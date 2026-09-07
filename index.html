@@ -1,0 +1,3956 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사주에 묻다 — 결과를 받은 뒤 계속 물어보는 사주 (가안)</title>
+<meta name="description" content="절기까지 맞춘 만세력으로 내 사주를 계산하고, 지금 움직이는 영역을 먼저 본 뒤, 결과를 읽다가 바로 물어보는 사주 서비스 (가안)">
+<meta name="theme-color" content="#F7F3EA">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23F7F3EA'/%3E%3Ccircle cx='32' cy='30' r='15' fill='none' stroke='%232F4A6E' stroke-width='4'/%3E%3Ccircle cx='32' cy='48' r='3.5' fill='%23B5442F'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+ * 메인 서비스 스타일 — 한지 크림 바탕, 먹 글자, 쪽빛 포인트. 표는 카드형, 이모지 없음.
+ * ========================================================================== */
+:root {
+  --paper: #F7F3EA; --paper-2: #FFFDF8; --paper-3: #EFE9DC;
+  --ink: #1F1C17; --ink-2: #4E483F; --muted: #8A8172; --line: #E6DFD0; --line-2: #D6CDB9;
+  --indigo: #2F4A6E; --indigo-soft: #E4EAF2; --red: #B5442F; --red-soft: #F4E3DE;
+  --love: #A94A5A; --money: #A8842F; --work: #2F4A6E; --people: #5D7A5B; --flow: #6E5A8A;
+  --radius: 16px; --radius-s: 10px;
+  --shadow: 0 1px 2px rgba(31,28,23,.04), 0 8px 24px rgba(31,28,23,.06);
+  --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --serif: "Gowun Batang", "Noto Serif KR", "Apple Myungjo", serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; letter-spacing: -0.01em; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--indigo); text-decoration: none; }
+p { margin: 0 0 .6em; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.02em; }
+.serif { font-family: var(--serif); }
+#app { max-width: 520px; margin: 0 auto; padding: 0 18px 80px; min-height: 100vh; }
+
+/* 상단 바 */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 8px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-weight: 700; font-size: 18px; color: var(--ink); }
+.brand .mark { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--indigo); position: relative; }
+.brand .mark::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--red); }
+.badge { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--muted); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px; margin-left: 6px; font-family: var(--sans); }
+.topbar .right { display: flex; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line-2); background: var(--paper-2); border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.indigo { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.btn.ghost { background: transparent; }
+.btn.sm { padding: 6px 12px; font-size: 13px; }
+.btn.block { width: 100%; padding: 14px; font-size: 16px; border-radius: 14px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* 안내자 */
+.guide { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0; }
+.guide .avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--indigo-soft); border: 1px solid var(--line-2); position: relative; }
+.guide .avatar::before { content: ""; position: absolute; left: 10px; top: 9px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--indigo); }
+.guide .avatar::after { content: ""; position: absolute; left: 15px; top: 24px; width: 4px; height: 4px; border-radius: 50%; background: var(--red); }
+.guide p { margin: 0; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; padding: 9px 12px; font-size: 14.5px; color: var(--ink-2); }
+
+/* 카드·섹션 */
+.card { background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin: 12px 0; box-shadow: var(--shadow); }
+.card.tint { background: var(--paper-3); box-shadow: none; }
+.card h2 { font-size: 17px; margin-bottom: 8px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.hero { padding: 26px 0 6px; }
+.hero h1 { font-family: var(--serif); font-size: 27px; line-height: 1.32; margin-bottom: 12px; }
+.hero .sub { color: var(--ink-2); font-size: 15px; }
+.lead { font-size: 18px; line-height: 1.55; font-weight: 600; }
+.small { font-size: 13px; color: var(--muted); }
+.muted { color: var(--muted); }
+.divider { height: 1px; background: var(--line); margin: 22px 0; }
+.stack > * + * { margin-top: 10px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.between { justify-content: space-between; }
+
+/* 칩 */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.chip { border: 1px solid var(--line-2); background: var(--paper-2); border-radius: 999px; padding: 7px 13px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.area-love.on { background: var(--love); border-color: var(--love); }
+.chip.area-money.on { background: var(--money); border-color: var(--money); }
+.chip.area-work.on { background: var(--work); border-color: var(--work); }
+.chip.area-people.on { background: var(--people); border-color: var(--people); }
+.chip.area-flow.on { background: var(--flow); border-color: var(--flow); }
+.chip.q { border-radius: 12px; text-align: left; padding: 10px 13px; line-height: 1.4; background: var(--paper-2); }
+
+/* 질문 목록 */
+.qlist { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.qitem { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; text-align: left; width: 100%; }
+.qitem .t { font-size: 15px; font-weight: 600; line-height: 1.4; }
+.qitem .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.qitem .arrow { color: var(--muted); font-size: 18px; flex: none; }
+.tag-free { display: inline-block; font-size: 11px; font-weight: 700; color: var(--indigo); background: var(--indigo-soft); border-radius: 999px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+
+/* 요약 띠 */
+.strip { display: flex; align-items: center; gap: 12px; background: var(--paper-3); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin: 12px 0; }
+.strip .sym { width: 40px; height: 40px; color: var(--ink-2); flex: none; }
+.strip .sym svg { width: 100%; height: 100%; }
+.strip .sym .accent { stroke: var(--red); }
+.strip b { font-size: 14.5px; }
+.strip .small { display: block; }
+
+/* 3단계 */
+.lv { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line-2); color: var(--muted); background: transparent; }
+.lv-1 { background: var(--paper-3); color: var(--ink-2); border-color: var(--line-2); }
+.lv-2 { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.areas { display: flex; flex-direction: column; gap: 8px; }
+.area { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; background: var(--paper-2); border: 1px solid var(--line); border-radius: 14px; padding: 11px 13px; text-align: left; width: 100%; }
+.area .name { font-weight: 700; font-size: 15px; }
+.area .why { font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
+.area.key { border-color: var(--ink); }
+.area .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.dot.love { background: var(--love); } .dot.money { background: var(--money); } .dot.work { background: var(--work); } .dot.people { background: var(--people); } .dot.flow { background: var(--flow); }
+
+/* 사주판 */
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+.pillar { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 4px; text-align: center; }
+.pillar .lab { font-size: 11px; color: var(--muted); font-weight: 700; }
+.pillar .hz { font-family: var(--serif); font-size: 22px; line-height: 1.15; margin: 4px 0; }
+.pillar .ss { font-size: 11px; color: var(--ink-2); }
+.pillar.hi { border-color: var(--indigo); background: var(--indigo-soft); }
+.pillar.empty .hz { color: var(--line-2); }
+
+/* 오행 막대 */
+.bars { display: flex; gap: 8px; align-items: flex-end; height: 74px; margin: 8px 0 4px; }
+.bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 12px; color: var(--ink-2); gap: 4px; }
+.bar i { display: block; width: 100%; border-radius: 6px 6px 3px 3px; background: var(--line-2); min-height: 4px; }
+.bar.on i { background: var(--indigo); }
+
+/* 시기 표: 카드형 */
+.months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin: 8px 0; }
+.mcell { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+.mcell i { display: block; width: 100%; height: 26px; border-radius: 6px; background: var(--paper-3); border: 1px solid var(--line); }
+.mcell.l1 i { background: #D9D2C1; }
+.mcell.l2 i { background: var(--ink); border-color: var(--ink); }
+.mcell.past { opacity: .45; }
+.mcell.now b { color: var(--red); }
+.mcell b { font-weight: 700; color: var(--ink-2); }
+.legend { display: flex; gap: 12px; font-size: 12px; color: var(--muted); margin: 4px 0 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--line); background: var(--paper-3); }
+.legend .i1 { background: #D9D2C1; } .legend .i2 { background: var(--ink); border-color: var(--ink); }
+.years { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+.ycell { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.ycell b { display: block; font-size: 14px; }
+.ycell .small { display: block; }
+.ycell.l2 { border-color: var(--ink); }
+.notes { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.cap { font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 10px 0 2px; }
+
+/* 대운 띠 */
+.daeun { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.drow { display: grid; grid-template-columns: 78px 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper-2); font-size: 13.5px; }
+.drow .age { font-weight: 700; }
+.drow .yrs { font-size: 11.5px; color: var(--muted); display: block; }
+.drow.cur { border-color: var(--indigo); background: var(--indigo-soft); }
+.drow.cur .age::after { content: "지금"; font-size: 10px; color: var(--indigo); margin-left: 6px; }
+
+/* 결과 본문 */
+.sec { margin: 26px 0; }
+.sec .no { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .06em; }
+.sec h3 { font-family: var(--serif); font-size: 20px; margin: 4px 0 10px; }
+.sec .concl { font-size: 17px; font-weight: 700; line-height: 1.5; margin-bottom: 10px; }
+.sec p.body { color: var(--ink-2); font-size: 15.5px; }
+details.ev { margin: 10px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); }
+details.ev summary { cursor: pointer; padding: 10px 14px; font-size: 14px; font-weight: 700; color: var(--ink-2); list-style: none; }
+details.ev summary::-webkit-details-marker { display: none; }
+details.ev summary::after { content: "펼치기"; float: right; font-weight: 500; color: var(--muted); font-size: 12px; }
+details.ev[open] summary::after { content: "접기"; }
+details.ev .in { padding: 0 14px 12px; font-size: 14px; color: var(--ink-2); }
+details.ev ul { margin: 6px 0 0; padding-left: 18px; }
+.term { background: none; border: 0; padding: 0; border-bottom: 1.5px dotted var(--indigo); color: var(--indigo); font-weight: 600; }
+.more { margin: 14px 0 4px; padding: 14px; border-radius: 14px; background: var(--indigo-soft); border: 1px solid #D3DCE9; }
+.more .t { font-size: 13.5px; font-weight: 700; color: var(--indigo); margin-bottom: 8px; }
+.more .chips { margin: 0 0 8px; }
+.more .chip { background: #fff; }
+.banner { background: var(--red-soft); border: 1px solid #E7C8BF; color: #7A2E22; border-radius: 12px; padding: 10px 14px; font-size: 13.5px; margin: 12px 0; }
+.locked { position: relative; }
+.locked .qitem { opacity: .6; }
+.lock { font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--line-2); border-radius: 999px; padding: 1px 7px; }
+
+/* 캐릭터 카드 */
+.tcard { background: linear-gradient(180deg, #FFFDF8 0%, #F2EBDD 100%); border: 1px solid var(--line-2); border-radius: 22px; padding: 26px 22px; text-align: center; margin: 14px 0; }
+.tcard .sym { width: 120px; height: 120px; margin: 0 auto 10px; color: var(--ink-2); }
+.tcard .sym svg { width: 100%; height: 100%; }
+.tcard .sym .accent { stroke: var(--red); }
+.tcard .hz { font-family: var(--serif); font-size: 15px; color: var(--muted); letter-spacing: .2em; }
+.tcard h2 { font-family: var(--serif); font-size: 26px; margin: 2px 0 2px; }
+.tcard .nick { font-size: 17px; color: var(--ink-2); margin-bottom: 14px; }
+.tcard ul { list-style: none; padding: 0; margin: 0 0 12px; text-align: left; }
+.tcard li { padding: 7px 0; border-top: 1px dashed var(--line-2); font-size: 14.5px; color: var(--ink-2); }
+.tcard li:first-child { border-top: 0; }
+.tcard .kw { font-size: 12.5px; color: var(--muted); letter-spacing: .08em; }
+.share-preview { width: 100%; border-radius: 14px; border: 1px solid var(--line); display: block; margin: 10px 0; }
+
+/* 입력 */
+.form label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 14px 0 6px; }
+.form .grid3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+.form .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form input[type=number], .form input[type=text], .form select { width: 100%; border: 1px solid var(--line-2); background: var(--paper-2); border-radius: 12px; padding: 12px; font-size: 16px; }
+.seg { display: flex; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; background: var(--paper-2); }
+.seg button { flex: 1; border: 0; background: transparent; padding: 11px; font-weight: 600; color: var(--muted); }
+.seg button.on { background: var(--ink); color: var(--paper); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); margin-top: 8px; }
+.err { color: var(--red); font-size: 13.5px; margin-top: 8px; }
+
+/* 리포트 소개 카드 */
+.rgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rcard { background: var(--paper-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: left; width: 100%; }
+.rcard b { display: block; font-size: 15px; margin-bottom: 4px; }
+.rcard .small { display: block; }
+.rcard.seen { border-color: var(--indigo); }
+
+/* 하단 시트(채팅) */
+.backdrop { position: fixed; inset: 0; background: rgba(31,28,23,.35); z-index: 40; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0 auto; max-width: 560px; background: var(--paper); border-radius: 22px 22px 0 0; box-shadow: 0 -8px 40px rgba(0,0,0,.18); display: flex; flex-direction: column; max-height: 82vh; }
+.sheet .hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px 8px; border-bottom: 1px solid var(--line); }
+.sheet .hd .ctx { font-size: 12.5px; color: var(--indigo); font-weight: 700; line-height: 1.3; }
+.sheet .hd .quota { font-size: 12px; color: var(--muted); }
+.sheet .msgs { overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.msg { max-width: 88%; padding: 10px 13px; border-radius: 16px; font-size: 14.5px; line-height: 1.55; }
+.msg.me { align-self: flex-end; background: var(--ink); color: var(--paper); border-bottom-right-radius: 4px; }
+.msg.ai { align-self: flex-start; background: var(--paper-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; color: var(--ink-2); }
+.msg.ai b { color: var(--ink); }
+.msg.sys { align-self: center; font-size: 12.5px; color: var(--muted); background: transparent; }
+.sheet .chips { padding: 0 16px; margin: 0 0 8px; }
+.sheet .inp { display: flex; gap: 8px; padding: 8px 16px 16px; border-top: 1px solid var(--line); }
+.sheet .inp input { flex: 1; border: 1px solid var(--line-2); border-radius: 999px; padding: 11px 14px; background: var(--paper-2); font-size: 15px; }
+.pop { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; max-width: 420px; width: calc(100% - 32px); background: var(--ink); color: var(--paper); border-radius: 14px; padding: 12px 16px; font-size: 14px; box-shadow: var(--shadow); }
+.pop b { display: block; margin-bottom: 4px; }
+
+/* 재방문 홈 */
+.thread { background: var(--paper-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; text-align: left; width: 100%; }
+.thread .small { display: block; }
+
+/* 푸터·개발 */
+.foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); line-height: 1.6; }
+.foot .row { margin-top: 8px; }
+
+/* 인쇄 */
+@media print {
+  body { background: #fff; }
+  #app { max-width: none; padding: 0; }
+  .topbar, .more, .btn, .guide, .banner, .foot, .sheet, .backdrop, .pop, .chips { display: none !important; }
+  .card, .sec { break-inside: avoid; }
+}
+@media (max-width: 380px) {
+  .hero h1 { font-size: 24px; }
+  .months { gap: 3px; }
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="backdrop" class="backdrop" hidden></div>
+<section id="sheet" class="sheet" hidden aria-label="후속질문"></section>
+<div id="pop" class="pop" hidden></div>
+<script>window.APP_CONFIG = { consultApi: '' };</script>
+<script>
+var KoreanLunarCalendar = (function () {
+  var module = { exports: {} }; var exports = module.exports;
+//#region src/korean-lunar-data.ts
+var LUNAR_CALENDAR_DATA = {
+	KOREAN_LUNAR_MIN_VALUE: 10000101,
+	KOREAN_LUNAR_MAX_VALUE: 20501118,
+	KOREAN_SOLAR_MIN_VALUE: 10000213,
+	KOREAN_SOLAR_MAX_VALUE: 20501231,
+	KOREAN_LUNAR_BASE_YEAR: 1e3,
+	SOLAR_LUNAR_DAY_DIFF: 43,
+	LUNAR_SMALL_MONTH_DAY: 29,
+	LUNAR_BIG_MONTH_DAY: 30,
+	SOLAR_SMALL_YEAR_DAY: 365,
+	SOLAR_BIG_YEAR_DAY: 366,
+	SOLAR_DAYS: [
+		31,
+		28,
+		31,
+		30,
+		31,
+		30,
+		31,
+		31,
+		30,
+		31,
+		30,
+		31,
+		29
+	],
+	KOREAN_CHEONGAN: [
+		44049,
+		51012,
+		48337,
+		51221,
+		47924,
+		44592,
+		44221,
+		49888,
+		51076,
+		44228
+	].map((c) => String.fromCharCode(c)),
+	KOREAN_GANJI: [
+		51088,
+		52629,
+		51064,
+		47896,
+		51652,
+		49324,
+		50724,
+		48120,
+		49888,
+		50976,
+		49696,
+		54644
+	].map((c) => String.fromCharCode(c)),
+	KOREAN_GAPJA_UNIT: [
+		45380,
+		50900,
+		51068
+	].map((c) => String.fromCharCode(c)),
+	CHINESE_CHEONGAN: [
+		30002,
+		20057,
+		19993,
+		19969,
+		25098,
+		24049,
+		24218,
+		36763,
+		22764,
+		30328
+	].map((c) => String.fromCharCode(c)),
+	CHINESE_GANJI: [
+		23376,
+		19985,
+		23493,
+		21359,
+		36784,
+		24051,
+		21320,
+		26410,
+		30003,
+		37193,
+		25100,
+		20133
+	].map((c) => String.fromCharCode(c)),
+	CHINESE_GAPJA_UNIT: [
+		24180,
+		26376,
+		26085
+	].map((c) => String.fromCharCode(c)),
+	INTERCALATION_STR: [50980, 38287].map((c) => String.fromCharCode(c)),
+	KOREAN_LUNAR_DATA: [
+		2194016855,
+		2197734699,
+		2193886506,
+		2194017621,
+		3271595437,
+		2193884522,
+		2194016621,
+		2197837021,
+		3267626157,
+		2193885773,
+		2197827149,
+		2193885990,
+		3271600982,
+		2194016981,
+		2193883994,
+		2197842298,
+		3267758427,
+		2193884315,
+		2197834395,
+		2193885771,
+		3271674533,
+		2193884842,
+		2194016981,
+		2197852893,
+		3267625653,
+		2194016599,
+		2197705902,
+		2194017431,
+		3267626571,
+		2197759306,
+		2194017705,
+		2197857974,
+		3267757677,
+		2193883758,
+		2197907758,
+		2193885486,
+		3267628182,
+		2197835157,
+		2193886538,
+		2197867881,
+		3267627864,
+		2194148715,
+		2197918315,
+		2193883741,
+		3267627307,
+		2197838507,
+		2193885845,
+		2193886026,
+		3271696043,
+		2193883861,
+		2197927258,
+		2194015419,
+		3267625563,
+		2197845303,
+		2193884459,
+		2193884821,
+		3271571285,
+		2193884842,
+		2198063797,
+		2193883765,
+		3267626166,
+		2197850718,
+		2193885782,
+		2193886502,
+		3271581350,
+		2194017621,
+		2193884586,
+		2197822826,
+		3267758445,
+		2197861551,
+		2193884317,
+		2193885773,
+		3271589165,
+		2193885862,
+		2194017109,
+		2197833173,
+		3267625818,
+		2194016605,
+		2197885299,
+		2193884251,
+		3271596623,
+		2193884747,
+		2193885861,
+		2197842793,
+		3267757749,
+		2193883866,
+		2197826230,
+		2194016567,
+		3271476375,
+		2194017431,
+		2193884747,
+		2197718698,
+		3267759525,
+		2193884596,
+		2198030957,
+		2193883822,
+		3267628641,
+		2197826862,
+		2193886358,
+		2197855565,
+		2193886538,
+		2194017637,
+		2197906837,
+		2194015581,
+		3267625581,
+		2197826141,
+		2193885483,
+		2197858967,
+		3267627669,
+		2193886026,
+		2197850970,
+		2194016981,
+		3267757403,
+		2197832375,
+		2193884247,
+		2193884459,
+		3271564587,
+		2193884821,
+		2197853997,
+		2193884586,
+		3267758773,
+		2197837037,
+		2193884342,
+		2194016855,
+		3271504974,
+		2193886502,
+		2197929618,
+		2194017621,
+		3267626410,
+		2197850554,
+		2194016621,
+		2193884334,
+		3271576221,
+		2193885773,
+		2193886501,
+		2197827365,
+		3267627860,
+		2198056297,
+		2193883866,
+		2194016605,
+		3271648411,
+		2193884315,
+		2193885771,
+		2197834571,
+		3267626661,
+		2197863251,
+		2193884852,
+		2194016950,
+		3271657814,
+		2194016663,
+		2193884311,
+		2197833367,
+		3267626315,
+		2197735077,
+		2194017701,
+		2193884588,
+		3271797429,
+		2193883758,
+		2193885486,
+		2197843118,
+		3267628182,
+		2193886538,
+		2197827402,
+		2194017621,
+		3271603563,
+		2194015579,
+		2193883741,
+		2197846333,
+		3267627303,
+		2193885845,
+		2197904661,
+		2193886026,
+		3267758933,
+		2197885653,
+		2194015451,
+		2197721694,
+		3267758679,
+		2193884459,
+		2197842603,
+		2193884821,
+		3267626666,
+		2197830570,
+		2194016949,
+		2197861559,
+		3267626158,
+		2194016855,
+		2197714222,
+		2193886502,
+		3267759763,
+		2197837525,
+		2193884586,
+		2194016693,
+		3271566701,
+		2193884334,
+		2197924429,
+		2193885773,
+		3267628326,
+		2197843301,
+		2193886034,
+		2194017642,
+		3271567066,
+		2194016605,
+		2197931165,
+		2193884315,
+		3267627595,
+		2197850795,
+		2193884837,
+		2193886036,
+		3271576500,
+		2194016950,
+		2194016603,
+		2197824823,
+		3267626135,
+		2197853775,
+		2193884491,
+		2193884837,
+		3271653061,
+		2193884588,
+		2194016950,
+		2197895278,
+		3267627310,
+		2197867671,
+		2193886358,
+		2193886538,
+		3271593386,
+		2194017109,
+		2193884522,
+		2197969627,
+		3267625565,
+		2193885486,
+		2197826859,
+		2193885845,
+		3271597389,
+		2193885994,
+		2194017109,
+		2197845365,
+		3267626202,
+		2194016859,
+		2197833047,
+		2193884459,
+		3271674515,
+		2193884819,
+		2193884842,
+		2197850842,
+		3267758821,
+		2193884342,
+		2197834414,
+		2194016855,
+		3267626279,
+		2197759270,
+		2194017875,
+		2197857995,
+		3267626410,
+		2194015661,
+		2197906605,
+		2193884334,
+		3267627598,
+		2197835085,
+		2193886502,
+		2197863763,
+		3267627858,
+		2194017130,
+		2197919082,
+		2194015575,
+		3267626141,
+		2197903899,
+		2193885771,
+		2193885861,
+		3271564965,
+		2193886034,
+		2197863258,
+		2194016950,
+		3267758427,
+		2197841079,
+		2193884311,
+		2193884747,
+		3271571275,
+		2193884837,
+		2197862067,
+		2193884588,
+		3267758774,
+		2197914285,
+		2193884318,
+		2193885773,
+		3271581003,
+		2193885989,
+		2193886034,
+		2197892690,
+		3267758938,
+		2197858654,
+		2194016603,
+		2193884315,
+		3271584343,
+		2193885771,
+		2193885861,
+		2197834661,
+		3267626708,
+		2197867222,
+		2194016950,
+		2194016567,
+		2197849247,
+		2193884311,
+		2193884747,
+		2197706442,
+		3267759525,
+		2193884586,
+		2197822828,
+		2194016878,
+		3271604527,
+		2193885486,
+		2193886358,
+		2197847381,
+		3267628362,
+		2194017621,
+		2197894485,
+		2193884522,
+		3267758701,
+		2197822045,
+		2193885483,
+		2197850715,
+		3267627669,
+		2193885994,
+		2197904170,
+		2194016981,
+		3267626202,
+		2197822650,
+		2194016855,
+		2197853487,
+		3267626279,
+		2193884819,
+		2197845683,
+		2193884842,
+		3267758773,
+		2197828981,
+		2193884342,
+		2197867111,
+		3267627566,
+		2193886486,
+		2197851798,
+		2193886538,
+		3267759530,
+		2197837290,
+		2194015597,
+		2193884334,
+		3271632989,
+		2193885741,
+		2197859607,
+		2193885861,
+		3267627858,
+		2197847412,
+		2194016986,
+		2194015581,
+		3271570747,
+		2193884251,
+		2193885739,
+		2197887531,
+		3267627685,
+		2197855061,
+		2193884850,
+		2194016982,
+		3271644470,
+		2194016567,
+		2193884247,
+		2197830231,
+		3267626283,
+		2197727910,
+		2194017685,
+		2193884586,
+		3271654060,
+		2194016878,
+		2193884462,
+		2197830830,
+		3267627606,
+		2197863723,
+		2193886506,
+		2194017621,
+		3271595437,
+		2193884522,
+		2194016877,
+		2197837149,
+		3267626283,
+		2193885837,
+		2197827157,
+		2193885994,
+		3271600982,
+		2194016981,
+		2193884378,
+		2197842554,
+		3267758679,
+		2193884443,
+		2197899799,
+		2193884755,
+		3271673513,
+		2193884586,
+		2194016949,
+		2197852861,
+		3267625654,
+		2194016823,
+		2197706030,
+		2193886486,
+		2194017867,
+		2197698386,
+		2194017706,
+		2197927348,
+		3267757421,
+		2193883822,
+		2197846589,
+		2193885741,
+		3267628309,
+		2197835157,
+		2193886034,
+		2197867369,
+		3267758810,
+		2194015581,
+		2197918299,
+		2193884251,
+		3267627563,
+		2197838507,
+		2193885845,
+		2193886034,
+		3271564970,
+		2194016950,
+		2197865819,
+		2194015415,
+		3267626071,
+		2197845303,
+		2193884459,
+		2193884821,
+		3271640725,
+		2193884586,
+		2197867189,
+		2194016878,
+		3267626158,
+		2197850718,
+		2193885782,
+		2193886506,
+		3271585450,
+		2194017621,
+		2193884522,
+		2197891418,
+		3267758429,
+		2197861551,
+		2193884315,
+		2193885773,
+		3271589165,
+		2193885994,
+		2194017109,
+		2197833173,
+		3267625690,
+		2194016603,
+		2197885271,
+		2193884315,
+		3271596623,
+		2193884747,
+		2193884841,
+		2197842666,
+		3267757749,
+		2193883830,
+		2197826222,
+		2194016567,
+		3271537814,
+		2193886358,
+		2194017867,
+		2197714610,
+		3267759530,
+		2194015661,
+		2197828461,
+		2193883758,
+		3267627310,
+		2197826861,
+		2193886357,
+		2197855565,
+		3267627850,
+		2194017129,
+		2197906778,
+		2194015579,
+		3267625565,
+		2197826139,
+		2193885483,
+		2197858967,
+		3267626645,
+		2193885002,
+		2197850970,
+		2194016950,
+		3267757371,
+		2197832375,
+		2193883735,
+		2193884459,
+		3271564587,
+		2193884821,
+		2197853869,
+		2193884586,
+		3267758773,
+		2197837037,
+		2193884334,
+		2194016855,
+		3271504974,
+		2193886506,
+		2197929364,
+		2194017109,
+		2193884522,
+		2197846394,
+		2194016605,
+		2193884334,
+		3271576219,
+		2193885773,
+		2193886501,
+		2197887658,
+		3267758933,
+		2197853549,
+		2193883866,
+		2194016603,
+		3271578807,
+		2193884311,
+		2193885771,
+		2197834571,
+		3267626665,
+		2197867221,
+		2194015669,
+		2193883830,
+		3271592286,
+		2194016559,
+		2193884311,
+		2197702294,
+		3267628362,
+		2197868197,
+		2194017641,
+		2194015597,
+		3271664309,
+		2193883758,
+		2193885486,
+		2197843117,
+		3267628181,
+		2193886538,
+		2197827402,
+		2194017113,
+		3271607661,
+		2194015579,
+		2193883741,
+		2197846331,
+		3267627307,
+		2193885845,
+		2197904149,
+		2193884874,
+		3267758805,
+		2197885622,
+		2194015419,
+		2197852767,
+		3267625559,
+		2193884459,
+		2197711530,
+		2194017941,
+		3267626666,
+		2197830570,
+		2194016949,
+		2197861559,
+		3267626158,
+		2194016855,
+		2197714221,
+		2193886502,
+		3267759509,
+		2197837269,
+		2193884522,
+		2194016621,
+		3271566685,
+		2193884334,
+		2197858895,
+		2193885773,
+		3267628325,
+		2197843305,
+		2194017109,
+		2193883994,
+		3271568058,
+		2194016603,
+		2197931163,
+		2193884311,
+		3267627595,
+		2197850923,
+		2193884837,
+		2193884884,
+		3271772853,
+		2193883830,
+		2194016567,
+		2197824815,
+		3267626135,
+		2197722702,
+		2193886538,
+		2194017957,
+		3271648937,
+		2194015597,
+		2193883830,
+		2197895262,
+		3267627310,
+		2197863575,
+		2193885845,
+		2193886538,
+		3271593386,
+		2194017101,
+		2194015595,
+		2197832411,
+		3267625565,
+		2193885485,
+		2197826859,
+		2193885845,
+		3271596877,
+		2193884842,
+		2194016981,
+		2197841269,
+		3267757243,
+		2193883739,
+		2197894231,
+		2193884459,
+		3271539348,
+		2194017941,
+		2193884842,
+		2197850842,
+		3267758517,
+		2193884342,
+		2197834414,
+		2194016847,
+		3267495206,
+		2197892390,
+		2194017621,
+		2197923241,
+		3267626346,
+		2194016621,
+		2197906589,
+		2193884318,
+		3267627597,
+		2197835085,
+		2193886501,
+		2197863763,
+		3267627860,
+		2194017114,
+		2197915994,
+		2194016603,
+		3267626139,
+		2197834391,
+		2193885771,
+		2193885861,
+		3271564965,
+		2193884884,
+		2197994203,
+		2193883830,
+		3267758391,
+		2197841071,
+		2193884311,
+		2193884747,
+		3271440202,
+		2194017701,
+		2197862069,
+		2194015597,
+		3267625646,
+		2197846334,
+		2193885486,
+		2193886358,
+		3271646485,
+		2193886538,
+		2194017701,
+		2197894485,
+		3267626346,
+		2197846650,
+		2194016861,
+		2193885485,
+		3271584427,
+		2193885845,
+		2193886026,
+		2197834666,
+		3267758805,
+		2193884506,
+		2197891258,
+		2194016859,
+		3271587127,
+		2193884459,
+		2193884819,
+		2197903125,
+		3267626666,
+		2194016981,
+		2197829045,
+		2193884342,
+		3271592542,
+		2193885774,
+		2193886502,
+		2197843622,
+		3267628370,
+		2194017706,
+		2197898858,
+		2194015597,
+		3267626158,
+		2197830301,
+		2193885773,
+		2197847339,
+		3267627813,
+		2193886546,
+		2197904724,
+		2194017114,
+		3267757405,
+		2197828955,
+		2193884315,
+		2197845591,
+		2193885771,
+		2193885861,
+		2197842789,
+		2193884882,
+		3267758810,
+		2197833142,
+		2194016567,
+		2193884311,
+		3271571095,
+		2193884749,
+		2197714602,
+		2194017701,
+		3267626410,
+		2197838572,
+		2194016942,
+		2193885486,
+		3271572782,
+		2193886358,
+		2197916997,
+		2193886538,
+		3267759445,
+		2197906837,
+		2193884522,
+		2194016877,
+		3271574877,
+		2193884461,
+		2193885845,
+		2197896341,
+		3267627850,
+		2197912394,
+		2194016981,
+		2193884506,
+		3271645754,
+		2194016859,
+		2193884459,
+		2197899799,
+		3267626643,
+		2197853867,
+		2193884842,
+		2194016949,
+		3271582965,
+		2193884342,
+		2194016855,
+		2197701934,
+		3267628310,
+		2194017939,
+		2197698386,
+		2194017706,
+		3271652778,
+		2194015597,
+		2193884334,
+		2197903901,
+		3267627565,
+		2193886485,
+		2197835173,
+		2193886034,
+		3271597418,
+		2194016986,
+		2194015581,
+		2197906075,
+		3267626075,
+		2193885739,
+		2197838635,
+		2193885845,
+		3267627858,
+		2197891762,
+		2194016982,
+		2197910870,
+		3267757367,
+		2193884247,
+		2197837399,
+		2193884459,
+		3267626645,
+		2197829525,
+		2193884586,
+		2197858998,
+		3267758701,
+		2193884334,
+		2197842542,
+		2193885782,
+		3267628330,
+		2197839530,
+		2194017621,
+		2193884586,
+		3271572330,
+		2194016877,
+		2197845181,
+		2193884331,
+		3267627661,
+		2197839189,
+		2193885994,
+		2194017109,
+		3271574997,
+		2193884378,
+		2194016605,
+		2197824855,
+		3267626139,
+		2197842583,
+		2193884747,
+		2193884841,
+		2197834666,
+		2194015925,
+		2193883834,
+		2197826230,
+		3267758391,
+		2197710126,
+		2193886486,
+		2194017867,
+		3271448274,
+		2194017705,
+		2194015669,
+		2197828461,
+		3267625646,
+		2193885742,
+		2197827117,
+		2193886357,
+		3271585109,
+		2193886034,
+		2194017129,
+		2197833178,
+		3267757405,
+		2193883741,
+		2197830235,
+		2193885739,
+		3271654027,
+		2193885845,
+		2193886026,
+		2197904170,
+		3267758805,
+		2194015579,
+		2197832375,
+		2193883735,
+		3271595311,
+		2193884459,
+		2193884821,
+		2197841621,
+		3267626410,
+		2194016949,
+		2197833069,
+		2193884334,
+		3267758679,
+		2197763158,
+		2193886506,
+		2197913226,
+		3267759445,
+		2193884586,
+		2197838554,
+		2194016605,
+		3267626158,
+		2197834411,
+		2193885773,
+		2197851435,
+		3267627817,
+		2194017109,
+		2197845365,
+		2193883866,
+		3267758429,
+		2197837015,
+		2193884315,
+		2193885771,
+		3271637579,
+		2193884841,
+		2197850841,
+		2194015925,
+		3267625654,
+		2197903670,
+		2194016567,
+		2193884311,
+		3271444118,
+		2193886794,
+		2197860006,
+		2194017705,
+		3267757485,
+		2197906093,
+		2193883822,
+		2193885486,
+		3271580845,
+		2193886357,
+		2193886538,
+		2197896522,
+		3267758953,
+		2197845370,
+		2194015579,
+		2193883741,
+		3271579995,
+		2193885483,
+		2193885845,
+		2197835157,
+		3267627850,
+		2194017109,
+		2197825237,
+		2194015579,
+		3271582327,
+		2193883735,
+		2193884459,
+		2197707434,
+		3267759765,
+		2193884842,
+		2197830570,
+		2194016949,
+		2197849277,
+		2193884334,
+		2194016855,
+		2197706061,
+		3267628326,
+		2194017685,
+		2197898837,
+		2193884522,
+		3267758509,
+		2197824861,
+		2193884334,
+		2197842523,
+		3267627597,
+		2193886501,
+		2197839273,
+		2194017109,
+		3267626346,
+		2197826266,
+		2194016605,
+		2197845179,
+		3267626139,
+		2193885771,
+		2197838667,
+		2193884841,
+		3267627732,
+		2197965749,
+		2193883830,
+		2194016603,
+		3271566647,
+		2193884311,
+		2197710422,
+		2193886794,
+		3267759781,
+		2197903017,
+		2194015669,
+		2193883830,
+		3271637166,
+		2193885486,
+		2197912717,
+		2193886357,
+		3267628362,
+		2197908874,
+		2194017129,
+		2194015597,
+		3271639643,
+		2193883741,
+		2193885485,
+		2197826859,
+		3267627669,
+		2197847381,
+		2193886026,
+		2194017109,
+		3271644501,
+		2194015451,
+		2193883739,
+		2197895255,
+		3267626283,
+		2197850779,
+		2193884821,
+		2193884842,
+		3271584490,
+		2194016949,
+		2193884342,
+		2197834414,
+		3267758679,
+		2193884455,
+		2197698342,
+		2194017685,
+		3271587509,
+		2193884522,
+		2194016685,
+		2197837021,
+		3267626158,
+		2193885774,
+		2197835085,
+		2193886501,
+		3271593305,
+		2193886036,
+		2194017642,
+		2197907802,
+		3267758427,
+		2193884315,
+		2197834395,
+		2193885771,
+		3271600935,
+		2193884837,
+		2193884884,
+		2197973877,
+		3267625654,
+		2194016603,
+		2197836983,
+		2193884311,
+		3267626571,
+		2197698378,
+		2194017957,
+		2197849817,
+		3267757485,
+		2193883830,
+		2197838190,
+		2193885486,
+		3267628182,
+		2197835413,
+		2193886538,
+		2194017701,
+		3271567189,
+		2193884524,
+		2197977787,
+		2193883741,
+		3267627309,
+		2197839019,
+		2193885845,
+		2193886026,
+		3271637834,
+		2194017109,
+		2197853533,
+		2193884346,
+		3267758683,
+		2197837143,
+		2193884459,
+		2193885845,
+		3271576469,
+		2193884842,
+		2194016981,
+		2197825205,
+		3267626166,
+		2197842542,
+		2194016855,
+		2193884455,
+		3271448230,
+		2194017683,
+		2193884586,
+		2197830506,
+		3267758445,
+		2197861551,
+		2193884334,
+		2193885773,
+		3271650573,
+		2193886501,
+		2193886546,
+		2197839316,
+		3267758954,
+		2194016621,
+		2197824859,
+		2193884315,
+		3271588439,
+		2193885771,
+		2193885989,
+		2197904165,
+		3267626708,
+		2194016986,
+		2197895350
+	]
+};
+//#endregion
+//#region src/korean-lunar-calendar.ts
+var GAPJA_OFFSET = {
+	YEAR_CHEONGAN: 6,
+	YEAR_GANJI: 0,
+	MONTH_CHEONGAN: 3,
+	MONTH_GANJI: 1,
+	DAY_CHEONGAN: 4,
+	DAY_GANJI: 2
+};
+var KoreanLunarCalendar = class {
+	constructor() {
+		this.cumulativeLunarYearDays = /* @__PURE__ */ new Map();
+		this.cumulativeSolarYearDays = /* @__PURE__ */ new Map();
+		this.solarCalendar = {
+			year: 0,
+			month: 0,
+			day: 0
+		};
+		this.lunarCalendar = {
+			year: 0,
+			month: 0,
+			day: 0,
+			intercalation: false
+		};
+		const today = /* @__PURE__ */ new Date();
+		this.setSolarDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
+	}
+	getLunarData(year) {
+		return LUNAR_CALENDAR_DATA.KOREAN_LUNAR_DATA[year - LUNAR_CALENDAR_DATA.KOREAN_LUNAR_BASE_YEAR];
+	}
+	getLunarIntercalationMonth(lunarData) {
+		return lunarData >> 12 & 15;
+	}
+	getLunarYearDays(year) {
+		return this.getLunarData(year) >> 17 & 511;
+	}
+	getLunarMonthDays(year, month, isIntercalation) {
+		const lunarData = this.getLunarData(year);
+		return (isIntercalation && this.getLunarIntercalationMonth(lunarData) === month ? (lunarData >> 16 & 1) > 0 : (lunarData >> 12 - month & 1) > 0) ? LUNAR_CALENDAR_DATA.LUNAR_BIG_MONTH_DAY : LUNAR_CALENDAR_DATA.LUNAR_SMALL_MONTH_DAY;
+	}
+	getLunarDaysBeforeBaseYear(year) {
+		return this.accumulateYearDays(year, this.cumulativeLunarYearDays, (y) => this.getLunarYearDays(y));
+	}
+	getLunarDaysBeforeBaseMonth(year, month, isIntercalation) {
+		let days = 0;
+		if (year >= LUNAR_CALENDAR_DATA.KOREAN_LUNAR_BASE_YEAR && month > 0) {
+			for (let baseMonth = 1; baseMonth < month + 1; baseMonth++) days += this.getLunarMonthDays(year, baseMonth, false);
+			if (isIntercalation) {
+				const intercalationMonth = this.getLunarIntercalationMonth(this.getLunarData(year));
+				if (intercalationMonth > 0 && intercalationMonth < month + 1) days += this.getLunarMonthDays(year, intercalationMonth, true);
+			}
+		}
+		return days;
+	}
+	getLunarAbsDays(year, month, day, isIntercalation) {
+		let days = this.getLunarDaysBeforeBaseYear(year - 1) + this.getLunarDaysBeforeBaseMonth(year, month - 1, true) + day;
+		if (isIntercalation && this.getLunarIntercalationMonth(this.getLunarData(year)) === month) days += this.getLunarMonthDays(year, month, false);
+		return days;
+	}
+	isSolarIntercalationYear(lunarData) {
+		return (lunarData >> 30 & 1) > 0;
+	}
+	getSolarYearDays(year) {
+		return this.isSolarIntercalationYear(this.getLunarData(year)) ? LUNAR_CALENDAR_DATA.SOLAR_BIG_YEAR_DAY : LUNAR_CALENDAR_DATA.SOLAR_SMALL_YEAR_DAY;
+	}
+	getSolarMonthDays(year, month) {
+		if (month === 2 && this.isSolarIntercalationYear(this.getLunarData(year))) return LUNAR_CALENDAR_DATA.SOLAR_DAYS[12];
+		return LUNAR_CALENDAR_DATA.SOLAR_DAYS[month - 1];
+	}
+	getSolarDaysBeforeBaseYear(year) {
+		return this.accumulateYearDays(year, this.cumulativeSolarYearDays, (y) => this.getSolarYearDays(y));
+	}
+	accumulateYearDays(year, cache, perYear) {
+		const cached = cache.get(year);
+		if (cached !== void 0) return cached;
+		const baseYear = LUNAR_CALENDAR_DATA.KOREAN_LUNAR_BASE_YEAR;
+		const previous = cache.get(year - 1);
+		let days = 0;
+		if (previous !== void 0 && year > baseYear) days = previous + perYear(year);
+		else for (let y = baseYear; y < year + 1; y++) days += perYear(y);
+		cache.set(year, days);
+		return days;
+	}
+	getSolarDaysBeforeBaseMonth(year, month) {
+		let days = 0;
+		for (let baseMonth = 1; baseMonth < month + 1; baseMonth++) days += this.getSolarMonthDays(year, baseMonth);
+		return days;
+	}
+	getSolarAbsDays(year, month, day) {
+		return this.getSolarDaysBeforeBaseYear(year - 1) + this.getSolarDaysBeforeBaseMonth(year, month - 1) + day - LUNAR_CALENDAR_DATA.SOLAR_LUNAR_DAY_DIFF;
+	}
+	setSolarDateByLunarDate(lunarYear, lunarMonth, lunarDay, isIntercalation) {
+		const absDays = this.getLunarAbsDays(lunarYear, lunarMonth, lunarDay, isIntercalation);
+		const solarYear = absDays < this.getSolarAbsDays(lunarYear + 1, 1, 1) ? lunarYear : lunarYear + 1;
+		let solarMonth = 0;
+		let solarDay = 0;
+		for (let month = 12; month > 0; month--) {
+			const absDaysByMonth = this.getSolarAbsDays(solarYear, month, 1);
+			if (absDays >= absDaysByMonth) {
+				solarMonth = month;
+				solarDay = absDays - absDaysByMonth + 1;
+				break;
+			}
+		}
+		this.solarCalendar = {
+			year: solarYear,
+			month: solarMonth,
+			day: solarDay
+		};
+	}
+	setLunarDateBySolarDate(solarYear, solarMonth, solarDay) {
+		const absDays = this.getSolarAbsDays(solarYear, solarMonth, solarDay);
+		const lunarYear = absDays >= this.getLunarAbsDays(solarYear, 1, 1, false) ? solarYear : solarYear - 1;
+		let lunarMonth = 0;
+		let lunarDay = 0;
+		let isIntercalation = false;
+		for (let month = 12; month > 0; month--) if (absDays >= this.getLunarAbsDays(lunarYear, month, 1, false)) {
+			lunarMonth = month;
+			if (this.getLunarIntercalationMonth(this.getLunarData(lunarYear)) === month) isIntercalation = absDays >= this.getLunarAbsDays(lunarYear, month, 1, true);
+			lunarDay = absDays - this.getLunarAbsDays(lunarYear, lunarMonth, 1, isIntercalation) + 1;
+			break;
+		}
+		this.lunarCalendar = {
+			year: lunarYear,
+			month: lunarMonth,
+			day: lunarDay,
+			intercalation: isIntercalation
+		};
+	}
+	checkValidDate(isLunar, isIntercalation, year, month, day) {
+		let isValid = false;
+		if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+		const dateValue = year * 1e4 + month * 100 + day;
+		if ((isLunar ? LUNAR_CALENDAR_DATA.KOREAN_LUNAR_MIN_VALUE : LUNAR_CALENDAR_DATA.KOREAN_SOLAR_MIN_VALUE) <= dateValue && (isLunar ? LUNAR_CALENDAR_DATA.KOREAN_LUNAR_MAX_VALUE : LUNAR_CALENDAR_DATA.KOREAN_SOLAR_MAX_VALUE) >= dateValue) {
+			if (month > 0 && month < 13 && day > 0) {
+				if (isLunar && isIntercalation && this.getLunarIntercalationMonth(this.getLunarData(year)) !== month) return false;
+				const dayLimit = isLunar ? this.getLunarMonthDays(year, month, isIntercalation) : this.getSolarMonthDays(year, month);
+				if (!isLunar && year === 1582 && month === 10 && day > 4 && day < 15) return false;
+				if (day <= dayLimit) isValid = true;
+			}
+		}
+		return isValid;
+	}
+	setLunarDate(lunarYear, lunarMonth, lunarDay, isIntercalation) {
+		let isValid = false;
+		if (this.checkValidDate(true, isIntercalation, lunarYear, lunarMonth, lunarDay)) {
+			this.lunarCalendar = {
+				year: lunarYear,
+				month: lunarMonth,
+				day: lunarDay,
+				intercalation: isIntercalation && this.getLunarIntercalationMonth(this.getLunarData(lunarYear)) === lunarMonth
+			};
+			this.setSolarDateByLunarDate(lunarYear, lunarMonth, lunarDay, isIntercalation);
+			isValid = true;
+		}
+		return isValid;
+	}
+	setSolarDate(solarYear, solarMonth, solarDay) {
+		let isValid = false;
+		if (this.checkValidDate(false, false, solarYear, solarMonth, solarDay)) {
+			this.solarCalendar = {
+				year: solarYear,
+				month: solarMonth,
+				day: solarDay
+			};
+			this.setLunarDateBySolarDate(solarYear, solarMonth, solarDay);
+			isValid = true;
+		}
+		return isValid;
+	}
+	computeGapJa() {
+		const lunar = this.lunarCalendar;
+		const absDays = this.getLunarAbsDays(lunar.year, lunar.month, lunar.day, !!lunar.intercalation);
+		if (absDays <= 0) return {
+			cheongan: {
+				year: 0,
+				month: 0,
+				day: 0
+			},
+			ganji: {
+				year: 0,
+				month: 0,
+				day: 0
+			}
+		};
+		const baseYear = LUNAR_CALENDAR_DATA.KOREAN_LUNAR_BASE_YEAR;
+		const cheonganLen = LUNAR_CALENDAR_DATA.KOREAN_CHEONGAN.length;
+		const ganjiLen = LUNAR_CALENDAR_DATA.KOREAN_GANJI.length;
+		const monthCount = lunar.month + 12 * (lunar.year - baseYear);
+		return {
+			cheongan: {
+				year: (lunar.year + GAPJA_OFFSET.YEAR_CHEONGAN - baseYear) % cheonganLen,
+				month: (monthCount + GAPJA_OFFSET.MONTH_CHEONGAN) % cheonganLen,
+				day: (absDays + GAPJA_OFFSET.DAY_CHEONGAN) % cheonganLen
+			},
+			ganji: {
+				year: (lunar.year + GAPJA_OFFSET.YEAR_GANJI - baseYear) % ganjiLen,
+				month: (monthCount + GAPJA_OFFSET.MONTH_GANJI) % ganjiLen,
+				day: (absDays + GAPJA_OFFSET.DAY_GANJI) % ganjiLen
+			}
+		};
+	}
+	getGapJaIndex() {
+		return this.computeGapJa();
+	}
+	getGapja(isChinese) {
+		const inx = this.getGapJaIndex();
+		const cheongan = !isChinese ? LUNAR_CALENDAR_DATA.KOREAN_CHEONGAN : LUNAR_CALENDAR_DATA.CHINESE_CHEONGAN;
+		const ganji = !isChinese ? LUNAR_CALENDAR_DATA.KOREAN_GANJI : LUNAR_CALENDAR_DATA.CHINESE_GANJI;
+		const unit = !isChinese ? LUNAR_CALENDAR_DATA.KOREAN_GAPJA_UNIT : LUNAR_CALENDAR_DATA.CHINESE_GAPJA_UNIT;
+		const intercalationStr = !isChinese ? `${LUNAR_CALENDAR_DATA.INTERCALATION_STR[0]}${LUNAR_CALENDAR_DATA.KOREAN_GAPJA_UNIT[1]}` : `${LUNAR_CALENDAR_DATA.INTERCALATION_STR[1]}${LUNAR_CALENDAR_DATA.CHINESE_GAPJA_UNIT[1]}`;
+		return {
+			year: `${cheongan[inx.cheongan.year]}${ganji[inx.ganji.year]}${unit[0]}`,
+			month: `${cheongan[inx.cheongan.month]}${ganji[inx.ganji.month]}${unit[1]}`,
+			day: `${cheongan[inx.cheongan.day]}${ganji[inx.ganji.day]}${unit[2]}`,
+			intercalation: this.lunarCalendar.intercalation ? intercalationStr : ""
+		};
+	}
+	getKoreanGapja() {
+		return this.getGapja();
+	}
+	getChineseGapja() {
+		return this.getGapja(true);
+	}
+	getLunarCalendar() {
+		return { ...this.lunarCalendar };
+	}
+	getSolarCalendar() {
+		return { ...this.solarCalendar };
+	}
+};
+//#endregion
+module.exports = KoreanLunarCalendar;
+
+//# sourceMappingURL=korean-lunar-calendar.js.map
+  return module.exports;
+})();
+/* ==========================================================================
+ * 사주 계산 엔진 — 만세력 기반 실계산
+ * 일주: 율리우스일 60갑자 (앵커: 2000-01-01 = 戊午)
+ * 년·월주: 입춘/12절 기준 (절기 근사 공식, ±1일 오차 가능)
+ * 시주: 오서둔, 한국 관례 30분 지연 시간 경계 (자시 23:30~01:29)
+ * ========================================================================== */
+
+const STEMS = [
+  { h: '甲', k: '갑', el: 0, yang: true },  { h: '乙', k: '을', el: 0, yang: false },
+  { h: '丙', k: '병', el: 1, yang: true },  { h: '丁', k: '정', el: 1, yang: false },
+  { h: '戊', k: '무', el: 2, yang: true },  { h: '己', k: '기', el: 2, yang: false },
+  { h: '庚', k: '경', el: 3, yang: true },  { h: '辛', k: '신', el: 3, yang: false },
+  { h: '壬', k: '임', el: 4, yang: true },  { h: '癸', k: '계', el: 4, yang: false },
+];
+const BRANCHES = [
+  { h: '子', k: '자', el: 4, yang: true,  animal: '쥐',   hidden: 9 },
+  { h: '丑', k: '축', el: 2, yang: false, animal: '소',   hidden: 5 },
+  { h: '寅', k: '인', el: 0, yang: true,  animal: '호랑이', hidden: 0 },
+  { h: '卯', k: '묘', el: 0, yang: false, animal: '토끼', hidden: 1 },
+  { h: '辰', k: '진', el: 2, yang: true,  animal: '용',   hidden: 4 },
+  { h: '巳', k: '사', el: 1, yang: false, animal: '뱀',   hidden: 2 },
+  { h: '午', k: '오', el: 1, yang: true,  animal: '말',   hidden: 3 },
+  { h: '未', k: '미', el: 2, yang: false, animal: '양',   hidden: 5 },
+  { h: '申', k: '신', el: 3, yang: true,  animal: '원숭이', hidden: 6 },
+  { h: '酉', k: '유', el: 3, yang: false, animal: '닭',   hidden: 7 },
+  { h: '戌', k: '술', el: 2, yang: true,  animal: '개',   hidden: 4 },
+  { h: '亥', k: '해', el: 4, yang: false, animal: '돼지', hidden: 8 },
+];
+const ELEMENTS = [
+  { k: '목', h: '木', color: '#4c7a5c' },
+  { k: '화', h: '火', color: '#a94a38' },
+  { k: '토', h: '土', color: '#a8842f' },
+  { k: '금', h: '金', color: '#77808c' },
+  { k: '수', h: '水', color: '#3e5a7e' },
+];
+// 생(生): el -> (el+1)%5 · 극(克): el -> (el+2)%5
+const SIPSEONG_NAMES = ['비견', '겁재', '식신', '상관', '편재', '정재', '편관', '정관', '편인', '정인'];
+
+function gzName(idx) {
+  const s = STEMS[idx % 10], b = BRANCHES[idx % 12];
+  return { hanja: s.h + b.h, hangul: s.k + b.k, stem: idx % 10, branch: idx % 12 };
+}
+
+// ---- 율리우스일 (그레고리력) --------------------------------------------
+function jdn(y, m, d) {
+  const a = Math.floor((14 - m) / 12), yy = y + 4800 - a, mm = m + 12 * a - 3;
+  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4)
+       - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+}
+function dayGanzhi(y, m, d) {
+  const j = jdn(y, m, d);
+  return { stem: (j + 9) % 10, branch: (j + 1) % 12 };
+}
+
+// ---- 절기 근사 (12節: 월 경계) ------------------------------------------
+// D = floor(Y*0.2422 + C) - L · 20세기/21세기 계수 (±1일 오차 가능)
+const TERM_C = {
+  // [20세기(1901-1999), 21세기(2000-2049)] — 월지 인덱스 순 (입춘=寅월 시작)
+  ipchun:   [4.6295, 3.87],  gyeongchip: [6.3826, 5.63],  cheongmyeong: [5.59, 4.81],
+  ipha:     [6.318, 5.52],   mangjong:   [6.5, 5.678],    soseo:        [7.928, 7.108],
+  ipchu:    [8.35, 7.5],     baekro:     [8.44, 7.646],   hanro:        [9.098, 8.318],
+  ipdong:   [8.218, 7.438],  daeseol:    [7.9, 7.18],     sohan:        [6.11, 5.4055],
+};
+const TERM_ORDER = ['ipchun', 'gyeongchip', 'cheongmyeong', 'ipha', 'mangjong', 'soseo',
+                    'ipchu', 'baekro', 'hanro', 'ipdong', 'daeseol', 'sohan'];
+const TERM_MONTH = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1]; // 각 절이 드는 양력 월
+
+function termDay(year, termKey) {
+  const century = year >= 2000 ? 1 : 0;
+  const Y = year % 100;
+  const janFeb = termKey === 'ipchun' || termKey === 'sohan';
+  const L = janFeb ? Math.floor((Y - 1) / 4) : Math.floor(Y / 4);
+  return Math.floor(Y * 0.2422 + TERM_C[termKey][century]) - L;
+}
+
+// ---- 년주: 입춘 기준 ------------------------------------------------------
+function yearGanzhi(y, m, d) {
+  const ipchun = termDay(y, 'ipchun'); // 2월 X일
+  let year = y;
+  if (m < 2 || (m === 2 && d < ipchun)) year -= 1;
+  return { stem: ((year - 4) % 10 + 10) % 10, branch: ((year - 4) % 12 + 12) % 12, sajuYear: year };
+}
+
+// ---- 월주: 12절 기준 월지 + 오호둔 월간 ----------------------------------
+// monthNo: 寅월=1 … 丑월=12
+function monthNumber(y, m, d) {
+  // 이 날짜가 속한 절 찾기: 해당 월에 드는 절의 날짜와 비교
+  for (let i = 0; i < 12; i++) {
+    const tm = TERM_MONTH[i];
+    const ty = i === 11 && m === 1 ? y : y; // 소한은 같은 해 1월
+    if (m === tm) {
+      const td = termDay(ty, TERM_ORDER[i]);
+      // 절입일 이후면 이 절의 월, 이전이면 직전 절의 월
+      return d >= td ? i + 1 : (i === 0 ? 12 : i);
+    }
+  }
+  return 1;
+}
+function monthGanzhi(y, m, d) {
+  const mn = monthNumber(y, m, d); // 1=寅 … 12=丑
+  const ys = yearGanzhi(y, m, d).stem;
+  const base = ((ys % 5) * 2 + 2) % 10;            // 오호둔: 寅월 천간
+  const stem = (base + mn - 1) % 10;
+  const branch = (mn + 1) % 12;                     // 寅=2 … 丑=1
+  return { stem, branch, monthNo: mn };
+}
+
+// ---- 시주: 30분 지연 경계 + 오서둔 ---------------------------------------
+function hourBranch(h, min) {
+  const t = (h * 60 + min + 30) % 1440; // 23:30 → 0
+  return Math.floor(t / 120);
+}
+function hourGanzhi(dayStem, h, min) {
+  const b = hourBranch(h, min);
+  const base = (dayStem % 5) * 2;                   // 오서둔: 子시 천간
+  return { stem: (base + b) % 10, branch: b };
+}
+
+// ---- 십성 ----------------------------------------------------------------
+function sipseong(dayStem, otherStem) {
+  const d = STEMS[dayStem], o = STEMS[otherStem];
+  const same = d.yang === o.yang;
+  let rel;
+  if (d.el === o.el) rel = 0;                            // 비견/겁재
+  else if ((d.el + 1) % 5 === o.el) rel = 1;             // 식신/상관
+  else if ((d.el + 2) % 5 === o.el) rel = 2;             // 편재/정재
+  else if ((o.el + 2) % 5 === d.el) rel = 3;             // 편관/정관
+  else rel = 4;                                          // 편인/정인
+  // 비견=같은극성, 겁재=다른극성 · 식신=같,상관=다 · 편재=같,정재=다 · 편관=같,정관=다 · 편인=같,정인=다
+  return rel * 2 + (same ? 0 : 1);
+}
+function sipseongOfBranch(dayStem, branch) {
+  return sipseong(dayStem, BRANCHES[branch].hidden);
+}
+
+// ---- 합·충 ---------------------------------------------------------------
+const YUKHAP = { 0: 1, 1: 0, 2: 11, 11: 2, 3: 10, 10: 3, 4: 9, 9: 4, 5: 8, 8: 5, 6: 7, 7: 6 };
+const SAMHAP = [[8, 0, 4], [11, 3, 7], [2, 6, 10], [5, 9, 1]]; // 수국 목국 화국 금국
+function branchRelation(b1, b2) {
+  if (b1 === b2) return 'same';
+  if (YUKHAP[b1] === b2) return 'yukhap';
+  if ((b1 + 6) % 12 === b2) return 'chung';
+  if (SAMHAP.some(g => g.includes(b1) && g.includes(b2))) return 'samhap';
+  return 'none';
+}
+function stemHap(s1, s2) { return (s1 + 5) % 10 === s2; } // 천간합
+
+// ---- 대운 ----------------------------------------------------------------
+function nextTermJdn(y, m, d, forward) {
+  // 출생일에서 가장 가까운 절입일(앞/뒤)의 JDN
+  const birth = jdn(y, m, d);
+  const candidates = [];
+  for (let yy = y - 1; yy <= y + 1; yy++) {
+    for (let i = 0; i < 12; i++) {
+      const tm = TERM_MONTH[i];
+      const td = termDay(yy, TERM_ORDER[i]);
+      candidates.push(jdn(yy, tm, td));
+    }
+  }
+  candidates.sort((a, b) => a - b);
+  if (forward) { for (const c of candidates) if (c > birth) return c; }
+  else { for (let i = candidates.length - 1; i >= 0; i--) if (candidates[i] < birth) return candidates[i]; }
+  return birth;
+}
+function daeun(y, m, d, gender, yearStem, monthGz) {
+  const yangYear = STEMS[yearStem].yang;
+  const forward = (yangYear && gender === 'M') || (!yangYear && gender === 'F');
+  const target = nextTermJdn(y, m, d, forward);
+  const days = Math.abs(target - jdn(y, m, d));
+  let start = Math.round(days / 3);
+  start = Math.max(1, Math.min(10, start));
+  const mIdx60 = gz60Index(monthGz.stem, monthGz.branch);
+  const list = [];
+  for (let i = 1; i <= 8; i++) {
+    const idx = ((mIdx60 + (forward ? i : -i)) % 60 + 60) % 60;
+    list.push({ age: start + (i - 1) * 10, gz: gzName(idx) });
+  }
+  return { forward, startAge: start, list };
+}
+function gz60Index(stem, branch) {
+  for (let i = 0; i < 60; i++) if (i % 10 === stem && i % 12 === branch) return i;
+  return 0;
+}
+
+// ---- 오행 분포 · 일간 강약 · 용신(근사) -----------------------------------
+function elementCounts(pillars) {
+  const counts = [0, 0, 0, 0, 0];
+  for (const p of pillars) {
+    if (!p) continue;
+    counts[STEMS[p.stem].el]++;
+    counts[BRANCHES[p.branch].el]++;
+  }
+  return counts;
+}
+function ilganStrength(dayStem, counts) {
+  const el = STEMS[dayStem].el;
+  const support = counts[el] + counts[(el + 4) % 5]; // 같은 오행 + 나를 생하는 오행
+  const total = counts.reduce((a, b) => a + b, 0);
+  const ratio = support / total;
+  return ratio >= 0.5 ? 'strong' : ratio >= 0.35 ? 'balanced' : 'weak';
+}
+function yongshin(dayStem, counts, strength) {
+  const el = STEMS[dayStem].el;
+  if (strength === 'strong') {
+    // 신강: 설기(내가 생하는 것)·재(내가 극하는 것) 중 부족한 쪽
+    const a = (el + 1) % 5, b = (el + 2) % 5;
+    return counts[a] <= counts[b] ? a : b;
+  }
+  // 신약/중화: 인성(나를 생) 또는 비겁(같은 오행) 중 부족한 쪽
+  const a = (el + 4) % 5;
+  return counts[a] <= counts[el] ? a : el;
+}
+
+// ---- 메인 ----------------------------------------------------------------
+function computeSaju(input) {
+  // input: { year, month, day, hour, minute, hourUnknown, calendar, leapMonth, gender }
+  let { year, month, day } = input;
+  let lunarInfo = null;
+  if (input.calendar === 'lunar') {
+    const cal = new KoreanLunarCalendar();
+    const ok = cal.setLunarDate(year, month, day, !!input.leapMonth);
+    if (!ok) throw new Error('음력 날짜가 올바르지 않네. 윤달 여부와 날짜를 확인해 주시게. (지원 1900~2050년)');
+    const s = cal.getSolarCalendar();
+    lunarInfo = { year, month, day, leap: !!input.leapMonth };
+    year = s.year; month = s.month; day = s.day;
+  }
+  const hour = input.hourUnknown ? null : input.hour;
+  const minute = input.hourUnknown ? 0 : (input.minute || 0);
+
+  // 야자시(23:30~)는 익일 일주
+  let dy = year, dm = month, dd = day;
+  if (hour !== null && (hour * 60 + minute) >= 1410) {
+    const t = new Date(Date.UTC(year, month - 1, day));
+    t.setUTCDate(t.getUTCDate() + 1);
+    dy = t.getUTCFullYear(); dm = t.getUTCMonth() + 1; dd = t.getUTCDate();
+  }
+
+  const yp = yearGanzhi(year, month, day);
+  const mp = monthGanzhi(year, month, day);
+  const dp = dayGanzhi(dy, dm, dd);
+  const hp = hour === null ? null : hourGanzhi(dp.stem, hour, minute);
+
+  const pillars = [yp, mp, dp, hp];
+  const counts = elementCounts(pillars);
+  const strength = ilganStrength(dp.stem, counts);
+  const ys = yongshin(dp.stem, counts, strength);
+  const du = daeun(year, month, day, input.gender, yp.stem, mp);
+
+  const ss = {
+    year:  { stem: sipseong(dp.stem, yp.stem), branch: sipseongOfBranch(dp.stem, yp.branch) },
+    month: { stem: sipseong(dp.stem, mp.stem), branch: sipseongOfBranch(dp.stem, mp.branch) },
+    day:   { stem: null, branch: sipseongOfBranch(dp.stem, dp.branch) },
+    hour:  hp ? { stem: sipseong(dp.stem, hp.stem), branch: sipseongOfBranch(dp.stem, hp.branch) } : null,
+  };
+
+  return {
+    solar: { year, month, day, hour, minute },
+    lunar: lunarInfo,
+    gender: input.gender,
+    pillars: { year: yp, month: mp, day: dp, hour: hp },
+    gz: {
+      year: gzName(gz60Index(yp.stem, yp.branch)),
+      month: gzName(gz60Index(mp.stem, mp.branch)),
+      day: gzName(gz60Index(dp.stem, dp.branch)),
+      hour: hp ? gzName(gz60Index(hp.stem, hp.branch)) : null,
+    },
+    day60: gz60Index(dp.stem, dp.branch),
+    counts, strength, yongshin: ys,
+    sipseong: ss,
+    daeun: du,
+    sajuYear: yp.sajuYear,
+  };
+}
+
+// ---- 오늘의 운세 (결정적: 같은 사주 + 같은 날 = 같은 결과) ------------------
+const TODAY_STEM_DELTA = [5, -10, 13, -5, 10, 14, -8, 12, 8, 15]; // 십성별 기본 점수
+function seededWobble(seed, span) {
+  let x = seed % 2147483647; if (x <= 0) x += 2147483646;
+  x = (x * 16807) % 2147483647;
+  return (x % (span * 2 + 1)) - span;
+}
+function todayFortune(saju, date) {
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+  const today = dayGanzhi(y, m, d);
+  const j = jdn(y, m, d);
+  const ss = sipseong(saju.pillars.day.stem, today.stem);
+  const rel = branchRelation(saju.pillars.day.branch, today.branch);
+  const relDelta = { yukhap: 15, samhap: 10, same: 5, none: 0, chung: -18 }[rel];
+  const hap = stemHap(saju.pillars.day.stem, today.stem);
+
+  let score = 52 + TODAY_STEM_DELTA[ss] + relDelta + (hap ? 8 : 0);
+  score += seededWobble(j * 61 + saju.day60, 5);
+  score = Math.max(8, Math.min(99, score));
+
+  const cat = (salt, bias) => {
+    let s = score + seededWobble(j * salt + saju.day60 * 7, 12) + bias;
+    return Math.max(5, Math.min(99, Math.round(s)));
+  };
+  const loveBias = { yukhap: 8, samhap: 5 }[rel] || 0;
+  const categories = {
+    love: cat(101, loveBias),
+    money: cat(211, ss === 4 || ss === 5 ? 6 : 0),
+    work: cat(307, ss === 6 || ss === 7 ? 6 : 0),
+    health: cat(401, rel === 'chung' ? -6 : 0),
+  };
+  const luckyEl = saju.yongshin;
+  return {
+    date: { y, m, d }, gz: gzName(gz60Index(today.stem, today.branch)),
+    score, categories, sipseong: ss, branchRel: rel, stemHap: hap,
+    lucky: {
+      element: luckyEl,
+      number: ((j + saju.day60) % 9) + 1,
+      direction: ['동쪽', '남동쪽', '남쪽', '남서쪽', '서쪽', '북서쪽', '북쪽', '북동쪽'][(j + saju.pillars.day.branch) % 8],
+    },
+  };
+}
+
+// ---- 궁합 ----------------------------------------------------------------
+const WONJIN = { 0: 7, 7: 0, 1: 6, 6: 1, 2: 9, 9: 2, 3: 8, 8: 3, 4: 11, 11: 4, 5: 10, 10: 5 }; // 원진
+
+function stemRelation(sa, sb) {
+  if (stemHap(sa, sb) || stemHap(sb, sa)) return 'hap';
+  const a = STEMS[sa].el, b = STEMS[sb].el;
+  if (a === b) return 'same';
+  if ((a + 1) % 5 === b || (b + 1) % 5 === a) return 'saeng';
+  return 'geuk';
+}
+
+function computeGunghap(A, B) {
+  const parts = {};
+  let score = 50;
+
+  // 1. 일간 관계 (부부의 축)
+  const ilgan = stemRelation(A.pillars.day.stem, B.pillars.day.stem);
+  parts.ilgan = ilgan;
+  score += { hap: 18, saeng: 11, same: 6, geuk: -7 }[ilgan];
+
+  // 2. 일지 관계 (배우자궁끼리)
+  const ba = A.pillars.day.branch, bb = B.pillars.day.branch;
+  let ilji = branchRelation(ba, bb);
+  if (ilji === 'none' && WONJIN[ba] === bb) ilji = 'wonjin';
+  parts.ilji = ilji;
+  score += { yukhap: 18, samhap: 12, same: 5, none: 0, chung: -16, wonjin: -10 }[ilji];
+
+  // 3. 오행 상보 (서로의 빈 기운을 채우는가)
+  let bowanAB = 0, bowanBA = 0;
+  for (let e = 0; e < 5; e++) {
+    if (A.counts[e] === 0 && B.counts[e] >= 2) bowanAB++;
+    if (B.counts[e] === 0 && A.counts[e] >= 2) bowanBA++;
+  }
+  parts.bowan = { ab: bowanAB, ba: bowanBA };
+  score += Math.min(bowanAB, 2) * 7 + Math.min(bowanBA, 2) * 7;
+
+  // 4. 띠(년지) 관계
+  const tti = branchRelation(A.pillars.year.branch, B.pillars.year.branch);
+  parts.tti = tti;
+  score += { yukhap: 5, samhap: 5, same: 2, none: 0, chung: -7 }[tti] || 0;
+
+  // 5. 용신 상생 (상대가 나의 약인가)
+  const yAB = STEMS[B.pillars.day.stem].el === A.yongshin;
+  const yBA = STEMS[A.pillars.day.stem].el === B.yongshin;
+  parts.yongshin = yAB && yBA ? 'mutual' : (yAB || yBA) ? 'oneway' : 'none';
+  score += { mutual: 14, oneway: 8, none: 0 }[parts.yongshin];
+
+  score = Math.max(12, Math.min(99, score));
+  return { score, parts };
+}
+
+/* ==========================================================================
+ * 메인 서비스 확장 계산 — 허선생 engine.js(전역 함수) 위에서 동작
+ * 세운·월운 십성, 현재 대운, 궁(宮) 합충, 역마·도화, 5영역 3단계(움직임)
+ * 점수는 만들지 않는다. 신호 개수로 잔잔함(0)·보통(1)·강함(2)만 낸다.
+ * ========================================================================== */
+
+const STAR_GROUPS = ['비겁', '식상', '재성', '관성', '인성'];
+const STAR_GROUP_OF = ['비겁', '비겁', '식상', '식상', '재성', '재성', '관성', '관성', '인성', '인성'];
+const AREA_KEYS = ['love', 'money', 'work', 'people', 'flow'];
+
+// 일지 삼합국 기준 역마·도화 자리
+// 申子辰(8,0,4) → 역마 寅(2)·도화 酉(9) / 寅午戌(2,6,10) → 申(8)·卯(3) / 巳酉丑(5,9,1) → 亥(11)·午(6) / 亥卯未(11,3,7) → 巳(5)·子(0)
+function shinsalBranches(dayBranch) {
+  const groups = [
+    { m: [8, 0, 4], y: 2, d: 9 }, { m: [2, 6, 10], y: 8, d: 3 },
+    { m: [5, 9, 1], y: 11, d: 6 }, { m: [11, 3, 7], y: 5, d: 0 },
+  ];
+  const g = groups.find(x => x.m.includes(dayBranch));
+  return { yeokmaBranch: g.y, dohwaBranch: g.d };
+}
+
+// 지지 관계를 합(hap)·충(chung)·원진(wonjin)·없음(none)으로 단순화
+function relOf(b1, b2) {
+  const r = branchRelation(b1, b2);
+  if (r === 'yukhap' || r === 'samhap') return 'hap';
+  if (r === 'chung') return 'chung';
+  if (WONJIN[b1] === b2) return 'wonjin';
+  return 'none';
+}
+const REL_KO = { hap: '합', chung: '충', wonjin: '원진', none: '' };
+
+function ageOn(birth, today) {
+  let a = today.year - birth.year;
+  if (today.month < birth.month || (today.month === birth.month && today.day < birth.day)) a--;
+  return a;
+}
+
+function starEntry(dayStem, stem, branch) {
+  const stemStar = sipseong(dayStem, stem), branchStar = sipseongOfBranch(dayStem, branch);
+  return {
+    stemStar, branchStar,
+    stemName: SIPSEONG_NAMES[stemStar], branchName: SIPSEONG_NAMES[branchStar],
+    stemGroup: STAR_GROUP_OF[stemStar], branchGroup: STAR_GROUP_OF[branchStar],
+  };
+}
+
+function buildFacts(saju, opt) {
+  const today = (opt && opt.today) || (() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }; })();
+  const birth = saju.solar;
+  const age = ageOn(birth, today);
+  const band = age < 30 ? '20s' : age < 40 ? '30s' : '40s';
+  const P = saju.pillars;
+  const ds = P.day.stem;
+  const gender = saju.gender;
+
+  // 십성 분포 (일간 제외 7자, 시간 모름이면 5자)
+  const stars = {};
+  STAR_GROUPS.forEach(g => { stars[g] = { n: 0, pos: [], names: [] }; });
+  const cells = [['년간', P.year.stem, 'stem'], ['년지', P.year.branch, 'branch'], ['월간', P.month.stem, 'stem'], ['월지', P.month.branch, 'branch'], ['일지', P.day.branch, 'branch']];
+  if (P.hour) cells.push(['시간', P.hour.stem, 'stem'], ['시지', P.hour.branch, 'branch']);
+  const cellStars = {};
+  for (const [pos, v, kind] of cells) {
+    const idx = kind === 'stem' ? sipseong(ds, v) : sipseongOfBranch(ds, v);
+    const g = STAR_GROUP_OF[idx];
+    stars[g].n++; stars[g].pos.push(pos); stars[g].names.push(SIPSEONG_NAMES[idx]);
+    cellStars[pos] = { idx, name: SIPSEONG_NAMES[idx], group: g };
+  }
+  const level = g => { const n = stars[g].n; return n === 0 ? 0 : n === 1 ? 1 : n === 2 ? 2 : 3; };
+  const spouseGroup = gender === 'F' ? '관성' : '재성';
+  const palaces = { parents: P.year.branch, career: P.month.branch, spouse: P.day.branch, children: P.hour ? P.hour.branch : null };
+
+  // 원국 지지 관계
+  const bl = [['년지', P.year.branch], ['월지', P.month.branch], ['일지', P.day.branch]];
+  if (P.hour) bl.push(['시지', P.hour.branch]);
+  const relations = [];
+  for (let i = 0; i < bl.length; i++) for (let j = i + 1; j < bl.length; j++) {
+    const t = relOf(bl[i][1], bl[j][1]);
+    if (t !== 'none') relations.push({ a: bl[i][0], b: bl[j][0], type: t, ko: REL_KO[t] });
+  }
+  const wealthBranches = bl.filter(([pos]) => cellStars[pos].group === '재성').map(([, b]) => b);
+  const shinsal = shinsalBranches(P.day.branch);
+  const natalYeokma = bl.some(([, b]) => b === shinsal.yeokmaBranch);
+  const natalDohwa = bl.some(([, b]) => b === shinsal.dohwaBranch);
+
+  // 대운 (만 나이 기준, 각 10년)
+  const list = saju.daeun.list.map(d => ({
+    age: d.age, endAge: d.age + 9, gz: d.gz, ...starEntry(ds, d.gz.stem, d.gz.branch),
+    fromYear: birth.year + d.age, toYear: birth.year + d.age + 9, current: false,
+  }));
+  let currentIdx = -1;
+  for (let i = 0; i < list.length; i++) if (age >= list[i].age && age <= list[i].endAge) currentIdx = i;
+  if (currentIdx >= 0) list[currentIdx].current = true;
+  const current = currentIdx >= 0 ? list[currentIdx] : null;
+  const next = currentIdx + 1 < list.length ? list[currentIdx + 1] : null;
+  const changeYear = next ? next.fromYear : null;
+  const nearChange = changeYear !== null && Math.abs(changeYear - today.year) <= 1;
+  const daeunF = { startAge: saju.daeun.startAge, list, currentIdx, current, next, changeYear, nearChange, beforeFirst: currentIdx < 0 };
+
+  // 세운 (작년~3년 뒤) · 월운 (올해·내년 12개월, 각 달 15일 기준 절기월)
+  const thisYear = today.year, nextYear = today.year + 1;
+  const decorate = (e, branch) => Object.assign(e, {
+    relSpouse: relOf(P.day.branch, branch), relCareer: relOf(P.month.branch, branch), relParents: relOf(P.year.branch, branch),
+    relChildren: P.hour ? relOf(P.hour.branch, branch) : 'none',
+    wonjin: WONJIN[P.day.branch] === branch, dohwa: branch === shinsal.dohwaBranch, yeokma: branch === shinsal.yeokmaBranch,
+    wealthClash: wealthBranches.some(b => branchRelation(b, branch) === 'chung'),
+  });
+  const seun = {};
+  for (let y = thisYear - 1; y <= thisYear + 3; y++) {
+    const yg = yearGanzhi(y, 6, 1);
+    seun[y] = decorate({ year: y, gz: gzName(gz60Index(yg.stem, yg.branch)), ...starEntry(ds, yg.stem, yg.branch) }, yg.branch);
+  }
+  const wolun = [];
+  for (const y of [thisYear, nextYear]) for (let m = 1; m <= 12; m++) {
+    const mg = monthGanzhi(y, m, 15);
+    wolun.push(decorate({ year: y, month: m, gz: gzName(gz60Index(mg.stem, mg.branch)), ...starEntry(ds, mg.stem, mg.branch) }, mg.branch));
+  }
+  const thisMonth = wolun.find(w => w.year === thisYear && w.month === today.month);
+
+  const movement = computeMovement({ spouseGroup, Y: seun[thisYear], M: thisMonth, nearChange });
+
+  return {
+    today, age, band, gender,
+    ilgan: { idx: ds, k: STEMS[ds].k, h: STEMS[ds].h, el: STEMS[ds].el, yang: STEMS[ds].yang },
+    strength: saju.strength, counts: saju.counts, yongshin: saju.yongshin,
+    pillars: P, gz: saju.gz, hourKnown: !!P.hour,
+    stars, cellStars, level, spouseGroup, palaces,
+    natal: { relations, wealthBranches, yeokma: natalYeokma, dohwa: natalDohwa },
+    daeun: daeunF, thisYear, nextYear, seun, wolun, thisMonth,
+    shinsal, movement,
+  };
+}
+
+// 5영역 3단계. 설계안 3.2 규칙. 도화·역마는 올해·이달 지지가 내 자리일 때만(동적) 센다.
+function computeMovement(f) {
+  const Y = f.Y, M = f.M;
+  const inG = (e, g) => !!e && (e.stemGroup === g || e.branchGroup === g);
+  const starOf = (e, g) => e.stemGroup === g ? e.stemName : e.branchName;
+  const hc = r => r === 'hap' || r === 'chung';
+  const push = (arr, code, condY, condM, starG) => {
+    if (condY) arr.push({ code, src: 'year', star: starG ? starOf(Y, starG) : null });
+    else if (condM) arr.push({ code, src: 'month', star: starG ? starOf(M, starG) : null });
+  };
+  const love = [], money = [], work = [], people = [], flow = [];
+  push(love, 'L_SPOUSE_IN', inG(Y, f.spouseGroup), inG(M, f.spouseGroup), f.spouseGroup);
+  push(love, 'L_PALACE', Y && hc(Y.relSpouse), M && hc(M.relSpouse));
+  push(love, 'L_DOHWA', Y && Y.dohwa, M && M.dohwa);
+
+  push(money, 'M_WEALTH_IN', inG(Y, '재성'), inG(M, '재성'), '재성');
+  push(money, 'M_RIVAL_IN', inG(Y, '비겁'), inG(M, '비겁'), '비겁');
+  push(money, 'M_WEALTH_CLASH', Y && Y.wealthClash, M && M.wealthClash);
+  push(money, 'M_OUTPUT_IN', inG(Y, '식상'), inG(M, '식상'), '식상');
+
+  push(work, 'W_OFFICER_IN', inG(Y, '관성'), inG(M, '관성'), '관성');
+  push(work, 'W_RESOURCE_IN', inG(Y, '인성'), inG(M, '인성'), '인성');
+  push(work, 'W_PALACE', Y && hc(Y.relCareer), M && hc(M.relCareer));
+
+  push(people, 'P_RIVAL_IN', inG(Y, '비겁'), inG(M, '비겁'), '비겁');
+  push(people, 'P_PALACE', Y && (hc(Y.relParents) || hc(Y.relCareer)), M && (hc(M.relParents) || hc(M.relCareer)));
+  push(people, 'P_WONJIN', Y && Y.wonjin, M && M.wonjin);
+
+  if (f.nearChange) flow.push({ code: 'F_DAEUN_CHANGE', src: 'daeun', star: null });
+  push(flow, 'F_DAY_CLASH', Y && Y.relSpouse === 'chung', M && M.relSpouse === 'chung');
+  push(flow, 'F_YEOKMA', Y && Y.yeokma, M && M.yeokma);
+
+  const lv = s => s.length === 0 ? 0 : s.length === 1 ? 1 : 2;
+  const areas = {
+    love: { level: lv(love), signals: love }, money: { level: lv(money), signals: money },
+    work: { level: lv(work), signals: work }, people: { level: lv(people), signals: people },
+    flow: { level: lv(flow), signals: flow },
+  };
+  const prio = ['flow', 'work', 'money', 'love', 'people'];
+  const order = AREA_KEYS.slice().sort((a, b) => {
+    const d = areas[b].signals.length - areas[a].signals.length;
+    if (d) return d;
+    const ya = areas[a].signals.some(s => s.src === 'year') ? 1 : 0, yb = areas[b].signals.some(s => s.src === 'year') ? 1 : 0;
+    if (yb - ya) return yb - ya;
+    return prio.indexOf(a) - prio.indexOf(b);
+  });
+  return { areas, key: order[0], order };
+}
+
+/* ==========================================================================
+ * 콘텐츠 — 10일간 캐릭터, 영역, 신호 문구, 용어, 안내자 대사, 질문 30개
+ * 말투: 현대적인 해요체, 짧은 문장. 단정 금지("~로 봐요", "~하기 쉬워요"까지).
+ * ========================================================================== */
+
+const LEVEL_WORDS = ['잔잔함', '보통', '강함'];
+
+const AREAS = {
+  love:   { key: 'love',   label: '사랑', color: '#A94A5A', noun: '인연' },
+  money:  { key: 'money',  label: '돈',   color: '#A8842F', noun: '재물' },
+  work:   { key: 'work',   label: '일',   color: '#2F4A6E', noun: '일' },
+  people: { key: 'people', label: '관계', color: '#5D7A5B', noun: '관계' },
+  flow:   { key: 'flow',   label: '흐름', color: '#6E5A8A', noun: '흐름' },
+};
+
+const GROUP_MEANING = {
+  비겁: '나와 같은 힘이에요. 사람, 경쟁, 나눔을 뜻해요',
+  식상: '내가 밖으로 내는 힘이에요. 표현, 활동, 재능이고 재성을 만드는 힘으로 봐요',
+  재성: '내가 다루는 것이에요. 돈, 현실, 결과를 뜻해요',
+  관성: '나를 다루는 힘이에요. 일, 책임, 규칙, 자리를 뜻해요',
+  인성: '나를 받쳐주는 힘이에요. 문서, 공부, 자격, 보호를 뜻해요',
+};
+
+// 일간 10유형 — 별명은 십간 물상의 통설. 캐릭터 그림은 나중에 img/ilgan/<k>.png 로 교체.
+const ILGAN = [
+  { k: '갑', h: '甲', name: '갑목', nick: '곧게 자라는 큰 나무', symbol: 'tree', keyword: '시작·정직·직진',
+    traits: ['앞으로 나아가는 힘이 커요. 시작을 잘해요.', '굽히는 건 서툴러요. 부러질지언정 휘지 않는 쪽이에요.', '사람들 앞에 서는 자리가 어울려요.'] },
+  { k: '을', h: '乙', name: '을목', nick: '바람을 타고 오르는 덩굴', symbol: 'vine', keyword: '유연·끈기·감각',
+    traits: ['부드럽지만 끈질겨요. 상황에 맞춰 길을 찾아요.', '혼자보다 기댈 곳이 있을 때 더 멀리 가요.', '눈치가 빠르고 사람 마음을 잘 읽어요.'] },
+  { k: '병', h: '丙', name: '병화', nick: '모두를 비추는 태양', symbol: 'sun', keyword: '밝음·솔직·몰입',
+    traits: ['밝고 솔직해요. 숨기는 걸 못 해요.', '에너지가 커서 주변이 같이 밝아져요.', '꾸준함보다 몰입이 강점이에요.'] },
+  { k: '정', h: '丁', name: '정화', nick: '밤을 지키는 촛불', symbol: 'candle', keyword: '온기·섬세·지속',
+    traits: ['조용하지만 오래 가요. 가까운 사람을 따뜻하게 해요.', '섬세해서 작은 변화도 알아차려요.', '속으로 많이 생각하고 늦게 말해요.'] },
+  { k: '무', h: '戊', name: '무토', nick: '쉽게 흔들리지 않는 산', symbol: 'mountain', keyword: '신뢰·중심·고집',
+    traits: ['듬직해요. 사람들이 기대러 와요.', '한번 정하면 잘 안 바꿔요. 느리지만 확실해요.', '속을 잘 안 보여서 오해를 사기도 해요.'] },
+  { k: '기', h: '己', name: '기토', nick: '무엇이든 키워내는 들판', symbol: 'field', keyword: '포용·실속·신중',
+    traits: ['받아들이는 폭이 넓어요. 가리지 않고 품어요.', '실속을 챙기는 눈이 있어요.', '속마음은 신중하고 걱정이 많은 편이에요.'] },
+  { k: '경', h: '庚', name: '경금', nick: '다듬을수록 단단해지는 쇠', symbol: 'iron', keyword: '결단·원칙·의리',
+    traits: ['결단이 빠르고 원칙이 분명해요.', '의리를 중요하게 여겨요. 한번 편이면 끝까지 편이에요.', '말이 직설이라 오해가 생길 때가 있어요.'] },
+  { k: '신', h: '辛', name: '신금', nick: '작지만 정확한 보석', symbol: 'gem', keyword: '정확·자존·예민',
+    traits: ['섬세하고 기준이 높아요. 대충을 못 견뎌요.', '자존심이 강해요. 인정받을 때 힘이 나요.', '겉은 차분한데 속은 예민해요.'] },
+  { k: '임', h: '壬', name: '임수', nick: '끝을 알 수 없는 바다', symbol: 'sea', keyword: '스케일·포용·깊이',
+    traits: ['생각의 스케일이 커요. 큰 그림을 그려요.', '유연하고 포용력이 있어요.', '감정의 깊이가 커서 혼자 잠길 때가 있어요.'] },
+  { k: '계', h: '癸', name: '계수', nick: '조용히 스며드는 비', symbol: 'rain', keyword: '직감·스밈·인내',
+    traits: ['조용히 스며들어 사람을 움직여요.', '직감이 좋아요. 분위기를 먼저 읽어요.', '속으로 삭이는 게 많아 지칠 수 있어요.'] },
+];
+// 천간합: 갑-기, 을-경, 병-신, 정-임, 무-계
+const ILGAN_MATCH = [5, 6, 7, 8, 9, 0, 1, 2, 3, 4];
+
+// 상징 그림 (단색 선 + 포인트). 캐릭터 일러스트가 오기 전까지의 자리표시.
+const SYMBOLS = {
+  tree: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M60 108V52"/><path d="M60 70 40 52M60 62 78 46M60 84 44 72"/><path d="M60 52c-22 0-30-16-24-30 6-14 28-14 24-2 8-14 34-10 30 6-4 14-14 26-30 26z" class="accent"/></g><path d="M22 108h76" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+  vine: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M40 110c0-30 40-30 40-60S48 20 48 8"/><path d="M62 40c8-2 14 4 12 12M46 70c-8 0-14 6-12 14M70 76c8 0 12 8 8 14"/><circle cx="48" cy="8" r="4" class="accent"/></g></svg>',
+  sun: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="60" cy="60" r="20" class="accent"/><path d="M60 14v12M60 94v12M14 60h12M94 60h12M27 27l9 9M84 84l9 9M27 93l9-9M84 36l9-9"/></g></svg>',
+  candle: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><rect x="46" y="54" width="28" height="50" rx="3"/><path d="M60 54V44"/><path d="M60 42c-8-8-8-16 0-24 8 8 8 16 0 24z" class="accent"/><path d="M36 104h48"/></g></svg>',
+  mountain: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 100 44 40l14 22 12-18 30 56z"/><path d="M44 40l-6 12 8 6 6-8" class="accent"/><path d="M10 100h100"/></g></svg>',
+  field: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M10 96c20-8 30-8 50 0s30 8 50 0"/><path d="M14 80c20-8 30-8 46 0s26 8 46 0"/><path d="M60 78V50"/><path d="M60 62c-8 0-12-6-10-14 8 0 12 6 10 14zM60 56c8 0 12-6 10-14-8 0-12 6-10 14z" class="accent"/></g></svg>',
+  iron: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 62h72l-10 16H40z"/><path d="M40 78v18h34V78"/><path d="M70 40 88 22" class="accent"/><path d="M50 62V46l20-6v22"/></g></svg>',
+  gem: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M36 34h48l18 24-42 44-42-44z"/><path d="M18 58h84M36 34l24 68 24-68M50 58l10-24 10 24" class="accent"/></g></svg>',
+  sea: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M10 64c14-12 26-12 40 0s26 12 40 0 20-8 20-8"/><path d="M10 84c14-12 26-12 40 0s26 12 40 0 20-8 20-8"/><circle cx="84" cy="30" r="10" class="accent"/></g></svg>',
+  rain: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M36 44c-14 0-16-20 0-20 2-14 26-14 30-2 14-6 26 8 18 22z"/><path d="M40 62l-6 14M58 62l-6 14M76 62l-6 14M48 84l-6 14M66 84l-6 14" class="accent"/></g></svg>',
+};
+
+// 5영역 신호 문구. {star}는 실제 십성 이름, {rel}은 합·충.
+const SIGNAL_TEXT = {
+  L_SPOUSE_IN: { year: '올해 인연의 별({star})이 들어와요', month: '이달에 인연의 별({star})이 들어와요' },
+  L_PALACE: { year: '올해 배우자 자리(일지)에 {rel}이 걸려요', month: '이달 배우자 자리(일지)에 {rel}이 걸려요' },
+  L_DOHWA: { year: '올해 지지가 내 도화 자리예요', month: '이달 지지가 내 도화 자리예요' },
+  M_WEALTH_IN: { year: '올해 재성({star})이 들어와요', month: '이달에 재성({star})이 들어와요' },
+  M_RIVAL_IN: { year: '올해 비겁({star})이 들어와요. 돈이 사람 쪽으로 움직여요', month: '이달에 비겁({star})이 들어와요. 돈이 사람 쪽으로 움직여요' },
+  M_WEALTH_CLASH: { year: '올해 원국의 재성 자리에 충이 걸려요', month: '이달 원국의 재성 자리에 충이 걸려요' },
+  M_OUTPUT_IN: { year: '올해 식상({star})이 들어와요. 버는 활동이 늘어요', month: '이달에 식상({star})이 들어와요. 버는 활동이 늘어요' },
+  W_OFFICER_IN: { year: '올해 관성({star})이 들어와요. 일과 책임이 커져요', month: '이달에 관성({star})이 들어와요. 일과 책임이 커져요' },
+  W_RESOURCE_IN: { year: '올해 인성({star})이 들어와요. 문서·공부·자격이 움직여요', month: '이달에 인성({star})이 들어와요. 문서·공부·자격이 움직여요' },
+  W_PALACE: { year: '올해 직업 자리(월지)에 {rel}이 걸려요', month: '이달 직업 자리(월지)에 {rel}이 걸려요' },
+  P_RIVAL_IN: { year: '올해 비겁({star})이 들어와요. 사람이 늘고 부딪혀요', month: '이달에 비겁({star})이 들어와요. 사람이 늘고 부딪혀요' },
+  P_PALACE: { year: '올해 부모·형제 자리에 {rel}이 걸려요', month: '이달 부모·형제 자리에 {rel}이 걸려요' },
+  P_WONJIN: { year: '올해 지지가 일지와 원진이에요. 미묘하게 어긋나요', month: '이달 지지가 일지와 원진이에요. 미묘하게 어긋나요' },
+  F_DAEUN_CHANGE: { daeun: '대운이 바뀌는 시점이에요. 10년 단위의 큰 흐름이 갈려요' },
+  F_DAY_CLASH: { year: '올해 지지가 일지와 충이에요. 자리를 옮기고 싶어져요', month: '이달 지지가 일지와 충이에요. 자리를 옮기고 싶어져요' },
+  F_YEOKMA: { year: '올해 지지가 내 역마 자리예요. 이동수가 있어요', month: '이달 지지가 내 역마 자리예요. 이동수가 있어요' },
+};
+const QUIET_TEXT = {
+  love: '올해도 이달도 인연 쪽은 조용해요. 지금 관계를 다지는 시기예요',
+  money: '올해도 이달도 돈 쪽은 조용해요. 크게 들어오지도 나가지도 않아요',
+  work: '올해도 이달도 일 쪽은 조용해요. 하던 일을 이어가는 시기예요',
+  people: '올해도 이달도 관계 쪽은 조용해요. 새 사람보다 익숙한 사람과의 시기예요',
+  flow: '큰 전환은 없어요. 지금 흐름이 이어지는 시기예요',
+};
+
+// 용어 사전 — 안내자가 한 줄로 풀어주는 말
+const GLOSSARY = {
+  비겁: '비견·겁재를 묶어 부르는 말이에요. 나와 같은 힘, 그러니까 사람과 경쟁을 뜻해요.',
+  식상: '식신·상관을 묶어 부르는 말이에요. 내가 밖으로 내는 힘, 표현과 활동이에요.',
+  재성: '편재·정재를 묶어 부르는 말이에요. 돈과 현실, 내가 다루는 것을 뜻해요.',
+  관성: '편관·정관을 묶어 부르는 말이에요. 일과 책임, 나를 다루는 힘이에요.',
+  인성: '편인·정인을 묶어 부르는 말이에요. 문서·공부·자격, 나를 받쳐주는 힘이에요.',
+  대운: '10년 단위로 바뀌는 큰 흐름이에요. 같은 사주라도 대운이 다르면 시기가 달라요.',
+  세운: '그 해의 흐름이에요. 해마다 들어오는 십성이 달라요.',
+  월운: '그 달의 흐름이에요. 세운 안에서 달마다 강약이 생겨요.',
+  신강: '일간, 그러니까 나를 받쳐주는 오행이 많은 상태예요. 밀어붙이는 힘이 있어요.',
+  신약: '나를 받쳐주는 오행이 적은 상태예요. 약한 게 아니라 환경의 도움이 필요한 구조예요.',
+  용신: '내 사주의 균형을 잡아주는 오행이에요. 부족한 쪽을 채워주는 기운이에요.',
+  합: '두 글자가 서로 끌어당기는 관계예요. 묶이고 모이는 일이 생겨요.',
+  충: '두 글자가 서로 부딪히는 관계예요. 흔들리고 옮기는 일이 생겨요.',
+  원진: '서로 미묘하게 어긋나는 관계예요. 크게 부딪히진 않는데 마음이 안 맞아요.',
+  역마: '이동을 뜻하는 자리예요. 이사, 출장, 전근 같은 움직임이 생기기 쉬워요.',
+  도화: '사람을 끄는 자리예요. 인기와 인연이 움직여요.',
+  배우자궁: '일지, 그러니까 태어난 날의 지지예요. 배우자와 가까운 관계를 보는 자리예요.',
+  재다신약: '돈이 나보다 힘이 센 구조를 부르는 말이에요. 능력 문제가 아니라 순서 문제예요.',
+  관인상생: '관성이 인성을 키우고 인성이 나를 받쳐주는 구조예요. 조직 안에서 자라기 좋은 흐름이에요.',
+  식상생재: '식상이 재성을 만드는 구조예요. 내가 움직여서 돈을 만드는 흐름이에요.',
+};
+
+// 안내자 대사 — 이름·외형은 미정. 역할은 설명과 연결.
+const GUIDE = {
+  home: '오늘은 뭐가 제일 궁금하세요? 하나만 골라보세요.',
+  home2: '질문 고르기 어려우면, 지금 내 사주에서 뭐가 움직이는지부터 볼게요.',
+  input: '태어난 시간을 모르면 비워도 돼요. 시간이 필요한 부분은 따로 표시해 드릴게요.',
+  loading: '만세력을 계산하고 있어요. 절기까지 맞춰 보는 중이에요.',
+  ask: '궁금한 걸 하나 골라보세요. 첫 질문은 그냥 풀어드릴게요.',
+  section: '여기서 궁금해지는 게 있죠? 이런 것도 물어볼 수 있어요.',
+  reportEnd: '궁금증이 남았나요? 방금 본 풀이를 바탕으로 이어서 물어보세요.',
+  revisit: '지난번 이어서 물어볼까요?',
+  locked: '가안이라 결제 없이 바로 열려요. 실제 서비스에서는 여기서 결제가 들어가요.',
+  error: '지금은 답을 만들지 못했어요. 질문은 차감되지 않았어요. 잠시 뒤 다시 눌러 주세요.',
+  quota: '이 리포트에 포함된 질문을 다 썼어요. 실제 서비스에서는 여기서 추가 묶음을 안내해요.',
+  chatHint: '예: 그럼 이때 이직해도 괜찮아요?',
+  typeEnd: '이건 시작이에요. 지금 내 사주에서 뭐가 움직이는지 보러 갈까요?',
+};
+
+// 선 긋기 문장
+const GUARDS = {
+  money: '금액 판단은 사주가 대신하지 않아요. 투자와 대출은 재무 상담이 필요해요.',
+  health: '건강은 사주로 진단하지 않아요. 몸이 계속 불편하면 병원이 먼저예요.',
+  legal: '계약과 법률 판단은 사주가 대신하지 않아요. 전문가 확인이 필요해요.',
+  relation: '만나고 헤어지는 결정은 사주가 정해줄 수 없어요. 두 사람의 대화가 정해요.',
+  choice: '할지 말지는 사주가 정해줄 수 없어요. 시기와 태도까지만 봐드릴게요.',
+};
+
+// 질문 30개. type: when(시기) which(둘 중) why(원인) ok(여부) daeun(대운) year(한 해) match(맞는 사람)
+// groups에 'SPOUSE'는 성별에 따라 관성/재성으로 바뀜. names는 특정 십성.
+const QUESTIONS = [
+  // 돈
+  { id: 'why_leak', area: 'money', type: 'why', report: 'wealth', tag: 'pattern', follow: ['money_when', 'save_vs_invest'],
+    text: '나는 왜 돈이 들어오면 꼭 나갈 일이 생길까?',
+    conclusion: '돈이 안 들어오는 사주가 아니에요. 들어온 돈이 흐르는 길이 정해져 있는 쪽이에요.',
+    why: [
+      { cond: 'rival_strong', text: '당신 사주에는 재성 곁에 비겁이 붙어 있어요. 명리에서는 이 자리를 돈을 나눠 쓰게 되는 자리로 봐요. 사람 때문에 돈이 움직이기 쉬워요.' },
+      { cond: 'wealth_weak_self_weak', text: '재성이 약하고 일간도 약한 편이에요. 명리에서는 이걸 돈이 머물 그릇이 아직 작은 구조로 봐요. 들어와도 오래 못 쥐는 느낌이 나요.' },
+      { cond: 'output_strong', text: '식상이 강해요. 버는 힘보다 쓰고 벌이는 힘이 앞서요. 돈이 활동비로 먼저 나가요.' },
+      { cond: 'default', text: '돈이 나가는 구조가 특별히 강하진 않아요. 시기의 문제일 가능성이 커요. 비겁이 드는 해에 유독 지출이 늘어요.' },
+    ],
+    condition: '버는 것보다 지키는 쪽이 과제예요. 돈이 들어온 달에 바로 나갈 곳을 정하지 않는 게 방법이에요.' },
+  { id: 'money_when', area: 'money', type: 'when', report: 'wealth', tag: 'timing', follow: ['invest_ok', 'biz_start_when'],
+    text: { default: '올해 돈이 크게 움직이는 달은?', '20s': '내가 돈을 벌기 시작하는 시기는?', '40s': '앞으로 재물이 크게 움직이는 시기는?' },
+    groups: ['재성', '식상'], palace: null, mode: 'in',
+    condition: '움직인다는 건 들어오기도 나가기도 한다는 뜻이에요. 강한 달에는 큰 결정을 한 번에 몰지 않는 게 좋아요.', guard: 'money' },
+  { id: 'job_or_biz', area: 'money', type: 'which', report: 'wealth', tag: 'type', follow: ['biz_start_when', 'change_job_ok'],
+    text: '나는 직장형일까 사업형일까?',
+    which: { left: { label: '직장형', groups: ['관성', '인성'] }, right: { label: '사업형', groups: ['식상', '재성'] },
+      texts: { left: '조직 안에서 자리를 받고 키우는 쪽이 맞아요. 관성과 인성이 받쳐줘서 규칙 안에서 더 강해져요.', right: '내가 움직여서 만드는 쪽이 맞아요. 식상과 재성이 받쳐줘서 규칙보다 결과로 평가받을 때 강해져요.', both: '둘 다 있어요. 조직 안에서 내 사업처럼 일할 때 제일 잘 돼요. 완전한 독립보다 반독립이 맞아요.', neither: '어느 쪽도 강하게 드러나진 않아요. 이럴 땐 대운이 정해요. 지금 대운의 십성을 보면 방향이 보여요.' } },
+    condition: '형이 정해졌다고 지금 당장 바꾸라는 뜻은 아니에요. 시기는 대운과 세운이 따로 정해요.' },
+  { id: 'marry_money', area: 'money', type: 'why', report: 'wealth', tag: 'pattern', follow: ['marriage_when', 'money_when'],
+    text: '결혼하면 내 재물운은 달라질까?',
+    conclusion: '달라져요. 방향은 사주마다 달라요.',
+    why: [
+      { cond: 'male_wealth_strong', text: '남성 사주에서 배우자는 재성이에요. 당신은 재성이 강해서 결혼과 돈이 같은 별로 움직여요. 배우자가 생기면 돈의 규모도 같이 커지는 구조예요.' },
+      { cond: 'male', text: '남성 사주에서 배우자는 재성이에요. 재성이 약한 편이라 결혼이 돈을 늘리기보다 돈의 쓰임을 정리해주는 쪽이에요.' },
+      { cond: 'female_wealth_strong', text: '여성 사주에서 배우자는 관성이고, 재성은 관성을 키우는 별이에요. 당신은 재성이 강해서 내 돈이 배우자 자리를 받쳐주는 구조예요. 결혼 뒤에도 돈은 내가 쥐는 쪽이에요.' },
+      { cond: 'default', text: '여성 사주에서 배우자는 관성이고, 재성은 관성을 키우는 별이에요. 재성이 강하지 않아서 결혼 뒤 돈은 둘이 같이 만드는 흐름이 돼요.' },
+    ],
+    condition: '재물운이 달라지는 시점은 결혼식이 아니라 배우자성이 드는 해예요. 시기 표를 같이 보세요.' },
+  { id: 'invest_ok', area: 'money', type: 'ok', report: 'wealth', tag: 'now', follow: ['money_when', 'save_vs_invest'],
+    text: '지금 투자해도 괜찮을까?',
+    groups: ['재성'], neg: ['비겁'], palace: null,
+    ok: { yes: '흐름은 열려 있어요. 올해 재성이 들어와서 돈이 움직이는 해예요.', mid: '흐름은 보통이에요. 크게 열리지도 막히지도 않아요.', no: '올해는 비겁이 들어와요. 명리에서는 돈이 사람 쪽으로 새기 쉬운 해로 봐요. 남의 말로 시작하는 투자는 피하는 게 맞아요.' },
+    condition: '한다면 강한 달 하나에 몰지 말고 나눠서 하는 게 사주 흐름과 맞아요.', guard: 'money' },
+  { id: 'save_vs_invest', area: 'money', type: 'which', report: 'wealth', tag: 'type', follow: ['invest_ok', 'why_leak'],
+    text: '내 사주에는 저축과 투자가 어떻게 달라?',
+    which: { left: { label: '지키는 쪽', groups: ['인성'], names: ['정재'] }, right: { label: '굴리는 쪽', groups: ['식상'], names: ['편재'] },
+      texts: { left: '지키는 쪽이 맞아요. 정재와 인성이 받쳐줘서 꾸준히 쌓는 방식이 결과가 좋아요. 큰 한 방보다 오래 가는 쪽이에요.', right: '굴리는 쪽이 맞아요. 편재와 식상이 받쳐줘서 돈을 움직일 때 커져요. 대신 나가는 속도도 빨라요.', both: '둘 다 있어요. 반은 묶고 반은 굴리는 구조가 사주와 맞아요.', neither: '어느 쪽도 강하지 않아요. 이럴 땐 방식보다 시기가 중요해요. 재성이 드는 해에만 움직이는 게 맞아요.' } },
+    condition: '방식이 맞아도 시기가 어긋나면 결과가 달라요. 강한 해와 약한 해를 표로 확인하세요.', guard: 'money' },
+
+  // 일
+  { id: 'job_when', area: 'work', type: 'when', report: 'work', tag: 'timing', follow: ['change_job_ok', 'promotion'],
+    text: { default: '이직하기 좋은 달은?', '20s': '취업·이직에 좋은 달은?', '40s': '일의 판을 바꾸기 좋은 시기는?' },
+    groups: ['관성', '인성'], palace: 'career', mode: 'in',
+    condition: '관성이 드는 달은 자리가 생기는 달이고, 인성이 드는 달은 문서와 자격이 움직이는 달이에요. 둘이 겹치는 달이 제일 강해요.' },
+  { id: 'change_job_ok', area: 'work', type: 'ok', report: 'work', tag: 'now', follow: ['job_when', 'work_style'],
+    text: '지금 이직해도 괜찮을까?',
+    groups: ['관성'], neg: [], palace: 'career',
+    ok: { yes: '움직임이 있는 해예요. 올해 관성이 들어오거나 직업 자리가 흔들려서, 옮기고 싶은 마음이 사주에서도 보여요.', mid: '흐름은 보통이에요. 옮겨도 머물러도 크게 다르지 않은 해예요.', no: '올해는 일 쪽이 조용해요. 지금 옮기면 조건이 크게 좋아지기보다 자리만 바뀌기 쉬워요.' },
+    condition: '옮긴다면 관성이 드는 달에 결정하고, 인성이 드는 달에 서류를 마무리하는 순서가 사주 흐름과 맞아요.', guard: 'choice' },
+  { id: 'biz_continue', area: 'work', type: 'which', report: 'work', tag: 'type', follow: ['biz_start_when', 'money_when'],
+    text: '사업을 계속하는 게 맞을까?',
+    which: { left: { label: '조직·안정', groups: ['관성', '인성'] }, right: { label: '독립·확장', groups: ['식상', '재성'] },
+      texts: { left: '사주 구조는 조직 쪽이 편해요. 사업을 계속한다면 혼자 다 하기보다 규칙과 파트너를 두는 방식이 맞아요.', right: '사주 구조는 독립 쪽이에요. 식상과 재성이 받쳐줘서 내가 움직일수록 커지는 구조예요. 계속하는 게 흐름과 맞아요.', both: '둘 다 있어요. 사업을 계속하되 조직처럼 운영하는 게 맞아요. 시스템을 만들면 강해져요.', neither: '구조만으로는 답이 안 나와요. 지금 대운과 올해 세운이 정해요. 시기 표를 보세요.' } },
+    condition: '계속할지 말지는 사주가 정해줄 수 없어요. 어떤 방식이 내 구조와 맞는지까지만 봐드릴게요.', guard: 'choice' },
+  { id: 'biz_start_when', area: 'work', type: 'when', report: 'work', tag: 'timing', follow: ['job_or_biz', 'invest_ok'],
+    text: '사업을 시작한다면 언제가 좋아?',
+    groups: ['식상', '재성'], palace: null, mode: 'in',
+    condition: '식상이 드는 시기는 판을 벌이기 좋고, 재성이 드는 시기는 결과가 붙기 좋아요. 시작은 식상, 확장은 재성 쪽이 맞아요.', guard: 'money' },
+  { id: 'work_style', area: 'work', type: 'which', report: 'work', tag: 'type', follow: ['job_when', 'move_when'],
+    text: '나는 한 우물형일까 이동형일까?',
+    which: { left: { label: '한 우물형', groups: ['인성'], names: ['정관'] }, right: { label: '이동형', groups: ['식상'], names: ['편관'], yeokma: true },
+      texts: { left: '한 우물형이에요. 정관과 인성이 받쳐줘서 오래 있을수록 인정이 쌓여요.', right: '이동형이에요. 식상과 편관, 역마가 움직여서 자리를 옮길 때 성장해요. 한 곳에 오래 있으면 답답해져요.', both: '둘 다 있어요. 한 회사 안에서 역할을 바꾸는 방식이 맞아요.', neither: '어느 쪽도 강하지 않아요. 흐름이 정해요. 역마가 드는 해에 움직이고 아닌 해는 머무는 게 맞아요.' } },
+    condition: '형은 성향이고 시기는 따로예요. 이동형이라도 관성이 드는 해에는 머무는 게 결과가 좋아요.' },
+  { id: 'promotion', area: 'work', type: 'when', report: 'work', tag: 'timing', follow: ['job_when', 'change_job_ok'],
+    text: '승진·인정을 받는 시기는?',
+    groups: ['관성'], palace: 'career', mode: 'in',
+    condition: '관성이 드는 시기에 자리가 생겨요. 인정은 그 자리에서 결과를 낸 다음에 따라와요.' },
+
+  // 사랑
+  { id: 'love_when', area: 'love', type: 'when', report: 'love', tag: 'timing', follow: ['match_type', 'marriage_when'],
+    text: '올해 새 인연이 들어오는 시기는?',
+    groups: ['SPOUSE'], palace: 'spouse', mode: 'in', dohwa: true,
+    condition: '인연의 별이 드는 달은 만남이 생기기 쉬운 달이에요. 만남을 만드는 건 사주가 아니라 나가는 발이에요.' },
+  { id: 'match_type', area: 'love', type: 'match', report: 'love', tag: 'type', follow: ['love_when', 'why_love_fail'],
+    text: '나는 어떤 사람과 잘 맞아?',
+    condition: '맞는 결이 있다는 뜻이지 아닌 사람과 안 된다는 뜻은 아니에요. 잘 맞는 사람은 편하고, 다른 사람은 배우게 해요.' },
+  { id: 'marriage_when', area: 'love', type: 'when', report: 'love', tag: 'timing', follow: ['marry_money', 'match_type'],
+    text: { default: '결혼 흐름이 맞는 해는?', '30s': '지금 만나는 사람과 결혼, 흐름이 맞는 해는?', '40s': '인연이 다시 드는 해는?' },
+    groups: ['SPOUSE'], palace: 'spouse', mode: 'in',
+    condition: '배우자 자리에 합이 드는 해가 결혼 흐름과 제일 맞아요. 충이 드는 해는 결정을 미루는 게 좋아요.', guard: 'relation' },
+  { id: 'spouse_shake', area: 'love', type: 'when', report: 'love', tag: 'pattern', follow: ['marriage_when', 'why_love_fail'],
+    text: { default: '관계가 흔들리기 쉬운 시기는?', '40s': '부부 사이가 흔들리는 해는 언제야?' },
+    groups: [], palace: 'spouse', mode: 'clash',
+    condition: '흔들린다는 건 깨진다는 뜻이 아니에요. 그 시기에 큰 결정을 하지 않는 게 방법이에요.', guard: 'relation' },
+  { id: 'why_love_fail', area: 'love', type: 'why', report: 'love', tag: 'pattern', follow: ['match_type', 'love_when'],
+    text: '나는 왜 연애가 오래 못 갈까?',
+    conclusion: '못 가는 게 아니라, 가는 방식이 정해져 있어요.',
+    why: [
+      { cond: 'spouse_palace_clash', text: '원국에서 배우자 자리에 충이 걸려 있어요. 명리에서는 이걸 관계가 가까워질수록 흔들리기 쉬운 구조로 봐요. 거리 조절이 관계의 기술이에요.' },
+      { cond: 'female_output_strong', text: '식상이 강해요. 여성 사주에서 식상은 배우자성인 관성을 누르는 힘이에요. 내 표현이 앞서면 상대가 작아져요. 말을 반으로 줄이면 오래 가요.' },
+      { cond: 'rival_strong', text: '비겁이 강해요. 명리에서는 이걸 경쟁과 비교가 관계에 들어오는 구조로 봐요. 상대와 나를 견주기 시작하면 식어요.' },
+      { cond: 'weak_self', text: '일간이 약한 편이에요. 맞춰주다 지치는 쪽이에요. 오래 가는 관계는 내가 덜 맞춰도 되는 상대예요.' },
+      { cond: 'default', text: '구조에 큰 문제는 없어요. 시기가 정해요. 배우자 자리에 충이 드는 해에 유독 흔들려요.' },
+    ],
+    condition: '오래 가는 인연은 상대를 고르는 문제이기도 해요. 잘 맞는 결을 같이 보세요.' },
+  { id: 'reunion_ok', area: 'love', type: 'ok', report: 'love', tag: 'now', follow: ['spouse_shake', 'love_when'],
+    text: '헤어진 사람과 다시 만나도 될까?',
+    groups: ['SPOUSE'], neg: [], palace: 'spouse',
+    ok: { yes: '흐름은 열려 있어요. 올해 배우자 자리가 움직여서 지난 인연이 다시 닿기 쉬운 해예요.', mid: '흐름은 보통이에요. 다시 만나도 새로 만나도 사주는 중립이에요.', no: '올해는 인연 쪽이 조용해요. 다시 만나면 예전 문제가 그대로 돌아오기 쉬워요.' },
+    condition: '다시 만난다면 헤어진 이유가 시기 문제였는지 구조 문제였는지 먼저 보세요. 구조라면 같은 자리에서 다시 흔들려요.', guard: 'relation' },
+
+  // 관계
+  { id: 'who_avoid', area: 'people', type: 'why', report: 'flow', tag: 'pattern', follow: ['partner_ok', 'boundary'],
+    text: '동업이나 팀에서 조심할 사람 유형은?',
+    conclusion: '조심할 사람은 나와 부딪히는 별을 가진 사람이에요.',
+    why: [
+      { cond: 'rival_strong', text: '비겁이 강해요. 나와 비슷한 사람, 그러니까 같은 걸 원하는 사람과 부딪혀요. 역할이 겹치는 사람을 조심하세요.' },
+      { cond: 'officer_strong', text: '관성이 강해요. 위에서 누르는 사람, 규칙을 앞세우는 사람 앞에서 작아져요. 권한을 나눠주지 않는 사람을 조심하세요.' },
+      { cond: 'output_strong', text: '식상이 강해요. 말이 앞서는 사람과 붙으면 둘 다 말만 커져요. 실행을 맡을 사람이 따로 필요해요.' },
+      { cond: 'default', text: '특정 유형이 강하게 걸리진 않아요. 이럴 땐 비겁이 드는 해에 만난 사람을 조심하면 돼요. 그 해에 맺은 관계가 돈 문제로 이어지기 쉬워요.' },
+    ],
+    condition: '조심한다는 건 피하라는 뜻이 아니라 역할을 문서로 나누라는 뜻이에요.', guard: 'legal' },
+  { id: 'partner_ok', area: 'people', type: 'ok', report: 'wealth', tag: 'now', follow: ['who_avoid', 'why_people_money'],
+    text: '동업해도 괜찮을까?',
+    groups: ['재성'], neg: ['비겁'], palace: null,
+    ok: { yes: '흐름은 열려 있어요. 올해 재성이 들어와서 같이 만드는 결과가 붙는 해예요.', mid: '흐름은 보통이에요. 동업 자체보다 역할 분담이 결과를 정해요.', no: '올해는 비겁이 들어와요. 명리에서는 동업으로 돈이 나뉘기 쉬운 해로 봐요. 계약을 서두르지 않는 게 맞아요.' },
+    condition: '한다면 돈과 역할을 문서로 먼저 나누세요. 비겁이 드는 해에 문서 없는 동업이 제일 흔들려요.', guard: 'legal' },
+  { id: 'family_when', area: 'people', type: 'when', report: 'flow', tag: 'timing', follow: ['boundary', 'rest_when'],
+    text: { default: '부모님과 부딪히는 시기는?', '40s': '자녀와 부딪히는 시기와 이유는?' },
+    groups: [], palace: 'family', mode: 'clash',
+    condition: '부딪히는 시기는 내가 아니라 자리가 흔들리는 시기예요. 그 달에는 결론을 내려 하지 말고 듣는 쪽이 맞아요.' },
+  { id: 'people_luck', area: 'people', type: 'when', report: 'flow', tag: 'timing', follow: ['job_when', 'partner_ok'],
+    text: '귀인이 들어오는 시기는?',
+    groups: ['인성'], palace: 'parents', mode: 'in',
+    condition: '인성이 드는 시기에 도와주는 사람이 나타나요. 귀인은 찾아가는 게 아니라 부탁할 때 생겨요.' },
+  { id: 'why_people_money', area: 'people', type: 'why', report: 'wealth', tag: 'pattern', follow: ['why_leak', 'partner_ok'],
+    text: '나는 왜 사람 때문에 돈이 움직일까?',
+    conclusion: '사람과 돈이 같은 자리에서 움직이는 구조예요.',
+    why: [
+      { cond: 'rival_strong', text: '비겁이 강해요. 명리에서는 비겁이 재성을 나누는 힘이라고 봐요. 사람이 늘면 돈이 나뉘고, 사람이 줄면 돈이 모여요.' },
+      { cond: 'wealth_weak', text: '재성이 약한 편이에요. 돈이 나 혼자 서 있기보다 사람을 타고 들어와요. 좋은 사람은 돈을 데려오고 나쁜 사람은 돈을 데려가요.' },
+      { cond: 'default', text: '구조가 강하진 않아요. 비겁이 드는 해에만 이 흐름이 세져요. 그 해의 빌려주기와 보증만 피하면 돼요.' },
+    ],
+    condition: '빌려주는 돈은 돌려받는 돈이 아니라 주는 돈이라고 생각하는 게 사주 흐름과 맞아요.', guard: 'legal' },
+  { id: 'boundary', area: 'people', type: 'which', report: 'flow', tag: 'type', follow: ['who_avoid', 'work_style'],
+    text: '나는 맞춰주는 쪽일까 이끄는 쪽일까?',
+    which: { left: { label: '이끄는 쪽', groups: ['비겁'], strength: 'strong' }, right: { label: '맞춰주는 쪽', groups: ['관성'], strength: 'weak' },
+      texts: { left: '이끄는 쪽이에요. 비겁이 받쳐주고 일간도 힘이 있어서 앞에 설 때 편해요.', right: '맞춰주는 쪽이에요. 관성이 받쳐줘서 규칙과 상대를 먼저 봐요. 뒤에서 받칠 때 오래 가요.', both: '둘 다 있어요. 상황에 따라 앞뒤를 바꾸는 사람이에요. 그래서 오해도 사요.', neither: '어느 쪽도 강하지 않아요. 관계에서 역할을 정해두면 편해요. 정하지 않으면 끌려가요.' } },
+    condition: '역할은 성향이지 우열이 아니에요. 맞춰주는 쪽이 팀을 오래 가게 해요.' },
+
+  // 흐름
+  { id: 'daeun_change', area: 'flow', type: 'daeun', report: 'flow', tag: 'daeun', follow: ['this_year', 'move_when'],
+    text: { default: '내 인생의 흐름이 바뀌는 지점은?', '20s': '20대 후반에 내 인생이 바뀌는 지점은?', '40s': '인생 후반 대운은 어떻게 흘러?' },
+    condition: '대운이 바뀌는 해 전후 1년은 큰 결정을 나눠서 하는 게 맞아요. 흐름이 갈리는 중이라 결과가 늦게 보여요.' },
+  { id: 'move_ok', area: 'flow', type: 'ok', report: 'flow', tag: 'now', follow: ['move_when', 'this_year'],
+    text: '올해 이사해도 괜찮을까?',
+    groups: ['인성'], neg: [], palace: 'spouse', move: true,
+    ok: { yes: '움직임이 있는 해예요. 역마나 충, 인성이 들어와서 자리를 옮기는 흐름이 사주에서도 보여요.', mid: '흐름은 보통이에요. 이사해도 머물러도 큰 차이는 없어요.', no: '올해는 이동 쪽이 조용해요. 꼭 가야 한다면 인성이 드는 달에 계약하는 게 맞아요.' },
+    condition: '이사는 문서가 따르는 일이에요. 인성이 드는 달에 계약하고, 충이 드는 달은 피하는 게 흐름과 맞아요.', guard: 'legal' },
+  { id: 'move_when', area: 'flow', type: 'when', report: 'flow', tag: 'timing', follow: ['move_ok', 'job_when'],
+    text: '이사하기 좋은 시기는?',
+    groups: ['인성'], palace: 'spouse', mode: 'move',
+    condition: '역마가 드는 달은 움직이기 좋고, 인성이 드는 달은 계약하기 좋아요. 둘이 겹치면 제일 강해요.', guard: 'legal' },
+  { id: 'this_year', area: 'flow', type: 'year', report: 'flow', tag: 'year', follow: ['next_year', 'daeun_change'],
+    text: '올해는 나에게 어떤 해야?', which_year: 'this',
+    condition: '한 해의 흐름은 대운 안에서 읽어야 해요. 같은 세운이라도 대운이 다르면 결과가 달라요.' },
+  { id: 'next_year', area: 'flow', type: 'year', report: 'flow', tag: 'year', follow: ['this_year', 'money_when'],
+    text: '내년은 어떻게 흘러?', which_year: 'next',
+    condition: '내년 준비는 올해 하반기에 시작하는 게 맞아요. 세운은 입춘부터 바뀌어요.' },
+  { id: 'rest_when', area: 'flow', type: 'when', report: 'flow', tag: 'timing', follow: ['this_year', 'family_when'],
+    text: '몸을 챙겨야 할 시기는?',
+    groups: ['관성'], palace: 'spouse', mode: 'clash',
+    condition: '충이 드는 달과 관성이 겹치는 달은 몸보다 일이 앞서기 쉬워요. 그 달에는 일정을 비워두는 게 방법이에요.', guard: 'health' },
+];
+
+const HOME_QUESTIONS = ['job_or_biz', 'money_when', 'change_job_ok', 'move_when', 'why_leak', 'love_when'];
+
+/* ==========================================================================
+ * 컴포저 — 사실(facts) → 문장. 모든 문장은 해요체, 단정 금지.
+ * 시기는 엔진 표(세운·월운·대운)에서만 가져온다. 여기서 연도를 지어내지 않는다.
+ * ========================================================================== */
+
+const REPORT_DEFS = {}; // reports/*.js 가 채운다
+
+function josa(word, a, b) {
+  const s = String(word); const c = s.charCodeAt(s.length - 1);
+  if (c < 0xAC00 || c > 0xD7A3) return s + a;
+  return s + (((c - 0xAC00) % 28) ? a : b);
+}
+const iga = w => josa(w, '이', '가');
+const eunneun = w => josa(w, '은', '는');
+const pt = (w, a, b) => josa(w, a, b).slice(String(w).length); // 조사만
+const levelWord = l => LEVEL_WORDS[l] || LEVEL_WORDS[0];
+const pickText = (t, band) => typeof t === 'string' ? t : (t[band] || t.default);
+const uniq = a => [...new Set(a)];
+const sentences = t => t.split(/(?<=[.!?])\s+/).filter(Boolean);
+
+function resolveGroups(groups, facts) {
+  return (groups || []).map(g => g === 'SPOUSE' ? facts.spouseGroup : g);
+}
+
+// ---- 린트: 단정·금지 표현 ------------------------------------------------
+const BANNED = [/반드시/, /무조건/, /확실히/, /100%/, /틀림없/, /부자 됩니다/, /돈이 들어옵니다/, /죽/, /병명/, /암 /, /우울증/, /사망/, /파산합니다/, /습니다/, /하느니라/, /하시게/];
+function lintText(text) {
+  return BANNED.filter(r => r.test(text)).map(r => r.source);
+}
+function termsIn(text) {
+  return Object.keys(GLOSSARY).filter(k => text.includes(k)).sort((a, b) => b.length - a.length);
+}
+
+// ---- 신호 문구 ---------------------------------------------------------------
+function signalText(facts, sig) {
+  const t = SIGNAL_TEXT[sig.code] && SIGNAL_TEXT[sig.code][sig.src];
+  if (!t) return '';
+  const e = sig.src === 'month' ? facts.thisMonth : facts.seun[facts.thisYear];
+  let rel = '';
+  if (sig.code === 'L_PALACE') rel = REL_KO[e.relSpouse];
+  if (sig.code === 'W_PALACE') rel = REL_KO[e.relCareer];
+  if (sig.code === 'P_PALACE') rel = REL_KO[e.relParents] || REL_KO[e.relCareer];
+  return t.replace('{star}', sig.star || '').replace('{rel}', rel || '합');
+}
+function areaReason(facts, key) {
+  const a = facts.movement.areas[key];
+  if (!a.signals.length) return QUIET_TEXT[key];
+  return signalText(facts, a.signals[0]);
+}
+
+const AREA_ATTITUDE = {
+  love: ['', '가볍게 움직이는 정도예요. 지금 관계를 돌보는 게 먼저예요.', '만남과 결정이 한꺼번에 올 수 있어요. 결정은 천천히, 만남은 열어두세요.'],
+  money: ['', '작게 움직여요. 지키는 쪽에 무게를 두세요.', '들어오고 나가는 폭이 커요. 큰 결정은 나눠서 하세요.'],
+  work: ['', '하던 일이 조금 넓어지는 정도예요.', '역할과 자리가 바뀌기 쉬워요. 맡을지 말지보다 어디까지 맡을지를 정하세요.'],
+  people: ['', '익숙한 사람과의 시기예요. 새 관계는 천천히요.', '사람이 늘고 부딪히기도 해요. 문서와 역할을 먼저 나누세요.'],
+  flow: ['', '작은 이동이나 변화가 있어요. 준비만 해두면 돼요.', '큰 전환이에요. 결과가 늦게 보이니 조급해하지 마세요.'],
+};
+
+function nowCard(facts) {
+  const key = facts.movement.key;
+  const a = facts.movement.areas[key];
+  const Y = facts.seun[facts.thisYear];
+  const lines = [];
+  if (a.level === 0) {
+    return {
+      area: key, level: 0,
+      headline: '지금은 크게 움직이는 게 없어요.',
+      lines: [
+        `${facts.thisYear}년 세운 ${Y.gz.hanja}(${Y.gz.hangul})는 당신에게 ${Y.stemName}·${Y.branchName}이에요. 원국과 크게 부딪히지 않아요.`,
+        '조용한 해는 준비하는 해예요. 다음 흐름이 오기 전에 자리를 정리해 두면 돼요.',
+      ],
+    };
+  }
+  const s = a.signals[0];
+  lines.push(signalText(facts, s) + '.');
+  if (s.src === 'year') lines.push(`${facts.thisYear}년 세운 ${Y.gz.hanja}(${Y.gz.hangul})는 ${Y.stemName}·${Y.branchName}이에요. 입춘부터 다음 입춘 전까지 이어져요.`);
+  else if (s.src === 'month') lines.push(`이달의 흐름이에요. 다음 달이면 바뀌어요.`);
+  else if (s.src === 'daeun' && facts.daeun.next) lines.push(`${facts.daeun.changeYear}년부터 ${facts.daeun.next.gz.hanja} ${facts.daeun.next.stemName}·${facts.daeun.next.branchName} 대운으로 바뀌어요.`);
+  lines.push(AREA_ATTITUDE[key][a.level]);
+  const second = facts.movement.order[1];
+  if (facts.movement.areas[second].level > 0) lines.push(`그다음은 ${josa(AREAS[second].label, '이에요', '예요')}.`);
+  return { area: key, level: a.level, headline: `지금 가장 크게 움직이는 건 ${josa(AREAS[key].label, '이에요', '예요')}.`, lines: lines.slice(0, 4) };
+}
+
+// ---- 시기 표 ------------------------------------------------------------------
+const REL_FIELD = { spouse: 'relSpouse', career: 'relCareer', parents: 'relParents', children: 'relChildren' };
+function timingRows(facts, spec) {
+  const groups = resolveGroups(spec.groups, facts);
+  const mode = spec.mode || 'in';
+  let relKeys = [];
+  if (spec.palace === 'family') relKeys = (facts.band === '40s' && facts.hourKnown) ? ['relChildren'] : ['relParents'];
+  else if (spec.palace && REL_FIELD[spec.palace]) relKeys = [REL_FIELD[spec.palace]];
+  const score = e => {
+    let n = 0; const notes = [];
+    const rels = relKeys.map(k => e[k]);
+    const starHits = () => { if (groups.includes(e.stemGroup)) { n++; notes.push(e.stemName); } if (groups.includes(e.branchGroup)) { n++; notes.push(e.branchName); } };
+    if (mode === 'clash') {
+      rels.forEach(r => { if (r === 'chung') { n += 2; notes.push('충'); } else if (r === 'wonjin') { n += 1; notes.push('원진'); } });
+      starHits();
+    } else {
+      starHits();
+      rels.forEach(r => { if (r === 'hap') { n++; notes.push('합'); } else if (r === 'chung') { n++; notes.push('충'); } });
+      if (mode === 'move') { if (e.yeokma) { n++; notes.push('역마'); } }
+      if (spec.dohwa && e.dohwa) { n++; notes.push('도화'); }
+    }
+    return { level: n === 0 ? 0 : n === 1 ? 1 : 2, notes: uniq(notes) };
+  };
+  const years = [facts.thisYear, facts.thisYear + 1, facts.thisYear + 2].map(y => {
+    const e = facts.seun[y]; const s = score(e);
+    return { label: `${y}년`, sub: `${e.gz.hanja} ${e.gz.hangul}`, level: s.level, notes: s.notes, year: y };
+  });
+  const mk = w => { const s = score(w); return { label: `${w.month}월`, sub: w.gz.hangul, level: s.level, notes: s.notes, month: w.month, year: w.year }; };
+  return {
+    years,
+    months: facts.wolun.filter(w => w.year === facts.thisYear).map(mk),
+    monthsNext: facts.wolun.filter(w => w.year === facts.nextYear).map(mk),
+  };
+}
+function joinKo(arr) { return arr.join('·'); }
+function timingSummary(facts, rows, mode) {
+  const out = [];
+  const strongWord = mode === 'clash' ? '흔들리기 쉬워요' : '제일 크게 움직여요';
+  const midWord = mode === 'clash' ? '조금 흔들려요' : '보통이에요';
+  const up = rows.months.filter(m => m.month >= facts.today.month);
+  const strongUp = up.filter(m => m.level === 2), midUp = up.filter(m => m.level === 1);
+  if (strongUp.length) out.push(`올해 남은 달 중에는 ${joinKo(strongUp.map(m => m.label))}에 ${strongWord}.`);
+  else if (midUp.length) out.push(`올해 남은 달은 크게 움직이지 않아요. ${joinKo(midUp.slice(0, 3).map(m => m.label))} 정도가 ${midWord}.`);
+  else out.push('올해 남은 달은 잔잔해요.');
+  const sy = rows.years.filter(y => y.level === 2), my = rows.years.filter(y => y.level === 1);
+  if (sy.length && my.length) out.push(`해 단위로는 ${joinKo(sy.map(y => y.label))}이 강하고, ${joinKo(my.map(y => y.label))}은 보통이에요.`);
+  else if (sy.length) out.push(`해 단위로는 ${joinKo(sy.map(y => y.label))}이 강해요.`);
+  else if (my.length) out.push(`해 단위로는 ${joinKo(my.map(y => y.label))}이 보통이고 나머지는 잔잔해요.`);
+  else out.push(`앞으로 세 해는 이 영역이 잔잔해요. 큰 시기는 대운을 봐야 해요.`);
+  const sn = rows.monthsNext.filter(m => m.level === 2);
+  if (sn.length) out.push(`내년은 ${joinKo(sn.slice(0, 4).map(m => m.label))}이 강해요.`);
+  return out;
+}
+
+// ---- 근거 문장 ----------------------------------------------------------------
+function natalEvidence(facts, group) {
+  const s = facts.stars[group];
+  if (!s || s.n === 0) return `당신 원국에는 ${iga(group)} 없어요. 그래서 세운으로 들어올 때 더 크게 느껴져요.`;
+  const pairs = s.pos.map((p, i) => `${p} ${s.names[i]}`).slice(0, 3);
+  return `당신 사주 ${joinKo(pairs)}이 ${group}이에요.`;
+}
+function seunEvidence(facts, year) {
+  const e = facts.seun[year];
+  return `${year}년 세운 ${e.gz.hanja}(${e.gz.hangul})는 당신에게 ${e.stemName}·${e.branchName}이에요.`;
+}
+function daeunEvidence(facts) {
+  const c = facts.daeun.current;
+  if (!c) return `아직 첫 대운 전이에요. ${facts.daeun.list[0].fromYear}년부터 ${facts.daeun.list[0].gz.hanja} 대운이 시작돼요.`;
+  return `지금 대운은 ${c.gz.hanja}(${c.gz.hangul}) ${c.stemName}·${c.branchName} 대운이에요. ${c.fromYear}년부터 ${c.toYear}년까지예요.`;
+}
+function strengthEvidence(facts) {
+  const w = { strong: '신강', balanced: '중화', weak: '신약' }[facts.strength];
+  return `일간 ${facts.ilgan.k}(${facts.ilgan.h})${pt(facts.ilgan.k, '은', '는')} ${w}이에요. ${{ strong: '밀어붙이는 힘이 있어요', balanced: '균형이 잡혀 있어요', weak: '환경의 도움이 필요한 구조예요' }[facts.strength]}.`;
+}
+
+// ---- 조건 판정 ----------------------------------------------------------------
+function condTest(name, facts) {
+  const L = facts.level;
+  switch (name) {
+    case 'rival_strong': return L('비겁') >= 2;
+    case 'wealth_weak': return L('재성') <= 1;
+    case 'wealth_weak_self_weak': return L('재성') <= 1 && facts.strength === 'weak';
+    case 'output_strong': return L('식상') >= 2;
+    case 'officer_strong': return L('관성') >= 2;
+    case 'resource_strong': return L('인성') >= 2;
+    case 'weak_self': return facts.strength === 'weak';
+    case 'strong_self': return facts.strength === 'strong';
+    case 'spouse_palace_clash': return facts.natal.relations.some(r => (r.a === '일지' || r.b === '일지') && (r.type === 'chung' || r.type === 'wonjin'));
+    case 'male': return facts.gender === 'M';
+    case 'female': return facts.gender === 'F';
+    case 'male_wealth_strong': return facts.gender === 'M' && L('재성') >= 2;
+    case 'female_wealth_strong': return facts.gender === 'F' && L('재성') >= 2;
+    case 'female_output_strong': return facts.gender === 'F' && L('식상') >= 2;
+    default: return true;
+  }
+}
+const COND_GROUP = { rival_strong: '비겁', wealth_weak: '재성', wealth_weak_self_weak: '재성', output_strong: '식상', officer_strong: '관성', resource_strong: '인성', female_output_strong: '식상', male_wealth_strong: '재성', female_wealth_strong: '재성', male: '재성', female: '재성' };
+
+function sideScore(facts, side) {
+  let n = 0;
+  (side.groups || []).forEach(g => { n += facts.level(g); });
+  (side.names || []).forEach(nm => { Object.values(facts.stars).forEach(s => { n += s.names.filter(x => x === nm).length; }); });
+  if (side.strength && facts.strength === side.strength) n += 1;
+  if (side.yeokma && facts.natal.yeokma) n += 1;
+  return n;
+}
+
+const DAEUN_GROUP_TEXT = {
+  비겁: '나와 같은 힘이 들어오는 시기예요. 사람이 늘고 내 주장이 세져요. 돈은 나누게 돼요.',
+  식상: '내 표현과 활동이 커지는 시기예요. 새로 벌이고 만드는 흐름이에요.',
+  재성: '돈과 현실이 앞에 오는 시기예요. 결과가 손에 잡히는 흐름이에요.',
+  관성: '일과 책임이 커지는 시기예요. 자리가 생기고 규칙이 늘어요.',
+  인성: '문서·공부·자격이 움직이는 시기예요. 받쳐주는 힘이 들어와요.',
+};
+const YEAR_GROUP_TEXT = {
+  비겁: '사람이 늘고 경쟁도 늘어요. 돈은 나가는 쪽으로 움직이기 쉬워요.',
+  식상: '표현하고 벌이는 해예요. 시작하는 일이 많아져요.',
+  재성: '돈과 결과가 움직이는 해예요. 들어오는 만큼 나가는 폭도 커요.',
+  관성: '일과 책임이 늘어나는 해예요. 자리가 바뀌기 쉬워요.',
+  인성: '문서와 공부, 도와주는 사람이 움직이는 해예요. 준비하기 좋은 해예요.',
+};
+
+// ---- 질문 답 ------------------------------------------------------------------
+function answerQuestion(facts, qid) {
+  const q = QUESTIONS.find(x => x.id === qid);
+  if (!q) throw new Error('unknown question ' + qid);
+  const title = pickText(q.text, facts.band);
+  let conclusion = '', body = [], evidence = [], timing = null, daeunRowsOut = null;
+  const mainGroup = { love: facts.spouseGroup, money: '재성', work: '관성', people: '비겁', flow: '인성' }[q.area];
+
+  if (q.type === 'why') {
+    const hit = q.why.find(c => condTest(c.cond, facts));
+    conclusion = q.conclusion;
+    body = sentences(hit.text);
+    const g = COND_GROUP[hit.cond] || mainGroup;
+    evidence = [natalEvidence(facts, g), strengthEvidence(facts)];
+    if (hit.cond === 'spouse_palace_clash') {
+      const r = facts.natal.relations.find(x => (x.a === '일지' || x.b === '일지') && (x.type === 'chung' || x.type === 'wonjin'));
+      evidence.unshift(`당신 원국의 ${r.a}와 ${r.b}가 ${r.ko}이에요.`);
+    }
+  } else if (q.type === 'when') {
+    timing = timingRows(facts, q);
+    const sm = timingSummary(facts, timing, q.mode);
+    conclusion = sm[0]; body = sm.slice(1);
+    const gs = resolveGroups(q.groups, facts);
+    evidence = [seunEvidence(facts, facts.thisYear)];
+    if (gs.length) evidence.push(natalEvidence(facts, gs[0]));
+    if (q.mode === 'clash') evidence.push(`기준 자리는 ${q.palace === 'family' ? (facts.band === '40s' && facts.hourKnown ? '자녀 자리(시지)' : '부모 자리(년지)') : '배우자 자리(일지)'}예요. 이 자리에 충·원진이 드는 시기를 셌어요.`);
+  } else if (q.type === 'which') {
+    const l = sideScore(facts, q.which.left), r = sideScore(facts, q.which.right);
+    let key;
+    if (l >= 2 && r >= 2 && Math.abs(l - r) <= 1) key = 'both';
+    else if (l <= 1 && r <= 1) key = 'neither';
+    else key = l > r ? 'left' : 'right';
+    const s = sentences(q.which.texts[key]);
+    conclusion = s[0]; body = s.slice(1);
+    evidence = [natalEvidence(facts, resolveGroups(q.which.left.groups, facts)[0]), natalEvidence(facts, resolveGroups(q.which.right.groups, facts)[0]), strengthEvidence(facts)];
+    if (key === 'neither') { evidence.push(daeunEvidence(facts)); }
+  } else if (q.type === 'ok') {
+    timing = timingRows(facts, { groups: q.groups, palace: q.palace, mode: q.move ? 'move' : 'in' });
+    const Y = facts.seun[facts.thisYear];
+    const neg = resolveGroups(q.neg, facts);
+    const negHit = neg.some(g => Y.stemGroup === g || Y.branchGroup === g);
+    const lv = timing.years[0].level;
+    let verdict = negHit ? 'no' : lv >= 2 ? 'yes' : lv === 1 ? 'mid' : 'quiet';
+    let text = verdict === 'quiet' ? `올해는 ${AREAS[q.area].label} 쪽이 조용해요. 서두를 이유도 막을 이유도 없는 해예요.` : q.ok[verdict];
+    const s = sentences(text);
+    conclusion = s[0]; body = s.slice(1);
+    const sm = timingSummary(facts, timing, 'in');
+    body.push(sm[0]);
+    evidence = [seunEvidence(facts, facts.thisYear), daeunEvidence(facts)];
+  } else if (q.type === 'daeun') {
+    const d = facts.daeun;
+    daeunRowsOut = daeunRows(facts, []);
+    if (d.beforeFirst) {
+      const f0 = d.list[0];
+      conclusion = `아직 첫 대운 전이에요. ${f0.fromYear}년, ${f0.age}세부터 ${f0.gz.hanja} ${f0.stemName}·${f0.branchName} 대운이 시작돼요.`;
+      body = [DAEUN_GROUP_TEXT[f0.stemGroup], '대운 전 시기는 원국 그대로의 나로 사는 시기예요. 흐름보다 기질이 앞서요.'];
+    } else {
+      const c = d.current, n = d.next;
+      conclusion = `지금은 ${c.gz.hanja}(${c.gz.hangul}) ${c.stemName}·${c.branchName} 대운이에요.`;
+      body = [DAEUN_GROUP_TEXT[c.stemGroup]];
+      if (c.branchGroup !== c.stemGroup) body.push(`지지로는 ${c.branchName}이 같이 있어서 ${DAEUN_GROUP_TEXT[c.branchGroup].split('.')[0]}.`);
+      if (n) body.push(`${d.changeYear}년, ${n.age}세부터 ${n.gz.hanja} ${n.stemName}·${n.branchName} 대운으로 바뀌어요. ${DAEUN_GROUP_TEXT[n.stemGroup].split('.')[0]}.`);
+      else body.push('표에 있는 마지막 대운이에요. 그 뒤는 같은 흐름이 이어진다고 봐요.');
+    }
+    evidence = [daeunEvidence(facts), `대운은 ${d.startAge}세부터 10년씩 바뀌어요. ${d.list[0].fromYear}년이 첫 대운의 시작이에요.`];
+  } else if (q.type === 'year') {
+    const y = q.which_year === 'next' ? facts.nextYear : facts.thisYear;
+    const e = facts.seun[y];
+    conclusion = `${y}년 ${e.gz.hanja}(${e.gz.hangul})는 당신에게 ${e.stemName}·${e.branchName}의 해예요.`;
+    body = [YEAR_GROUP_TEXT[e.stemGroup]];
+    if (e.branchGroup !== e.stemGroup) body.push(`지지 쪽으로는 ${e.branchName}이 같이 들어와요. ${YEAR_GROUP_TEXT[e.branchGroup].split('.')[0]}.`);
+    const rels = [];
+    if (e.relSpouse !== 'none') rels.push(`배우자 자리(일지)와 ${REL_KO[e.relSpouse]}`);
+    if (e.relCareer !== 'none') rels.push(`직업 자리(월지)와 ${REL_KO[e.relCareer]}`);
+    if (rels.length) body.push(`원국과는 ${joinKo(rels)}이 걸려요. 그 자리가 움직이는 해예요.`);
+    else body.push('원국과 크게 부딪히는 자리는 없어요. 흐름이 순하게 들어오는 해예요.');
+    timing = timingRows(facts, { groups: uniq([e.stemGroup, e.branchGroup]), palace: null, mode: 'in' });
+    if (q.which_year === 'next') { timing = { years: timing.years, months: timing.monthsNext, monthsNext: [] }; }
+    evidence = [seunEvidence(facts, y), daeunEvidence(facts)];
+  } else if (q.type === 'match') {
+    const me = ILGAN[facts.ilgan.idx], p = ILGAN[ILGAN_MATCH[facts.ilgan.idx]];
+    const el = ELEMENTS[facts.yongshin];
+    conclusion = `${p.name}(${p.nick}) 일간과 결이 잘 맞아요.`;
+    body = [`천간합으로 서로 끌어당기는 자리예요. ${p.traits[0]}`, `오행으로는 ${el.k}(${el.h}) 기운이 많은 사람이 당신의 부족한 쪽을 채워요.`, `반대로 당신과 같은 ${me.name} 일간은 편하지만 서로 양보가 없어요.`];
+    evidence = [`당신 일간은 ${me.k}(${me.h}), ${me.nick}이에요.`, `용신은 ${el.k}이에요. 부족한 오행을 가진 사람이 편해요.`];
+  }
+
+  const teaser = [conclusion, body[0], body[1], q.condition].filter(Boolean).slice(0, 5);
+  while (teaser.length < 3) teaser.push(evidence[teaser.length - 1] || q.condition);
+  return {
+    id: q.id, area: q.area, type: q.type, title, conclusion, body, teaser, evidence,
+    timing, daeun: daeunRowsOut, mode: q.mode || 'in',
+    condition: q.condition, guard: q.guard ? GUARDS[q.guard] : null,
+    followups: q.follow.map(id => ({ id, text: pickText(QUESTIONS.find(x => x.id === id).text, facts.band) })),
+    report: q.report, tag: q.tag,
+  };
+}
+
+// ---- 리포트 공용 도우미 ---------------------------------------------------------
+function starDesc(facts, group) {
+  const s = facts.stars[group];
+  const pos = s.pos.length ? `(${joinKo(s.pos)})` : '';
+  if (s.n === 0) return `원국에 ${iga(group)} 없어요. ${GROUP_MEANING[group]}. 이 힘은 대운과 세운으로 들어올 때 크게 느껴져요.`;
+  if (s.n === 1) return `${iga(group)} 하나 있어요${pos}. 있지만 세지 않아서 때에 따라 살아나요.`;
+  if (s.n === 2) return `${iga(group)} 둘 있어요${pos}. 또렷하게 작동하는 힘이에요.`;
+  return `${iga(group)} ${s.n}개예요${pos}. 사주에서 가장 큰 힘 중 하나예요.`;
+}
+function daeunRows(facts, groups) {
+  const gs = resolveGroups(groups, facts);
+  return facts.daeun.list.map(d => {
+    let n = 0; if (gs.includes(d.stemGroup)) n++; if (gs.includes(d.branchGroup)) n++;
+    return { label: `${d.age}~${d.endAge}세`, sub: `${d.fromYear}~${d.toYear}`, name: `${d.gz.hanja} ${d.stemName}·${d.branchName}`, level: gs.length ? (n === 0 ? 0 : n === 1 ? 1 : 2) : 1, current: d.current, fromYear: d.fromYear, toYear: d.toYear, stemGroup: d.stemGroup, branchGroup: d.branchGroup };
+  });
+}
+function daeunText(facts, groups, noun) {
+  const gs = resolveGroups(groups, facts);
+  const d = facts.daeun; const out = [];
+  if (d.beforeFirst) {
+    out.push(`아직 첫 대운 전이에요. ${d.list[0].fromYear}년부터 ${d.list[0].gz.hanja} 대운이 시작돼요.`);
+    return out;
+  }
+  const c = d.current;
+  const hit = gs.includes(c.stemGroup) || gs.includes(c.branchGroup);
+  out.push(`지금 대운 ${c.gz.hanja}(${c.fromYear}~${c.toYear})는 ${c.stemName}·${c.branchName}이에요.`);
+  out.push(hit ? `${noun} 쪽 별이 대운에 들어 있어요. 이 10년은 ${noun}이 인생의 앞자리에 있는 시기예요.` : `${noun} 쪽 별은 이 대운에 없어요. ${noun}은 세운이 들어올 때만 움직이고, 대운 자체는 ${DAEUN_GROUP_TEXT[c.stemGroup].split('.')[0]}.`);
+  const left = c.toYear - facts.thisYear;
+  out.push(left > 0 ? `이 대운은 ${left}년 남았어요.` : '올해가 이 대운의 마지막 해예요.');
+  if (d.next) {
+    const n = d.next; const nh = gs.includes(n.stemGroup) || gs.includes(n.branchGroup);
+    out.push(`${d.changeYear}년부터 ${n.gz.hanja} ${n.stemName}·${n.branchName} 대운이에요. ${nh ? `${noun}이 다시 앞으로 나와요.` : DAEUN_GROUP_TEXT[n.stemGroup].split('.')[0] + '.'}`);
+  }
+  return out;
+}
+function bigDaeun(facts, groups) {
+  // 해당 영역 별이 든 대운 중 가장 이른 것(현재 이후 우선)
+  const rows = daeunRows(facts, groups);
+  const soon = r => r.toYear >= facts.thisYear && r.fromYear <= facts.thisYear + 20;
+  const future = rows.filter(r => r.level === 2 && soon(r));
+  const any = rows.filter(r => r.level >= 1 && soon(r));
+  const far = rows.filter(r => r.level === 2 && r.toYear >= facts.thisYear);
+  return future[0] || any[0] || far[0] || null;
+}
+function monthRowsFor(facts, year, groups, palace, mode) {
+  const rows = timingRows(facts, { groups, palace, mode: mode || 'in' });
+  return year === facts.nextYear ? rows.monthsNext : rows.months;
+}
+function buildReport(id, facts) {
+  const def = REPORT_DEFS[id];
+  const sections = def.sections.map(fn => fn(facts));
+  const cover = def.cover(facts, sections);
+  return { id, title: def.title, area: def.area, short: def.short, cover, sections };
+}
+
+/* 나의 재물 설명서 — 8단. 다른 리포트의 패턴 기준 파일.
+ * 섹션 = { tag, title, conclusion, body[], evidence[], table|null, daeun|null, years|null }
+ * 문장은 해요체, 단정 금지. 시기는 composer의 표 함수에서만 가져온다. */
+(function () {
+  const G = ['재성', '식상'];
+
+  function wealthType(f) {
+    const w = f.level('재성'), o = f.level('식상');
+    if (w >= 2 && f.strength === 'strong') return { key: 'holder', line: '돈을 직접 쥐고 굴리는 사람이에요.' };
+    if (w >= 2 && f.strength === 'weak') return { key: 'heavy', line: '돈은 잘 보이는데 쥐는 힘이 달리는 구조예요. 명리에서는 이걸 재다신약이라고 불러요.' };
+    if (w >= 2) return { key: 'steady', line: '돈이 또렷하게 보이고 다루는 힘도 균형이 잡혀 있어요.' };
+    if (o >= 2) return { key: 'maker', line: '돈보다 일이 먼저인 사람이에요. 활동이 돈을 만들어요. 명리에서는 이 흐름을 식상생재라고 봐요.' };
+    return { key: 'carried', line: '돈을 목표로 움직이는 사람은 아니에요. 자리와 문서가 돈을 데려오는 구조예요.' };
+  }
+  function leak(f) {
+    if (condTest('rival_strong', f)) return { key: 'rival', line: '비겁이 재성을 나누는 구조예요. 사람 때문에 돈이 움직이기 쉬워요.' };
+    if (condTest('wealth_weak_self_weak', f)) return { key: 'small', line: '돈이 머물 그릇이 아직 작은 구조예요. 들어와도 오래 못 쥐는 느낌이 나요.' };
+    if (condTest('output_strong', f)) return { key: 'spend', line: '쓰고 벌이는 힘이 버는 힘보다 앞서요. 돈이 활동비로 먼저 나가요.' };
+    return { key: 'time', line: '새는 구조가 강하진 않아요. 비겁이 드는 해에만 지출이 늘어요.' };
+  }
+  function keyTime(f) {
+    const rows = timingRows(f, { groups: G, palace: null, mode: 'in' });
+    const sy = rows.years.find(y => y.level === 2) || rows.years.find(y => y.level === 1);
+    const bd = bigDaeun(f, G);
+    if (bd && bd.level === 2) return { label: `${bd.label} ${bd.name} 대운`, line: `재물이 가장 크게 움직이는 시기는 ${bd.label}(${bd.sub}) ${bd.name} 대운이에요.` };
+    if (sy) return { label: `${sy.label} ${sy.sub}`, line: `가까운 시기로는 ${sy.label}(${sy.sub})에 재물이 움직여요.` };
+    return { label: '세운 중심', line: '앞으로 세 해는 재물이 잔잔해요. 대운으로 오는 큰 시기는 4단 표에 있어요.' };
+  }
+
+  const s0 = f => {
+    const t = wealthType(f), l = leak(f), k = keyTime(f);
+    return { tag: 'summary', title: '먼저 결론', conclusion: t.line.split('.')[0] + '.',
+      body: [l.line.split('.')[0] + '.', k.line, '아래는 왜 그런지, 그리고 언제인지에 대한 설명이에요.'],
+      evidence: [natalEvidence(f, '재성'), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s1 = f => {
+    const t = wealthType(f);
+    const body = [starDesc(f, '재성'), starDesc(f, '식상')];
+    if (t.key === 'heavy') body.push('재다신약은 능력 문제가 아니라 순서 문제예요. 돈보다 나를 먼저 세우는 대운에서 풀려요.');
+    if (t.key === 'maker') body.push('식상이 재성을 만들어요. 가만히 있으면 돈이 안 오고, 움직이면 따라와요.');
+    if (t.key === 'carried') body.push('관성과 인성이 받쳐주는 사주는 자리를 지키는 게 곧 돈이에요. 자리가 흔들리면 돈도 흔들려요.');
+    if (t.key === 'holder') body.push('쥐는 힘이 커서 큰돈을 다뤄도 흔들리지 않아요. 대신 남에게 맡기는 걸 못 해요.');
+    if (t.key === 'steady') body.push('크게 튀지 않아요. 꾸준히 쌓는 방식이 이 구조와 맞아요.');
+    return { tag: 'me', title: '나는 어떻게 돈을 버는 사람인가', conclusion: t.line.split('.')[0] + '.', body, evidence: [natalEvidence(f, '재성'), natalEvidence(f, '식상'), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s2 = f => {
+    const l = leak(f);
+    const body = sentences(l.line);
+    body.push(starDesc(f, '비겁'));
+    const rows = timingRows(f, { groups: ['비겁'], palace: null, mode: 'in' });
+    const ry = rows.years.filter(y => y.level >= 1).map(y => y.label);
+    body.push(ry.length ? `가까운 해로는 ${joinKo(ry)}에 비겁이 들어와요. 그 해에 빌려주기와 보증을 피하면 돼요.` : '앞으로 세 해는 비겁이 들어오지 않아요. 새는 흐름이 약한 시기예요.');
+    return { tag: 'pattern', title: '돈이 새는 방식', conclusion: '돈이 안 들어오는 게 아니라 나가는 길이 정해져 있어요.', body, evidence: [natalEvidence(f, '비겁'), natalEvidence(f, '재성')], table: null, daeun: null, years: rows.years };
+  };
+  const s3 = f => {
+    const a = answerQuestion(f, 'job_or_biz');
+    return { tag: 'type', title: '직장형인가 사업형인가', conclusion: a.conclusion, body: a.body.concat([a.condition]), evidence: a.evidence, table: null, daeun: null, years: null };
+  };
+  const s4 = f => {
+    const rows = daeunRows(f, G);
+    const strong = rows.filter(r => r.level === 2), mid = rows.filter(r => r.level === 1);
+    const bd = bigDaeun(f, G);
+    const body = ['대운 표에서 재성·식상이 든 10년을 강함으로 표시했어요. 재성은 결과가 붙는 시기, 식상은 벌이는 시기예요.'];
+    if (strong.length) body.push(`강한 대운은 ${joinKo(strong.map(r => r.label))}이에요.`);
+    if (mid.length) body.push(`보통은 ${joinKo(mid.map(r => r.label))}이에요. 둘 중 하나만 든 시기예요.`);
+    if (!strong.length && !mid.length) body.push('표 안에 재성·식상 대운이 없어요. 돈은 세운으로만 움직이고, 자리와 문서가 돈을 대신해요.');
+    body.push('강함이 좋고 잔잔함이 나쁘다는 뜻이 아니에요. 움직임의 크기예요.');
+    return { tag: 'daeun', title: '재물이 커지는 시기', conclusion: bd ? `${bd.label}(${bd.sub}) ${bd.name} 대운에 재물이 앞자리로 와요.` : '재물이 앞자리로 오는 대운은 표 안에 없어요. 세운이 정해요.', body, evidence: [daeunEvidence(f)], table: null, daeun: rows, years: null };
+  };
+  const s5 = f => {
+    const lines = daeunText(f, G, '돈');
+    const c = f.daeun.current;
+    const hit = c && (G.includes(c.stemGroup) || G.includes(c.branchGroup));
+    return { tag: 'now', title: '지금 대운의 돈', conclusion: f.daeun.beforeFirst ? '아직 대운 전이라 돈은 원국 그대로 움직여요.' : hit ? '지금 10년은 돈이 인생의 앞자리에 있어요.' : `지금 10년은 돈보다 ${c.stemGroup} 쪽이 앞자리예요.`, body: lines, evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+  };
+  const s6 = f => {
+    const rows = timingRows(f, { groups: G, palace: null, mode: 'in' });
+    const sm = timingSummary(f, rows, 'in');
+    const Y = f.seun[f.thisYear], N = f.seun[f.nextYear];
+    const body = sm.slice(1);
+    body.push(`올해 ${Y.gz.hanja}는 ${Y.stemName}·${Y.branchName}의 해예요. ${YEAR_GROUP_TEXT[Y.stemGroup].split('.')[0]}.`);
+    body.push(`내년 ${N.gz.hanja}는 ${N.stemName}·${N.branchName}의 해예요. ${YEAR_GROUP_TEXT[N.stemGroup].split('.')[0]}.`);
+    return { tag: 'timing', title: '올해와 내년 재물 흐름', conclusion: sm[0], body, evidence: [seunEvidence(f, f.thisYear), seunEvidence(f, f.nextYear)], table: { caption: `${f.thisYear}년 월별 재물 움직임`, rows: rows.months }, tableNext: { caption: `${f.nextYear}년 월별 재물 움직임`, rows: rows.monthsNext }, daeun: null, years: rows.years };
+  };
+  const s7 = f => {
+    const t = wealthType(f), l = leak(f);
+    const body = [];
+    if (t.key === 'heavy') body.push('돈이 크게 보일 때일수록 나를 먼저 세우는 게 순서예요. 몸과 시간을 먼저 챙기면 돈이 따라와요.');
+    if (t.key === 'holder' || t.key === 'steady') body.push('큰돈을 다루는 힘이 있다면, 한 번에 걸지 말고 나눠서 거는 게 이 구조와 맞아요.');
+    if (t.key === 'maker') body.push('벌이가 곧 돈이라면, 벌이는 달과 거두는 달을 나누세요. 식상이 드는 달에 벌이고 재성이 드는 달에 거둬요.');
+    if (t.key === 'carried') body.push('자리가 돈이라면, 자리를 흔드는 결정은 인성이 드는 달에 문서로 마무리하세요.');
+    if (l.key === 'rival') body.push('사람 때문에 돈이 움직인다면, 빌려주는 돈은 주는 돈이라고 생각하는 게 흐름과 맞아요.');
+    if (l.key === 'spend') body.push('활동비로 먼저 나간다면, 들어온 달에 나갈 곳을 정하지 마세요. 한 달 뒤에 정해도 늦지 않아요.');
+    if (l.key === 'small' || l.key === 'time') body.push('새는 구조가 약하다면 시기만 보면 돼요. 비겁이 드는 해에 문서 없는 약속을 피하세요.');
+    body.push(GUARDS.money);
+    return { tag: 'attitude', title: '돈을 대하는 태도', conclusion: '태도는 구조를 바꾸지 못하지만 결과는 바꿔요.', body, evidence: [], table: null, daeun: null, years: null };
+  };
+
+  REPORT_DEFS.wealth = {
+    id: 'wealth', title: '나의 재물 설명서', area: 'money', short: '어떻게 벌고, 어디서 새고, 언제 커지는지',
+    toc: ['먼저 결론', '나는 어떻게 돈을 버는 사람인가', '돈이 새는 방식', '직장형인가 사업형인가', '재물이 커지는 시기', '지금 대운의 돈', '올해와 내년 재물 흐름', '돈을 대하는 태도'],
+    sections: [s0, s1, s2, s3, s4, s5, s6, s7],
+    cover(f, sections) {
+      const k = keyTime(f);
+      return { summary: [sections[1].conclusion, sections[2].conclusion, k.line], keyTime: k.label };
+    },
+  };
+})();
+
+/* 나의 일 설명서 — 8단. wealth.js 패턴을 따른다.
+ * 섹션 = { tag, title, conclusion, body[], evidence[], table|null, daeun|null, years|null }
+ * 문장은 해요체, 단정 금지. 시기는 composer의 표 함수에서만 가져온다. */
+(function () {
+  const G = ['관성', '인성'];
+
+  function workType(f) {
+    const g = f.level('관성'), i = f.level('인성'), o = f.level('식상');
+    if (g >= 2 && f.strength === 'weak') return { key: 'heavy', line: '책임이 무겁게 오는 구조예요. 자리는 오는데 감당이 먼저 힘들어요.' };
+    if (g >= 2 && i >= 1) return { key: 'org', line: '조직 안에서 자라는 사람이에요. 명리에서는 이 구조를 관인상생이라고 봐요.' };
+    if (g >= 2) return { key: 'duty', line: '맡은 자리와 책임으로 일하는 사람이에요. 규칙이 있을 때 더 강해져요.' };
+    if (o >= 2) return { key: 'maker', line: '표현하고 기획하는 사람이에요. 시키는 일보다 만드는 일에서 힘이 나요.' };
+    if (g === 0) return { key: 'free', line: '규칙 밖에서 일하는 사람이에요. 관성이 없어서 자리보다 내 방식이 먼저예요.' };
+    return { key: 'steady', line: '일을 크게 벌이지도 튀지도 않아요. 하던 일을 꾸준히 넓히는 쪽이에요.' };
+  }
+  function block(f) {
+    if (condTest('officer_strong', f)) return { key: 'pressed', line: '위에서 누르는 힘이 커요. 관성이 강해서 규칙과 상사 앞에서 작아지기 쉬워요.' };
+    if (condTest('output_strong', f)) return { key: 'talk', line: '말이 앞서서 막혀요. 식상이 강해서 계획은 빠른데 실행이 늦게 붙어요.' };
+    if (condTest('weak_self', f)) return { key: 'load', line: '맡은 일이 무거워서 막혀요. 일간이 약해서 일을 받으면 몸이 먼저 지쳐요.' };
+    if (condTest('rival_strong', f)) return { key: 'overlap', line: '사람과 역할이 겹쳐서 막혀요. 비겁이 강해서 같은 자리를 놓고 부딪히기 쉬워요.' };
+    return { key: 'time', line: '막히는 구조가 강하진 않아요. 직업 자리가 흔들리는 해에만 일이 꼬여요.' };
+  }
+  function keyTime(f) {
+    const rows = timingRows(f, { groups: G, palace: 'career', mode: 'in' });
+    const sy = rows.years.find(y => y.level === 2) || rows.years.find(y => y.level === 1);
+    const bd = bigDaeun(f, G);
+    if (bd && bd.level === 2) return { label: `${bd.label} ${bd.name} 대운`, line: `일이 가장 크게 움직이는 시기는 ${bd.label}(${bd.sub}) ${bd.name} 대운이에요.` };
+    if (sy) return { label: `${sy.label} ${sy.sub}`, line: `가까운 시기로는 ${sy.label}(${sy.sub})에 일이 움직여요.` };
+    return { label: '세운 중심', line: '앞으로 세 해는 일이 잔잔해요. 대운으로 오는 큰 시기는 4단 표에 있어요.' };
+  }
+  function orgOrIndie(f) {
+    const org = f.level('관성') + f.level('인성'), indie = f.level('식상') + f.level('재성');
+    if (org >= 2 && indie >= 2 && Math.abs(org - indie) <= 1) return { key: 'both', text: '둘 다 있어요. 조직 안에서 내 사업처럼 일할 때 제일 잘 돼요. 완전한 독립보다 반독립이 맞아요.' };
+    if (org <= 1 && indie <= 1) return { key: 'neither', text: '어느 쪽도 강하게 드러나진 않아요. 이럴 땐 대운이 정해요. 지금 대운의 십성을 보면 방향이 보여요.' };
+    if (org > indie) return { key: 'org', text: '조직형이에요. 관성과 인성이 받쳐줘서 자리를 받고 키울 때 강해져요. 규칙이 나를 지켜줘요.' };
+    return { key: 'indie', text: '독립형이에요. 식상과 재성이 받쳐줘서 내가 움직여 만들 때 강해져요. 규칙보다 결과로 평가받는 자리가 맞아요.' };
+  }
+
+  const s0 = f => {
+    const t = workType(f), b = block(f), k = keyTime(f);
+    return { tag: 'summary', title: '먼저 결론', conclusion: t.line.split('.')[0] + '.',
+      body: [b.line.split('.')[0] + '.', k.line, '아래는 왜 그런지, 그리고 언제인지에 대한 설명이에요.'],
+      evidence: [natalEvidence(f, '관성'), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s1 = f => {
+    const t = workType(f);
+    const body = [starDesc(f, '관성'), starDesc(f, '인성')];
+    if (t.key === 'org') body.push('관성이 인성을 키우고 인성이 나를 받쳐요. 오래 있을수록 자리가 단단해지는 구조예요.');
+    if (t.key === 'heavy') body.push('자리가 오는 건 좋은데 감당이 먼저예요. 인성이 드는 시기에 받쳐주는 사람이 생기면 풀려요.');
+    if (t.key === 'duty') body.push('책임이 곧 힘이에요. 역할이 분명한 자리에서 결과가 나와요.');
+    if (t.key === 'maker') body.push('식상이 일을 만들어요. 기획과 표현이 앞서고 정리는 뒤에 붙어요.');
+    if (t.key === 'free') body.push('규칙이 없다고 일을 못 하는 게 아니에요. 내 방식으로 일할 수 있는 자리를 찾는 게 먼저예요.');
+    if (t.key === 'steady') body.push('큰 전환보다 조금씩 넓히는 방식이 맞아요. 갑자기 판을 바꾸면 힘이 빠져요.');
+    return { tag: 'me', title: '나는 어떻게 일하는 사람인가', conclusion: t.line.split('.')[0] + '.', body, evidence: [natalEvidence(f, '관성'), natalEvidence(f, '인성'), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s2 = f => {
+    const b = block(f);
+    const body = sentences(b.line);
+    body.push(starDesc(f, '관성'));
+    const rows = timingRows(f, { groups: ['관성'], palace: 'career', mode: 'clash' });
+    const ry = rows.years.filter(y => y.level >= 1).map(y => y.label);
+    body.push(ry.length ? `가까운 해로는 ${joinKo(ry)}에 직업 자리가 흔들려요. 그 해에는 자리를 옮기는 결정을 서두르지 않는 게 좋아요.` : '앞으로 세 해는 직업 자리가 흔들리지 않아요. 막히는 흐름이 약한 시기예요.');
+    return { tag: 'pattern', title: '일이 막히는 방식', conclusion: '일이 안 되는 게 아니라 막히는 자리가 정해져 있어요.', body, evidence: [natalEvidence(f, '관성'), natalEvidence(f, '식상')], table: null, daeun: null, years: rows.years };
+  };
+  const s3 = f => {
+    const o = orgOrIndie(f);
+    const s = sentences(o.text);
+    const ws = answerQuestion(f, 'work_style');
+    const body = s.slice(1);
+    body.push(`같이 보면, ${ws.conclusion}`);
+    if (ws.body[0]) body.push(ws.body[0]);
+    body.push('형이 정해졌다고 지금 당장 바꾸라는 뜻은 아니에요. 시기는 대운과 세운이 따로 정해요.');
+    const evidence = [natalEvidence(f, '관성'), natalEvidence(f, '식상'), strengthEvidence(f)];
+    if (o.key === 'neither') evidence.push(daeunEvidence(f));
+    return { tag: 'type', title: '조직형인가 독립형인가', conclusion: s[0], body, evidence, table: null, daeun: null, years: null };
+  };
+  const s4 = f => {
+    const rows = daeunRows(f, G);
+    const strong = rows.filter(r => r.level === 2), mid = rows.filter(r => r.level === 1);
+    const bd = bigDaeun(f, G);
+    const body = ['대운 표에서 관성·인성이 든 10년을 강함으로 표시했어요. 관성은 자리가 생기는 시기, 인성은 문서와 자격이 붙는 시기예요.'];
+    if (strong.length) body.push(`강한 대운은 ${joinKo(strong.map(r => r.label))}이에요.`);
+    if (mid.length) body.push(`보통은 ${joinKo(mid.map(r => r.label))}이에요. 둘 중 하나만 든 시기예요.`);
+    if (!strong.length && !mid.length) body.push('표 안에 관성·인성 대운이 없어요. 일은 세운으로만 움직이고, 내가 벌이는 활동이 자리를 대신해요.');
+    body.push('강함이 좋고 잔잔함이 나쁘다는 뜻이 아니에요. 움직임의 크기예요.');
+    return { tag: 'daeun', title: '일이 커지는 시기', conclusion: bd ? `${bd.label}(${bd.sub}) ${bd.name} 대운에 일이 앞자리로 와요.` : '일이 앞자리로 오는 대운은 표 안에 없어요. 세운이 정해요.', body, evidence: [daeunEvidence(f)], table: null, daeun: rows, years: null };
+  };
+  const s5 = f => {
+    const lines = daeunText(f, G, '일');
+    const c = f.daeun.current;
+    const hit = c && (G.includes(c.stemGroup) || G.includes(c.branchGroup));
+    return { tag: 'now', title: '지금 대운의 일', conclusion: f.daeun.beforeFirst ? '아직 대운 전이라 일은 원국 그대로 움직여요.' : hit ? '지금 10년은 일이 인생의 앞자리에 있어요.' : `지금 10년은 일보다 ${c.stemGroup} 쪽이 앞자리예요.`, body: lines, evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+  };
+  const s6 = f => {
+    const rows = timingRows(f, { groups: G, palace: 'career', mode: 'in' });
+    const sm = timingSummary(f, rows, 'in');
+    const Y = f.seun[f.thisYear], N = f.seun[f.nextYear];
+    const body = sm.slice(1);
+    body.push(`올해 ${Y.gz.hanja}는 ${Y.stemName}·${Y.branchName}의 해예요. ${YEAR_GROUP_TEXT[Y.stemGroup].split('.')[0]}.`);
+    body.push(`내년 ${N.gz.hanja}는 ${N.stemName}·${N.branchName}의 해예요. ${YEAR_GROUP_TEXT[N.stemGroup].split('.')[0]}.`);
+    if (Y.relCareer !== 'none') body.push(`올해는 직업 자리(월지)에 ${REL_KO[Y.relCareer]}이 걸려요. 자리 자체가 움직이는 해예요.`);
+    return { tag: 'timing', title: '올해와 내년 일의 흐름', conclusion: sm[0], body, evidence: [seunEvidence(f, f.thisYear), seunEvidence(f, f.nextYear)], table: { caption: `${f.thisYear}년 월별 일의 움직임`, rows: rows.months }, tableNext: { caption: `${f.nextYear}년 월별 일의 움직임`, rows: rows.monthsNext }, daeun: null, years: rows.years };
+  };
+  const s7 = f => {
+    const t = workType(f), b = block(f), o = orgOrIndie(f);
+    const body = [];
+    if (o.key === 'org') body.push('조직이 맞는 구조라면, 자리를 고를 때 규칙이 분명한 곳을 먼저 보세요. 규칙이 없는 곳에서는 힘이 빠져요.');
+    if (o.key === 'indie') body.push('독립이 맞는 구조라면, 자리보다 결과로 평가받는 일을 고르세요. 시키는 일만 있는 자리는 오래 못 가요.');
+    if (o.key === 'both') body.push('둘 다 있는 구조라면, 조직 안에서 내 몫이 분명한 자리를 고르세요. 반독립이 제일 오래 가요.');
+    if (o.key === 'neither') body.push('구조가 뚜렷하지 않다면, 일을 고를 때 지금 대운의 별을 먼저 보세요. 대운이 방향을 정해요.');
+    if (t.key === 'heavy') body.push('책임이 무겁게 온다면, 자리를 받기 전에 받쳐줄 사람부터 확인하세요. 혼자 다 지는 자리는 피하는 게 맞아요.');
+    if (b.key === 'pressed') body.push('위에서 눌려 막힌다면, 권한을 나눠주는 상사가 있는 곳을 고르세요. 규칙보다 사람이 자리를 정해요.');
+    if (b.key === 'talk') body.push('말이 앞서 막힌다면, 실행을 맡을 사람이 옆에 있는 일을 고르세요. 혼자 기획만 하는 자리는 결과가 늦어요.');
+    if (b.key === 'load' || b.key === 'overlap' || b.key === 'time') body.push('옮기는 결정이라면 관성이 드는 달에 정하고, 인성이 드는 달에 서류를 마무리하세요. 충이 드는 달은 피하는 게 흐름과 맞아요.');
+    body.push(GUARDS.choice);
+    return { tag: 'attitude', title: '일을 고르는 기준', conclusion: '일은 잘하는 것보다 오래 할 수 있는 자리를 고르는 게 먼저예요.', body, evidence: [], table: null, daeun: null, years: null };
+  };
+
+  REPORT_DEFS.work = {
+    id: 'work', title: '나의 일 설명서', area: 'work', short: '어떻게 일하고, 어디서 막히고, 언제 커지는지',
+    toc: ['먼저 결론', '나는 어떻게 일하는 사람인가', '일이 막히는 방식', '조직형인가 독립형인가', '일이 커지는 시기', '지금 대운의 일', '올해와 내년 일의 흐름', '일을 고르는 기준'],
+    sections: [s0, s1, s2, s3, s4, s5, s6, s7],
+    cover(f, sections) {
+      const k = keyTime(f);
+      return { summary: [sections[1].conclusion, sections[2].conclusion, k.line], keyTime: k.label };
+    },
+  };
+})();
+
+/* 나의 사랑과 인연 설명서 — 8단. reports/wealth.js 와 같은 패턴.
+ * 인연의 별은 성별에 따라 다르다(여성 관성, 남성 재성) → 항상 f.spouseGroup 을 쓴다.
+ * 섹션 = { tag, title, conclusion, body[], evidence[], table|null, daeun|null, years|null }
+ * 문장은 해요체, 단정 금지. 시기는 composer의 표 함수에서만 가져온다. */
+(function () {
+  const G = f => [f.spouseGroup];
+  const SPEC = f => ({ groups: G(f), palace: 'spouse', mode: 'in', dohwa: true });
+
+  const PALACE_TEXT = {
+    비겁: '배우자 자리에 나와 같은 힘이 있어요. 친구 같은 관계가 편해요.',
+    식상: '배우자 자리에 내 표현이 있어요. 말이 통하는 사람에게 끌려요.',
+    재성: '배우자 자리에 현실이 있어요. 실속 있는 관계를 원해요.',
+    관성: '배우자 자리에 책임이 있어요. 서로 지켜주는 관계를 원해요.',
+    인성: '배우자 자리에 받쳐주는 힘이 있어요. 나를 돌봐주는 사람에게 끌려요.',
+  };
+
+  function loveType(f) {
+    const sp = f.level(f.spouseGroup), o = f.level('식상'), r = f.level('비겁');
+    if (condTest('spouse_palace_clash', f)) return { key: 'distance', line: '가까워질수록 흔들리기 쉬운 구조예요. 거리 조절이 사랑의 기술이에요.' };
+    if (sp >= 2 && f.strength === 'weak') return { key: 'swept', line: '인연의 별이 나보다 세요. 사람에게 끌려가기 쉬운 쪽이에요.' };
+    if (sp >= 2) return { key: 'steady', line: '인연의 별이 또렷해요. 관계가 생기면 오래 붙잡는 쪽이에요.' };
+    if (o >= 2) return { key: 'expressive', line: '표현이 앞서는 사람이에요. 마음을 먼저 보여주고 상대를 기다려요.' };
+    if (r >= 2) return { key: 'independent', line: '혼자서도 괜찮은 사람이에요. 관계보다 나를 먼저 세워요.' };
+    return { key: 'quiet', line: '인연의 별이 원국에 세지 않아요. 만남은 대운과 세운이 데려와요.' };
+  }
+  function palaceLine(f) {
+    const c = f.cellStars['일지'];
+    const own = c.group === f.spouseGroup ? ' 인연의 별이 배우자 자리에 앉아 있어요. 명리에서는 이걸 배우자 인연이 또렷한 자리로 봐요.' : '';
+    return `배우자 자리(일지)에는 ${iga(c.name)} 있어요. ${PALACE_TEXT[c.group]}${own}`;
+  }
+  function keyTime(f) {
+    const rows = timingRows(f, SPEC(f));
+    const sy = rows.years.find(y => y.level === 2) || rows.years.find(y => y.level === 1);
+    const bd = bigDaeun(f, G(f));
+    if (bd && bd.level === 2) return { label: `${bd.label} ${bd.name} 대운`, line: `인연이 가장 크게 움직이는 시기는 ${bd.label}(${bd.sub}) ${bd.name} 대운이에요.` };
+    if (sy) return { label: `${sy.label} ${sy.sub}`, line: `가까운 시기로는 ${sy.label}(${sy.sub})에 인연이 움직여요.` };
+    return { label: '세운 중심', line: '앞으로 세 해는 인연이 잔잔해요. 대운으로 오는 큰 시기는 4단 표에 있어요.' };
+  }
+  function clashYears(f) {
+    return Object.keys(f.seun).map(Number).filter(y => y >= f.thisYear && f.seun[y].relSpouse === 'chung').sort();
+  }
+
+  const s0 = f => {
+    const t = loveType(f), k = keyTime(f);
+    const p = answerQuestion(f, 'why_love_fail');
+    return { tag: 'summary', title: '먼저 결론', conclusion: t.line.split('.')[0] + '.',
+      body: [p.body[0], k.line, '아래는 왜 그런지, 그리고 언제인지에 대한 설명이에요.'],
+      evidence: [natalEvidence(f, f.spouseGroup), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s1 = f => {
+    const t = loveType(f);
+    const body = sentences(t.line).slice(1);
+    body.push(starDesc(f, f.spouseGroup));
+    body.push(palaceLine(f));
+    if (f.gender === 'F' && f.level('식상') >= 2) body.push('식상이 강해요. 여성 사주에서 식상은 인연의 별인 관성을 누르는 힘이에요. 내 말이 앞서면 상대가 작아져요.');
+    if (f.gender === 'M' && f.level('비겁') >= 2) body.push('비겁이 강해요. 남성 사주에서 비겁은 인연의 별인 재성을 나누는 힘이에요. 경쟁 속에서 인연이 생기기 쉬워요.');
+    if (t.key === 'swept') body.push('끌려가는 힘이 세다는 건 나쁜 게 아니에요. 다만 상대를 고를 때 내 기준을 먼저 적어두는 게 방법이에요.');
+    if (t.key === 'quiet') body.push('원국에 별이 약하면 세운으로 들어올 때 더 크게 느껴져요. 그 해를 놓치지 않는 게 방법이에요.');
+    return { tag: 'me', title: '나는 어떻게 사랑하는 사람인가', conclusion: t.line.split('.')[0] + '.', body, evidence: [natalEvidence(f, f.spouseGroup), natalEvidence(f, '식상'), strengthEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s2 = f => {
+    const a = answerQuestion(f, 'why_love_fail');
+    const rows = timingRows(f, { groups: [], palace: 'spouse', mode: 'clash' });
+    const body = a.body.slice();
+    const ry = rows.years.filter(y => y.level >= 1).map(y => y.label);
+    body.push(ry.length ? `가까운 해로는 ${joinKo(ry)}에 배우자 자리가 흔들려요. 그 해에는 큰 결정을 미루는 게 좋아요.` : '앞으로 세 해는 배우자 자리에 충·원진이 들지 않아요. 흔들리는 흐름이 약한 시기예요.');
+    return { tag: 'pattern', title: '관계가 어긋나는 방식', conclusion: a.conclusion, body, evidence: a.evidence, table: null, daeun: null, years: rows.years };
+  };
+  const s3 = f => {
+    const a = answerQuestion(f, 'match_type');
+    return { tag: 'type', title: '나와 맞는 상대의 결', conclusion: a.conclusion, body: a.body.concat([a.condition]), evidence: a.evidence, table: null, daeun: null, years: null };
+  };
+  const s4 = f => {
+    const rows = daeunRows(f, G(f));
+    const strong = rows.filter(r => r.level === 2), mid = rows.filter(r => r.level === 1);
+    const bd = bigDaeun(f, G(f));
+    const body = [`대운 표에서 인연의 별(${f.spouseGroup})이 든 10년을 강함으로 표시했어요. 그 시기에 만남과 결혼 이야기가 인생의 앞자리로 와요.`];
+    if (strong.length) body.push(`강한 대운은 ${joinKo(strong.map(r => r.label))}이에요.`);
+    if (mid.length) body.push(`보통은 ${joinKo(mid.map(r => r.label))}이에요. 천간이나 지지 한쪽에만 든 시기예요.`);
+    if (!strong.length && !mid.length) body.push('표 안에 인연의 별이 든 대운이 없어요. 인연은 세운으로만 움직이고, 대운은 다른 주제를 앞세워요.');
+    body.push('강함이 좋고 잔잔함이 나쁘다는 뜻이 아니에요. 움직임의 크기예요.');
+    return { tag: 'daeun', title: '인연이 드는 시기', conclusion: bd ? `${bd.label}(${bd.sub}) ${bd.name} 대운에 인연이 앞자리로 와요.` : '인연이 앞자리로 오는 대운은 표 안에 없어요. 세운이 정해요.', body, evidence: [daeunEvidence(f)], table: null, daeun: rows, years: null };
+  };
+  const s5 = f => {
+    const lines = daeunText(f, G(f), '인연');
+    const c = f.daeun.current;
+    const hit = c && G(f).includes(c.stemGroup) || c && G(f).includes(c.branchGroup);
+    return { tag: 'now', title: '지금 대운의 인연', conclusion: f.daeun.beforeFirst ? '아직 대운 전이라 인연은 원국 그대로 움직여요.' : hit ? '지금 10년은 인연이 인생의 앞자리에 있어요.' : `지금 10년은 인연보다 ${c.stemGroup} 쪽이 앞자리예요.`, body: lines, evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+  };
+  const s6 = f => {
+    const rows = timingRows(f, SPEC(f));
+    const sm = timingSummary(f, rows, 'in');
+    const Y = f.seun[f.thisYear], N = f.seun[f.nextYear];
+    const body = sm.slice(1);
+    body.push(`올해 ${Y.gz.hanja}는 ${Y.stemName}·${Y.branchName}의 해예요. ${YEAR_GROUP_TEXT[Y.stemGroup].split('.')[0]}.`);
+    body.push(`내년 ${N.gz.hanja}는 ${N.stemName}·${N.branchName}의 해예요. ${YEAR_GROUP_TEXT[N.stemGroup].split('.')[0]}.`);
+    const cy = clashYears(f);
+    body.push(cy.length ? `${joinKo(cy.map(y => `${y}년`))}은 배우자 자리에 충이 들어요. 결정을 미루는 게 좋은 해예요.` : '세운 표 안에는 배우자 자리에 충이 드는 해가 없어요. 결정을 미룰 이유가 흐름에는 없어요.');
+    return { tag: 'timing', title: '올해와 내년 만남·결혼 흐름', conclusion: sm[0], body, evidence: [seunEvidence(f, f.thisYear), seunEvidence(f, f.nextYear)], table: { caption: `${f.thisYear}년 월별 인연 움직임`, rows: rows.months }, tableNext: { caption: `${f.nextYear}년 월별 인연 움직임`, rows: rows.monthsNext }, daeun: null, years: rows.years };
+  };
+  const s7 = f => {
+    const t = loveType(f);
+    const body = [];
+    if (t.key === 'distance') body.push('가까워질수록 흔들린다면, 거리를 좁히는 속도를 상대에게 맞추지 말고 내 속도로 가세요.');
+    if (t.key === 'swept') body.push('끌려가기 쉽다면, 만나기 전에 내 기준 세 가지를 적어두세요. 사람이 아니라 기준이 결정하게요.');
+    if (t.key === 'steady') body.push('오래 붙잡는 쪽이라면, 놓아야 할 때를 정해두는 게 오히려 관계를 지켜요.');
+    if (t.key === 'expressive') body.push('표현이 앞선다면, 말을 반으로 줄이고 상대의 말을 끝까지 들어보세요. 그게 관계를 오래 가게 해요.');
+    if (t.key === 'independent') body.push('나를 먼저 세우는 쪽이라면, 상대에게 역할 하나를 내주세요. 기댈 자리가 있어야 관계가 붙어요.');
+    if (t.key === 'quiet') body.push('원국이 조용하다면, 인연의 별이 드는 달에 약속을 잡으세요. 그 달의 만남이 오래 가요.');
+    if (f.gender === 'F' && f.level('식상') >= 2) body.push('식상이 강하다면, 상대를 고칠 생각을 내려놓는 게 방법이에요. 고치려 들면 관성이 눌려요.');
+    body.push('흔들리는 해에는 헤어지거나 결혼하는 결정을 하지 않는 게 흐름과 맞아요. 시기가 지나면 같은 문제가 작아 보여요.');
+    body.push(GUARDS.relation);
+    return { tag: 'attitude', title: '관계에서 지킬 것', conclusion: '태도는 구조를 바꾸지 못하지만 관계의 길이는 바꿔요.', body, evidence: [], table: null, daeun: null, years: null };
+  };
+
+  REPORT_DEFS.love = {
+    id: 'love', title: '나의 사랑과 인연 설명서', area: 'love', short: '어떻게 사랑하고, 어디서 어긋나고, 언제 인연이 드는지',
+    toc: ['먼저 결론', '나는 어떻게 사랑하는 사람인가', '관계가 어긋나는 방식', '나와 맞는 상대의 결', '인연이 드는 시기', '지금 대운의 인연', '올해와 내년 만남·결혼 흐름', '관계에서 지킬 것'],
+    sections: [s0, s1, s2, s3, s4, s5, s6, s7],
+    cover(f, sections) {
+      const k = keyTime(f);
+      return { summary: [sections[1].conclusion, sections[2].conclusion, k.line], keyTime: k.label };
+    },
+  };
+})();
+
+/* 나의 흐름 설명서 — 8단. wealth.js 패턴을 따른다.
+ * 섹션 = { tag, title, conclusion, body[], evidence[], table|null, daeun|null, years|null }
+ * 문장은 해요체, 단정 금지. 시기는 composer의 표 함수에서만 가져온다. */
+(function () {
+  const G = ['관성', '인성'];
+  const STRENGTH_WORD = { strong: '신강한', balanced: '중화된', weak: '신약한' };
+  const PALACE_NAME = { 년지: '부모·조상 자리', 월지: '직업·사회 자리', 일지: '배우자·나 자리', 시지: '자녀·말년 자리' };
+  const REL_MEANING = {
+    합: '그 두 자리가 서로 묶여서 같이 움직여요.',
+    충: '그 두 자리가 부딪혀요. 자리를 옮기는 리듬이 반복돼요.',
+    원진: '그 두 자리가 미묘하게 어긋나요. 마음이 안 맞는 리듬이 반복돼요.',
+  };
+  const KEY_ATTITUDE = {
+    love: '지금 사랑이 앞자리라면, 만남은 열어두고 결정은 천천히 하세요.',
+    money: '지금 돈이 앞자리라면, 들어온 달에 나갈 곳을 정하지 마세요.',
+    work: '지금 일이 앞자리라면, 맡을지 말지보다 어디까지 맡을지를 정하세요.',
+    people: '지금 관계가 앞자리라면, 역할과 돈을 문서로 먼저 나누세요.',
+    flow: '지금 흐름 자체가 움직인다면, 준비만 해두고 결과는 기다리세요.',
+  };
+
+  function keyTime(f) {
+    const d = f.daeun;
+    if (d.nearChange && d.changeYear && d.next) {
+      return { label: `${d.changeYear}년 대운 교체`, line: `가장 큰 갈림길은 ${d.changeYear}년이에요. ${d.next.gz.hanja} ${d.next.stemName}·${d.next.branchName} 대운으로 바뀌는 해예요.` };
+    }
+    const rows = timingRows(f, { groups: G, palace: 'spouse', mode: 'in' });
+    const sy = rows.years.find(y => y.level === 2) || rows.years.find(y => y.level === 1);
+    if (sy) return { label: `${sy.label} ${sy.sub}`, line: `가까운 시기로는 ${sy.label}(${sy.sub})에 자리와 문서가 움직여요.` };
+    if (d.changeYear && d.next) return { label: `${d.changeYear}년 대운 교체`, line: `다음 큰 갈림길은 ${d.changeYear}년 대운 교체예요.` };
+    return { label: '세운 중심', line: '앞으로 세 해는 흐름이 잔잔해요. 큰 시기는 4단 대운 표에 있어요.' };
+  }
+  function biggestGroup(f) {
+    let best = null;
+    for (const g of Object.keys(f.stars)) if (!best || f.stars[g].n > f.stars[best].n) best = g;
+    return best;
+  }
+  function elementLine(f) {
+    let maxIdx = 0;
+    for (let i = 1; i < 5; i++) if (f.counts[i] > f.counts[maxIdx]) maxIdx = i;
+    const missing = ELEMENTS.filter((e, i) => f.counts[i] === 0).map(e => e.k);
+    const out = [`오행은 ${ELEMENTS[maxIdx].k}(${ELEMENTS[maxIdx].h}) 기운이 가장 많아요.`];
+    out.push(missing.length ? `${joinKo(missing)} 기운은 원국에 없어요. 없는 오행은 세운으로 들어올 때 크게 느껴져요.` : '다섯 오행이 다 있어요. 치우침이 적은 구조예요.');
+    return out;
+  }
+
+  const s0 = f => {
+    const il = ILGAN[f.ilgan.idx], k = keyTime(f);
+    const rels = f.natal.relations;
+    return { tag: 'summary', title: '먼저 결론',
+      conclusion: `${il.name}(${il.nick}) 일간의 ${STRENGTH_WORD[f.strength]} 사주예요.`,
+      body: [
+        rels.length ? `원국 안에서 ${rels[0].a}와 ${rels[0].b}가 ${rels[0].ko}이라 그 자리가 반복해서 움직여요.` : '원국 안에서 부딪히는 자리가 없어서 흐름은 밖에서 들어와요.',
+        k.line,
+        '아래는 내 사주의 구조와 리듬, 그리고 대운 지도예요.',
+      ],
+      evidence: [strengthEvidence(f), daeunEvidence(f)], table: null, daeun: null, years: null };
+  };
+  const s1 = f => {
+    const il = ILGAN[f.ilgan.idx], bg = biggestGroup(f);
+    const body = [`당신 일간은 ${il.k}(${il.h}) ${il.name}, ${il.nick}이에요. ${il.traits[0]}`, strengthEvidence(f)];
+    body.push(...elementLine(f));
+    body.push(`용신은 ${ELEMENTS[f.yongshin].k}(${ELEMENTS[f.yongshin].h}) 기운이에요. 부족한 쪽을 채워주는 기운이에요.`);
+    if (f.stars[bg].n > 0) body.push(`십성으로는 ${iga(bg)} ${f.stars[bg].n}개로 가장 커요. ${GROUP_MEANING[bg]}.`);
+    return { tag: 'me', title: '내 사주의 큰 구조', conclusion: `${il.name} 일간에 ${STRENGTH_WORD[f.strength]} 사주, 가장 큰 힘은 ${bg}이에요.`, body, evidence: [strengthEvidence(f), natalEvidence(f, bg)], table: null, daeun: null, years: null };
+  };
+  const s2 = f => {
+    const rels = f.natal.relations.slice(0, 3);
+    const body = [];
+    rels.forEach(r => body.push(`${r.a}(${PALACE_NAME[r.a]})와 ${r.b}(${PALACE_NAME[r.b]})가 ${r.ko}이에요. ${REL_MEANING[r.ko]}`));
+    if (f.natal.yeokma) body.push('원국에 역마 자리가 있어요. 이동이 인생의 리듬이에요.');
+    if (f.natal.dohwa) body.push('원국에 도화 자리가 있어요. 사람을 끄는 힘이 리듬이에요.');
+    if (!body.length) body.push('원국 안에서 서로 부딪히는 자리가 없어요. 리듬은 대운과 세운이 만들어요.');
+    const Y = f.seun[f.thisYear];
+    const ys = [];
+    if (Y.relSpouse !== 'none') ys.push(`배우자 자리(일지)에 ${REL_KO[Y.relSpouse]}`);
+    if (Y.relCareer !== 'none') ys.push(`직업 자리(월지)에 ${REL_KO[Y.relCareer]}`);
+    if (Y.relParents !== 'none') ys.push(`부모 자리(년지)에 ${REL_KO[Y.relParents]}`);
+    body.push(ys.length ? `올해는 ${joinKo(ys)}이 걸려요. 그 자리의 리듬이 올해 살아나요.` : '올해는 원국과 부딪히는 자리가 없어요. 리듬이 쉬어가는 해예요.');
+    const evidence = f.natal.relations.map(r => `당신 원국의 ${r.a}와 ${r.b}가 ${r.ko}이에요.`);
+    evidence.push(seunEvidence(f, f.thisYear));
+    return { tag: 'pattern', title: '반복되는 인생의 리듬', conclusion: rels.length ? `반복되는 리듬은 ${rels[0].ko}에서 와요.` : '원국의 리듬은 순해요. 흐름은 밖에서 들어와요.', body, evidence, table: null, daeun: null, years: null };
+  };
+  const s3 = f => {
+    const a = answerQuestion(f, 'boundary');
+    return { tag: 'type', title: '앞에서 이끄는 사람인가 뒤에서 받치는 사람인가', conclusion: a.conclusion, body: a.body.concat([a.condition]), evidence: a.evidence, table: null, daeun: null, years: null };
+  };
+  const s4 = f => {
+    const rows = daeunRows(f, []).map(r => Object.assign({}, r, { level: (r.stemGroup === '재성' || r.stemGroup === '관성') ? 2 : 1 }));
+    const d = f.daeun;
+    const body = ['대운 표는 10년 단위의 큰 흐름이에요. 재성·관성 대운은 결과와 자리가 움직이는 시기라 강함으로 표시했어요.'];
+    rows.forEach(r => body.push(`${r.label} ${r.name}: ${DAEUN_GROUP_TEXT[r.stemGroup].split('.')[0]}.`));
+    body.push(`대운은 ${d.startAge}세부터 10년마다 바뀌어요.${d.changeYear ? ` 다음 교체는 ${d.changeYear}년이에요.` : ''}`);
+    const c = d.current;
+    return { tag: 'daeun', title: '대운 지도 전체', conclusion: c ? `지금은 ${d.currentIdx + 1}번째 대운, ${c.gz.hanja} ${c.stemName}·${c.branchName} 대운이에요.` : d.beforeFirst ? `첫 대운은 ${d.list[0].fromYear}년, ${d.list[0].age}세에 시작돼요.` : '표에 있는 대운을 다 지났어요. 마지막 대운의 흐름이 이어진다고 봐요.', body, evidence: [daeunEvidence(f)], table: null, daeun: rows, years: null };
+  };
+  const s5 = f => {
+    const d = f.daeun, nc = nowCard(f);
+    if (d.beforeFirst) {
+      const f0 = d.list[0];
+      return { tag: 'now', title: '지금 대운', conclusion: '아직 첫 대운 전이에요.', body: [`${f0.fromYear}년, ${f0.age}세부터 ${f0.gz.hanja} ${f0.stemName}·${f0.branchName} 대운이 시작돼요.`, '대운 전 시기는 원국 그대로의 나로 사는 시기예요. 흐름보다 기질이 앞서요.', `${nc.headline} ${nc.lines[0]}`], evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+    }
+    if (!d.current) {
+      const last = d.list[d.list.length - 1];
+      return { tag: 'now', title: '지금 대운', conclusion: '표에 있는 대운을 다 지났어요.', body: [`마지막 대운 ${last.gz.hanja} ${last.stemName}·${last.branchName}의 흐름이 이어진다고 봐요.`, DAEUN_GROUP_TEXT[last.stemGroup], `${nc.headline} ${nc.lines[0]}`], evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+    }
+    const c = d.current, n = d.next;
+    const body = [DAEUN_GROUP_TEXT[c.stemGroup]];
+    if (c.branchGroup !== c.stemGroup) body.push(`지지로는 ${iga(c.branchName)} 같이 있어요. ${DAEUN_GROUP_TEXT[c.branchGroup].split('.')[0]}.`);
+    const left = c.toYear - f.thisYear;
+    body.push(left > 0 ? `이 대운은 ${left}년 남았어요.` : '올해가 이 대운의 마지막 해예요.');
+    body.push(n ? `${d.changeYear}년부터 ${n.gz.hanja} ${n.stemName}·${n.branchName} 대운이에요. ${DAEUN_GROUP_TEXT[n.stemGroup].split('.')[0]}.` : '표에 있는 마지막 대운이에요. 그 뒤는 같은 흐름이 이어진다고 봐요.');
+    if (d.nearChange) body.push('지금은 대운이 바뀌는 문턱이에요. 결과가 늦게 보이는 시기예요.');
+    body.push(`${nc.headline} ${nc.lines[0]}`);
+    return { tag: 'now', title: '지금 대운', conclusion: `지금 대운은 ${c.gz.hanja}(${c.gz.hangul}) ${c.stemName}·${c.branchName} 대운이에요.`, body, evidence: [daeunEvidence(f), seunEvidence(f, f.thisYear)], table: null, daeun: null, years: null };
+  };
+  const s6 = f => {
+    const rows = timingRows(f, { groups: G, palace: 'spouse', mode: 'in' });
+    const sm = timingSummary(f, rows, 'in');
+    const rest = timingRows(f, { groups: ['관성'], palace: 'spouse', mode: 'clash' });
+    const Y = f.seun[f.thisYear];
+    const body = sm.slice(1);
+    body.push(`올해 ${Y.gz.hanja}는 ${Y.stemName}·${Y.branchName}의 해예요. ${YEAR_GROUP_TEXT[Y.stemGroup].split('.')[0]}.`);
+    const restUp = rest.months.filter(m => m.month >= f.today.month && m.level === 2);
+    body.push(restUp.length ? `몸을 챙길 달은 ${joinKo(restUp.map(m => m.label))}이에요. 일정을 비워둘 달로 잡아두면 돼요.` : '올해 남은 달 중에 일정을 비워둘 만큼 흔들리는 달은 없어요.');
+    body.push(GUARDS.health);
+    return { tag: 'timing', title: '올해 12개월과 몸을 챙길 시기', conclusion: sm[0], body, evidence: [seunEvidence(f, f.thisYear), seunEvidence(f, f.nextYear)],
+      table: { caption: '올해 월별 흐름', rows: rows.months }, tableNext: { caption: `${f.nextYear}년 월별 흐름`, rows: rows.monthsNext }, tableRest: { caption: '몸을 챙길 달', rows: rest.months }, daeun: null, years: rows.years };
+  };
+  const s7 = f => {
+    const key = f.movement.key;
+    const body = [];
+    if (f.daeun.nearChange) body.push('대운이 바뀌는 문턱이라면, 큰 결정은 나눠서 하세요. 흐름이 갈리는 중이라 결과가 늦게 보여요.');
+    body.push(f.movement.areas[key].level === 0 ? '조용한 시기라면, 다음 흐름이 오기 전에 자리를 정리해 두세요.' : KEY_ATTITUDE[key]);
+    body.push({ weak: '신약한 사주라면, 혼자 다 하기보다 받쳐주는 사람과 문서를 먼저 두세요.', strong: '신강한 사주라면, 밀어붙이는 힘을 반으로 줄이는 게 오래 가는 방법이에요.', balanced: '균형이 잡힌 사주라면, 시기만 보면 돼요. 강한 해에 움직이고 잔잔한 해에 다지세요.' }[f.strength]);
+    body.push(GUARDS.choice);
+    return { tag: 'attitude', title: '이 시기를 보내는 법', conclusion: '흐름은 바꾸지 못해도 보내는 법은 고를 수 있어요.', body, evidence: [], table: null, daeun: null, years: null };
+  };
+
+  REPORT_DEFS.flow = {
+    id: 'flow', title: '나의 흐름 설명서', area: 'flow', short: '내 사주의 큰 구조와 대운 지도, 올해 12개월',
+    toc: ['먼저 결론', '내 사주의 큰 구조', '반복되는 인생의 리듬', '앞에서 이끄는 사람인가 뒤에서 받치는 사람인가', '대운 지도 전체', '지금 대운', '올해 12개월과 몸을 챙길 시기', '이 시기를 보내는 법'],
+    sections: [s0, s1, s2, s3, s4, s5, s6, s7],
+    cover(f, sections) {
+      const k = keyTime(f);
+      return { summary: [sections[1].conclusion, sections[2].conclusion, k.line], keyTime: k.label };
+    },
+  };
+})();
+
+/* ==========================================================================
+ * 후속질문 규칙 엔진 — LLM 없이 엔진 표(세운·월운·대운)와 질문 풀로 답한다.
+ * 답 형태 고정: 결론 → 근거 → 시기·조건 → (선 긋기) → 다음 질문. 5문장 이내.
+ * 실제 서비스에서는 app.js가 APP_CONFIG.consultApi(워커)를 먼저 시도하고 실패 시 여기로 온다.
+ * ========================================================================== */
+
+const KEYWORD_MAP = [
+  { re: /몸|건강|아프|피곤|병|통증/, kind: 'health' },
+  { re: /집을|집 |부동산|아파트|전세|매매|청약/, kind: 'property' },
+  { re: /투자|주식|코인|펀드|적금/, q: 'invest_ok' },
+  { re: /저축|모으/, q: 'save_vs_invest' },
+  { re: /이사|이동|옮기/, q: 'move_when' },
+  { re: /이직|퇴사|회사|직장|취업|입사/, q: 'change_job_ok' },
+  { re: /사업|창업|가게|장사|개업/, q: 'biz_start_when' },
+  { re: /승진|인정|평가/, q: 'promotion' },
+  { re: /결혼|혼인|프러포즈/, q: 'marriage_when' },
+  { re: /헤어|재회|다시 만나|전 남|전 여/, q: 'reunion_ok' },
+  { re: /연애|인연|만남|소개팅|썸/, q: 'love_when' },
+  { re: /동업|파트너|같이 일|공동/, q: 'partner_ok' },
+  { re: /부모|자녀|아이|엄마|아빠|가족|형제/, q: 'family_when' },
+  { re: /귀인|도와주|은인/, q: 'people_luck' },
+  { re: /대운|인생|흐름이 바뀌|전환/, q: 'daeun_change' },
+  { re: /내년/, q: 'next_year' },
+  { re: /올해|이번 해|금년/, q: 'this_year' },
+  { re: /빚|대출|보증/, q: 'why_people_money' },
+  { re: /돈|재물|수입|월급|매출/, q: 'money_when' },
+  { re: /맞는 사람|어떤 사람|이상형/, q: 'match_type' },
+  { re: /맞춰|이끄|리더/, q: 'boundary' },
+];
+const AREA_WHEN = { money: 'money_when', work: 'job_when', love: 'love_when', people: 'people_luck', flow: 'move_when' };
+const AREA_WHY = { money: 'why_leak', work: 'work_style', love: 'why_love_fail', people: 'why_people_money', flow: 'daeun_change' };
+const AREA_SECTION_HINT = { summary: 0, me: 1, pattern: 2, type: 3, daeun: 4, now: 5, timing: 6, attitude: 7 };
+
+function ctxArea(ctx) {
+  if (ctx && ctx.area) return ctx.area;
+  if (ctx && ctx.report && REPORT_DEFS[ctx.report]) return REPORT_DEFS[ctx.report].area;
+  if (ctx && ctx.question) { const q = QUESTIONS.find(x => x.id === ctx.question); if (q) return q.area; }
+  return 'flow';
+}
+function qText(id, facts) { const q = QUESTIONS.find(x => x.id === id); return q ? pickText(q.text, facts.band) : ''; }
+function nextLine(id, facts) { return `이어서, "${qText(id, facts)}"도 볼까요?`; }
+
+function matchQuestion(text, ctx) {
+  const t = text.replace(/\s+/g, ' ');
+  for (const k of KEYWORD_MAP) if (k.re.test(t)) return k;
+  const area = ctxArea(ctx);
+  if (/언제|몇 월|몇월|시기|타이밍|좋은 달|좋은 해/.test(t)) return { q: AREA_WHEN[area] };
+  if (/왜|이유/.test(t)) return { q: AREA_WHY[area] };
+  if (/괜찮|해도 돼|해도 될|할까/.test(t)) return { q: { money: 'invest_ok', work: 'change_job_ok', love: 'reunion_ok', people: 'partner_ok', flow: 'move_ok' }[area] };
+  return null;
+}
+
+function fromAnswer(a, facts) {
+  const ev = a.type === 'daeun' ? (a.evidence[1] || a.evidence[0]) : a.evidence.find(e => !a.conclusion.includes(e.slice(0, 12)) && !e.includes(a.conclusion.slice(0, 12))) || a.evidence[0];
+  const s = [a.conclusion, ev];
+  if (a.timing && a.type !== 'when') s.push(timingSummary(facts, a.timing, a.mode)[0]);
+  else if (a.body[0]) s.push(a.body[0]);
+  else if (a.timing) s.push(timingSummary(facts, a.timing, a.mode)[1] || a.condition);
+  if (a.guard) s.push(a.guard);
+  s.push(nextLine(a.followups[0].id, facts));
+  return { sentences: s.slice(0, 5), suggest: a.followups.slice(0, 2), guard: !!a.guard, fallback: false, question: a.id };
+}
+
+function propertyReply(facts) {
+  const Y = facts.seun[facts.thisYear];
+  const rows = timingRows(facts, { groups: ['인성'], palace: null, mode: 'in' });
+  const up = rows.months.filter(m => m.month >= facts.today.month && m.level >= 1).slice(0, 3);
+  const hasDoc = Y.stemGroup === '인성' || Y.branchGroup === '인성';
+  const hasMoney = Y.stemGroup === '재성' || Y.branchGroup === '재성';
+  const s = ['네, 명리에서 집은 문서(인성)와 재성이 같이 움직이는 일로 봐요.'];
+  s.push(hasDoc ? `${facts.thisYear}년 세운 ${Y.gz.hanja}에 인성이 들어와서 문서 쪽이 움직이는 해예요.` : hasMoney ? `${facts.thisYear}년 세운 ${Y.gz.hanja}에 재성이 들어와요. 돈은 움직이는데 문서(인성)는 조용한 해예요.` : `${facts.thisYear}년 세운 ${Y.gz.hanja}는 ${Y.stemName}·${Y.branchName}이라 집 쪽은 조용한 해예요.`);
+  s.push(up.length ? `계약을 한다면 ${joinKo(up.map(m => m.label))}이 흐름과 맞아요. 살지 말지는 사주가 정해줄 수 없어요.` : '올해 남은 달에는 인성이 드는 달이 없어요. 계약은 내년 흐름을 보는 게 맞아요. 살지 말지는 사주가 정해줄 수 없어요.');
+  s.push(GUARDS.money);
+  s.push(nextLine('move_when', facts));
+  return { sentences: s, suggest: [{ id: 'move_when', text: qText('move_when', facts) }, { id: 'money_when', text: qText('money_when', facts) }], guard: true, fallback: false, question: 'property' };
+}
+
+function healthReply(facts) {
+  const a = answerQuestion(facts, 'rest_when');
+  const s = [GUARDS.health, '사주에서 볼 수 있는 건 일정을 비워둘 달 정도예요.', a.conclusion.replace('흔들리기 쉬워요', '몸보다 일이 앞서기 쉬워요'), nextLine('this_year', facts)];
+  return { sentences: s, suggest: [{ id: 'rest_when', text: qText('rest_when', facts) }, { id: 'this_year', text: qText('this_year', facts) }], guard: true, fallback: false, question: 'rest_when' };
+}
+
+function fallbackReply(facts, ctx) {
+  const area = ctxArea(ctx);
+  const now = nowCard(facts);
+  const s = ['이 질문은 아직 규칙으로 정리되지 않았어요. 질문은 차감되지 않았어요.', `대신 지금 ${AREAS[area].label} 쪽 흐름만 짚어드릴게요. ${areaReason(facts, area)}.`, now.headline];
+  if (ctx && ctx.report && REPORT_DEFS[ctx.report]) s.push(`자세한 건 ${REPORT_DEFS[ctx.report].title}의 ${REPORT_DEFS[ctx.report].toc[AREA_SECTION_HINT[ctx.section] || 6]} 부분을 참고해 보세요.`);
+  s.push(nextLine(AREA_WHEN[area], facts));
+  return { sentences: s.slice(0, 5), suggest: [{ id: AREA_WHEN[area], text: qText(AREA_WHEN[area], facts) }, { id: AREA_WHY[area], text: qText(AREA_WHY[area], facts) }], guard: false, fallback: true, question: null };
+}
+
+function consultReply(facts, ctx, text) {
+  const m = matchQuestion(text || '', ctx);
+  if (!m) return fallbackReply(facts, ctx);
+  if (m.kind === 'health') return healthReply(facts);
+  if (m.kind === 'property') return propertyReply(facts);
+  const q = m.q;
+  if (!q) return fallbackReply(facts, ctx);
+  const a = answerQuestion(facts, q);
+  const r = fromAnswer(a, facts);
+  if (/투자|주식|코인|대출|빚|보증|매매/.test(text) && !r.guard) { r.sentences.splice(Math.min(3, r.sentences.length - 1), 0, GUARDS.money); r.sentences = r.sentences.slice(0, 5); r.guard = true; }
+  return r;
+}
+
+// 맥락에 맞는 추천질문 3개: 같은 영역·같은 태그 우선, 다음 같은 영역, 다음 흐름 영역.
+function suggestFor(facts, ctx) {
+  const area = ctxArea(ctx);
+  const tag = ctx && ctx.section;
+  const exclude = new Set([ctx && ctx.question].filter(Boolean));
+  const pool = QUESTIONS.filter(q => !exclude.has(q.id));
+  const score = q => (q.area === area ? 2 : 0) + (tag && q.tag === tag ? 1 : 0) + (q.report === (ctx && ctx.report) ? 1 : 0);
+  return pool.slice().sort((a, b) => score(b) - score(a)).slice(0, 3).map(q => ({ id: q.id, text: pickText(q.text, facts.band) }));
+}
+
+/* ==========================================================================
+ * 앱 — 해시 라우터, 화면, 후속질문 바텀시트, 저장(localStorage), 공유 카드, 인쇄
+ * 화면: #/ 홈(S0·S7) · #/input(S1) · #/now(S2) · #/ask/:area(S3) · #/q/:id(S4)
+ *       #/detail/:id · #/report/:id(S5) · #/type, #/type/result(T) · #/tarot
+ * 가안: 결제 없음(잠금은 안내만), 상담은 규칙 엔진(APP_CONFIG.consultApi가 있으면 먼저 시도)
+ * ========================================================================== */
+(function () {
+  'use strict';
+  const APP_NAME = '사주에 묻다';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const AREA_LIST = ['love', 'money', 'work', 'people', 'flow'];
+  const REPORT_LIST = ['wealth', 'work', 'love', 'flow'];
+
+  // ---------- 저장 ----------
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('ms_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('ms_' + k, JSON.stringify(v)); } catch (e) {} },
+    del(k) { try { localStorage.removeItem('ms_' + k); } catch (e) {} },
+  };
+  const state = { profile: null, saju: null, facts: null, chat: { ctx: null, key: null, busy: false } };
+
+  function loadProfile() {
+    const p = store.get('profile', null);
+    if (!p) { state.profile = state.saju = state.facts = null; return false; }
+    try { state.saju = computeSaju(p.input); state.facts = buildFacts(state.saju); state.profile = p; return true; }
+    catch (e) { store.del('profile'); state.profile = state.saju = state.facts = null; return false; }
+  }
+  const seen = () => store.get('seen', { questions: [], reports: [], details: [] });
+  function markSeen(kind, id) { const s = seen(); s[kind] = [id].concat(s[kind].filter(x => x !== id)).slice(0, 20); store.set('seen', s); }
+  const threads = () => store.get('threads', {});
+  const quotas = () => store.get('quota', {});
+  const QUOTA_DEFAULT = key => key.startsWith('r_') ? 10 : key.startsWith('q_') ? 2 : 5;
+  function quotaOf(key) { const q = quotas(); return key in q ? q[key] : QUOTA_DEFAULT(key); }
+  function setQuota(key, n) { const q = quotas(); q[key] = n; store.set('quota', q); }
+
+  // ---------- 조각 ----------
+  const nickname = () => (state.profile && state.profile.nick) ? state.profile.nick : (state.facts ? ILGAN[state.facts.ilgan.idx].nick : '');
+  const symbolSvg = idx => SYMBOLS[ILGAN[idx].symbol];
+  const lv = l => `<span class="lv lv-${l}">${LEVEL_WORDS[l]}</span>`;
+  const areaChip = (k, on) => `<button class="chip area-${k}${on ? ' on' : ''}" data-go="#/ask/${k}">${AREAS[k].label}</button>`;
+  const btn = (label, go, cls) => `<button class="btn ${cls || ''}" data-go="${go}">${esc(label)}</button>`;
+
+  function topbar() {
+    const has = !!state.facts;
+    return `<header class="topbar">
+      <a class="brand" href="#/"><span class="mark"></span>${APP_NAME}<span class="badge">가안</span></a>
+      <div class="right">${has ? `<button class="btn sm ghost" data-go="#/input">${esc(nickname())} · 다시 입력</button>` : `<button class="btn sm" data-go="#/input">내 사주 입력</button>`}</div>
+    </header>`;
+  }
+  const guide = text => `<div class="guide"><span class="avatar" aria-hidden="true"></span><p>${esc(text)}</p></div>`;
+  function termify(text) {
+    let html = esc(text);
+    const done = new Set();
+    for (const k of termsIn(text)) {
+      if (done.has(k) || [...done].some(d => d.includes(k))) continue;
+      html = html.replace(k, `<button class="term" data-term="${k}">${k}</button>`);
+      done.add(k);
+    }
+    return html;
+  }
+  const paras = (arr, cls) => arr.map(t => `<p class="${cls || 'body'}">${termify(t)}</p>`).join('');
+
+  function strip() {
+    const f = state.facts; const il = ILGAN[f.ilgan.idx]; const Y = f.seun[f.thisYear]; const c = f.daeun.current;
+    return `<div class="strip"><span class="sym">${symbolSvg(f.ilgan.idx)}</span>
+      <div><b>${il.name} ${il.h} · ${esc(il.nick)}</b>
+      <span class="small">${c ? `지금 대운 ${c.gz.hanja} ${c.stemName}·${c.branchName}` : '첫 대운 전'} · 올해 ${Y.gz.hanja} ${Y.stemName}·${Y.branchName}${f.hourKnown ? '' : ' · 시간 모름'}</span></div></div>`;
+  }
+  function monthsGrid(rows, caption) {
+    const f = state.facts;
+    const cells = rows.map(r => {
+      const past = r.year === f.thisYear && r.month < f.today.month;
+      const now = r.year === f.thisYear && r.month === f.today.month;
+      return `<div class="mcell l${r.level}${past ? ' past' : ''}${now ? ' now' : ''}" title="${esc(r.sub)} ${esc(r.notes.join(' '))}"><i></i><b>${r.month}</b></div>`;
+    }).join('');
+    const strong = rows.filter(r => r.level === 2).map(r => `${r.label}(${r.notes.join('·')})`);
+    return `${caption ? `<div class="cap">${esc(caption)}</div>` : ''}<div class="months">${cells}</div>
+      <div class="legend"><span><i></i>잔잔함</span><span><i class="i1"></i>보통</span><span><i class="i2"></i>강함</span></div>
+      ${strong.length ? `<div class="notes">강한 달: ${esc(strong.join(', '))}</div>` : '<div class="notes">강한 달은 없어요.</div>'}`;
+  }
+  const yearsGrid = rows => `<div class="years">${rows.map(r => `<div class="ycell l${r.level}"><b>${r.label}</b><span class="small">${esc(r.sub)}</span>${lv(r.level)}${r.notes.length ? `<div class="notes">${esc(r.notes.join('·'))}</div>` : ''}</div>`).join('')}</div>`;
+  const daeunList = rows => `<div class="daeun">${rows.map(r => `<div class="drow${r.current ? ' cur' : ''}"><span class="age">${r.label}<span class="yrs">${r.sub}</span></span><span>${esc(r.name)}</span>${lv(r.level)}</div>`).join('')}</div>`;
+  function pillarsGrid(hiGroups) {
+    const f = state.facts; const P = f.pillars; const hi = new Set(hiGroups || []);
+    const cell = (lab, p, sk, bk) => {
+      if (!p) return `<div class="pillar empty"><div class="lab">${lab}</div><div class="hz">?<br>?</div><div class="ss">시간 모름</div></div>`;
+      const s = f.cellStars[sk], b = f.cellStars[bk];
+      const on = (s && hi.has(s.group)) || (b && hi.has(b.group));
+      return `<div class="pillar${on ? ' hi' : ''}"><div class="lab">${lab}</div><div class="hz">${STEMS[p.stem].h}<br>${BRANCHES[p.branch].h}</div><div class="ss">${s ? s.name : '일간'}<br>${b ? b.name : ''}</div></div>`;
+    };
+    return `<div class="pillars">${cell('년', P.year, '년간', '년지')}${cell('월', P.month, '월간', '월지')}${cell('일', P.day, null, '일지')}${cell('시', P.hour, '시간', '시지')}</div>`;
+  }
+  function ohengBars() {
+    const c = state.facts.counts; const max = Math.max(...c, 1);
+    return `<div class="bars">${c.map((n, i) => `<div class="bar${n === max ? ' on' : ''}"><i style="height:${Math.max(6, Math.round(n / max * 52))}px"></i>${ELEMENTS[i].k} ${n}</div>`).join('')}</div>`;
+  }
+  function qItem(q, opts) {
+    const o = opts || {}; const f = state.facts;
+    const text = pickText(q.text, f ? f.band : '30s');
+    const go = o.go || `#/q/${q.id}`;
+    return `<button class="qitem" data-go="${go}"><span><span class="t">${esc(text)}${o.free ? '<span class="tag-free">무료 맛보기</span>' : ''}</span>${o.meta ? `<span class="meta">${esc(o.meta)}</span>` : ''}</span><span class="arrow">›</span></button>`;
+  }
+  function areaQuestions(area) {
+    const band = state.facts ? state.facts.band : '30s';
+    const qs = QUESTIONS.filter(q => q.area === area);
+    return qs.filter(q => typeof q.text === 'object' && q.text[band]).concat(qs.filter(q => !(typeof q.text === 'object' && q.text[band])));
+  }
+  function questionList(area) {
+    return `<div class="qlist">${areaQuestions(area).map((q, i) => qItem(q, { free: i === 0 })).join('')}</div>`;
+  }
+  function moreAsk(ctx) {
+    const sug = suggestFor(state.facts, ctx);
+    const c = esc(JSON.stringify(ctx));
+    return `<div class="more"><div class="t">이 내용 더 물어보기</div>
+      <div class="chips">${sug.map(s => `<button class="chip q" data-chat="${c}" data-ask="${esc(s.text)}">${esc(s.text)}</button>`).join('')}</div>
+      <button class="btn sm indigo" data-chat="${c}">직접 물어보기</button></div>`;
+  }
+  const reportCards = () => {
+    const s = seen();
+    return `<div class="rgrid">${REPORT_LIST.map(id => { const r = REPORT_DEFS[id]; return `<button class="rcard${s.reports.includes(id) ? ' seen' : ''}" data-go="#/report/${id}"><b>${r.title}</b><span class="small">${esc(r.short)}</span>${s.reports.includes(id) ? '<span class="small">읽기</span>' : ''}</button>`; }).join('')}</div>`;
+  };
+  function footer() {
+    return `<footer class="foot">
+      <div>사주 해석은 전통 명리의 관점이에요. 개인의 판단을 대신하지 않아요. 건강·법률·금융 판단은 전문가에게요.</div>
+      <div>가안 · 결제 없음 · 상담은 규칙 엔진(LLM 연결 전) · 생년월일은 이 기기에만 저장돼요.</div>
+      <div class="row"><button class="btn sm ghost" data-action="reset-quota">질문 수 초기화</button><button class="btn sm ghost" data-action="reset-all">내 사주 지우기</button><a class="btn sm ghost" href="./heo/">허선생(기존)</a></div>
+    </footer>`;
+  }
+
+  // ---------- 화면 ----------
+  function viewHome() {
+    if (!state.facts) {
+      const qs = HOME_QUESTIONS.map(id => QUESTIONS.find(q => q.id === id));
+      return `${topbar()}
+      <section class="hero"><div class="eyebrow">결과를 받고 끝나는 사주가 아니라</div><h1>오늘, 내 사주에<br>무엇을 물어볼까요?</h1><p class="sub">절기까지 맞춘 만세력으로 계산하고, 지금 움직이는 영역을 먼저 본 뒤, 읽다가 바로 물어봐요.</p></section>
+      <div class="chips">${AREA_LIST.map(k => areaChip(k, false)).join('')}</div>
+      <div class="qlist">${qs.map((q, i) => qItem(q, { free: i === 0 })).join('')}</div>
+      ${guide(GUIDE.home)}
+      <div class="card tint"><p class="lead">질문 고르기 어려우면,<br>지금 내 사주에서 뭐가 움직이는지부터.</p>${btn('내 사주 보기 (무료)', '#/input', 'primary block')}</div>
+      <div class="card"><div class="eyebrow">이 서비스가 다른 점</div>
+        <div class="stack"><p><b>절기까지 맞춘 만세력.</b> 입춘과 12절을 기준으로 년·월주를 계산해요. 검증 테스트가 붙어 있어요.</p>
+        <p><b>지금 움직이는 영역을 먼저.</b> 오행 설명부터 시작하지 않아요. 올해와 이달에 크게 움직이는 것부터 보여줘요.</p>
+        <p><b>읽다가 바로 물어보기.</b> 풀이 중간중간에 후속질문이 열려요. 생년월일을 다시 말할 필요가 없어요.</p></div></div>
+      <div class="card"><div class="eyebrow">깊이 보는 리포트</div>${reportCards()}</div>
+      <button class="card" style="width:100%;text-align:left" data-go="#/type"><div class="eyebrow">나의 사주 캐릭터</div><b>나는 어떤 사람? 30초 캐릭터 카드</b><span class="small" style="display:block">일간 10유형 중 내 것을 찾고 친구에게 공유해요.</span></button>
+      <button class="card" style="width:100%;text-align:left" data-go="#/tarot"><div class="eyebrow">타로</div><b>지금 품은 물음에 그림패로</b><span class="small" style="display:block">사주와 별도 시스템이에요. 가안에는 아직 없어요.</span></button>
+      ${footer()}`;
+    }
+    const f = state.facts; const th = threads(); const s = seen();
+    const tlist = Object.values(th).sort((a, b) => b.updated - a.updated).slice(0, 2);
+    const recent = s.reports.map(id => ({ go: `#/report/${id}`, t: REPORT_DEFS[id].title, k: '리포트' })).concat(s.details.map(id => ({ go: `#/detail/${id}`, t: pickText(QUESTIONS.find(q => q.id === id).text, f.band), k: '질문 상세' })), s.questions.map(id => ({ go: `#/q/${id}`, t: pickText(QUESTIONS.find(q => q.id === id).text, f.band), k: '맛보기' }))).slice(0, 5);
+    const seenQ = new Set(s.questions.concat(s.details));
+    const unseen = AREA_LIST.map(k => areaQuestions(k).find(q => !seenQ.has(q.id))).filter(Boolean).slice(0, 4);
+    const M = f.thisMonth;
+    return `${topbar()}
+      <section class="hero"><h1>${esc(nickname())}님,<br>지난번 이어서 물어볼까요?</h1></section>
+      ${guide(GUIDE.revisit)}
+      <div class="row"><button class="btn primary" data-chat="${esc(JSON.stringify({ area: f.movement.key }))}">내 사주에 질문하기</button>${btn('지금의 나 보기', '#/now')}</div>
+      <div class="card"><div class="eyebrow">이달의 흐름 · ${f.thisYear}년 ${f.today.month}월 ${M.gz.hanja}</div>
+        <p class="lead">${esc(nowCard(f).headline)}</p>
+        <div class="areas">${f.movement.order.map(k => `<button class="area${k === f.movement.key ? ' key' : ''}" data-go="#/ask/${k}"><span class="name"><i class="dot ${k}"></i>${AREAS[k].label}</span><span class="why">${esc(areaReason(f, k))}</span>${lv(f.movement.areas[k].level)}</button>`).join('')}</div></div>
+      ${tlist.length ? `<div class="card"><div class="eyebrow">이어서 물어보기</div><div class="stack">${tlist.map(t => `<button class="thread" data-chat="${esc(JSON.stringify(t.ctx))}"><b>${esc(t.label)}</b><span class="small">${esc((t.messages.filter(m => m.role === 'me').slice(-1)[0] || { text: '아직 질문 전' }).text)}</span></button>`).join('')}</div></div>` : ''}
+      ${recent.length ? `<div class="card"><div class="eyebrow">최근 본 풀이</div><div class="qlist">${recent.map(r => `<button class="qitem" data-go="${r.go}"><span><span class="t">${esc(r.t)}</span><span class="meta">${r.k}</span></span><span class="arrow">›</span></button>`).join('')}</div></div>` : ''}
+      ${unseen.length ? `<div class="card"><div class="eyebrow">아직 안 본 질문</div><div class="qlist">${unseen.map(q => qItem(q)).join('')}</div></div>` : ''}
+      <div class="card"><div class="eyebrow">깊이 보는 리포트</div>${reportCards()}</div>
+      <div class="card tint"><div class="eyebrow">내 사주 관리</div><div class="row">${btn('다시 입력', '#/input', 'sm')}${btn('캐릭터 카드', '#/type/result', 'sm')}<span class="small">가족·연인 추가와 궁합은 다음 단계예요.</span></div></div>
+      ${footer()}`;
+  }
+
+  function viewInput(mode) {
+    const p = state.profile ? state.profile.input : null;
+    const v = (k, d) => p && p[k] != null ? p[k] : d;
+    return `${topbar()}
+      <section class="hero"><div class="eyebrow">${mode === 'type' ? '나의 사주 캐릭터' : '내 사주 입력'}</div><h1>${mode === 'type' ? '나는 어떤 사람?' : '태어난 날을 알려주세요'}</h1><p class="sub">이름은 받지 않아요. 생년월일은 이 기기에만 저장돼요.</p></section>
+      ${guide(GUIDE.input)}
+      <form class="form card" id="f-input" data-mode="${mode || ''}">
+        <label>생년월일</label>
+        <div class="grid3"><input type="number" id="i-y" placeholder="년 (예: 1988)" min="1900" max="2050" value="${v('year', '')}" required><input type="number" id="i-m" placeholder="월" min="1" max="12" value="${v('month', '')}" required><input type="number" id="i-d" placeholder="일" min="1" max="31" value="${v('day', '')}" required></div>
+        <label>양력 · 음력</label>
+        <div class="seg" id="i-cal"><button type="button" data-v="solar" class="${v('calendar', 'solar') === 'solar' ? 'on' : ''}">양력</button><button type="button" data-v="lunar" class="${v('calendar', 'solar') === 'lunar' ? 'on' : ''}">음력</button></div>
+        <label class="check" id="i-leap-wrap" ${v('calendar', 'solar') === 'lunar' ? '' : 'hidden'}><input type="checkbox" id="i-leap" ${v('leapMonth', false) ? 'checked' : ''}> 윤달이에요</label>
+        <label>태어난 시간</label>
+        <div class="grid2"><input type="number" id="i-h" placeholder="시 (0~23)" min="0" max="23" value="${v('hourUnknown', false) ? '' : v('hour', '')}"><input type="number" id="i-mi" placeholder="분" min="0" max="59" value="${v('hourUnknown', false) ? '' : v('minute', '')}"></div>
+        <label class="check"><input type="checkbox" id="i-unk" ${v('hourUnknown', false) ? 'checked' : ''}> 시간을 몰라요</label>
+        <label>성별</label>
+        <div class="seg" id="i-g"><button type="button" data-v="F" class="${v('gender', 'F') === 'F' ? 'on' : ''}">여성</button><button type="button" data-v="M" class="${v('gender', 'F') === 'M' ? 'on' : ''}">남성</button></div>
+        <label>부를 이름 (선택)</label>
+        <input type="text" id="i-nick" placeholder="비우면 일간 별명으로 불러요" maxlength="12" value="${esc(state.profile ? state.profile.nick || '' : '')}">
+        <div class="err" id="i-err" hidden></div>
+        <div style="margin-top:18px"><button class="btn primary block" type="submit">${mode === 'type' ? '내 캐릭터 보기' : '계산하기'}</button></div>
+      </form>
+      <p class="small">성별은 배우자 별을 정하는 데만 써요. 여성은 관성, 남성은 재성이에요.</p>`;
+  }
+  function submitInput(form) {
+    const err = $('#i-err', form);
+    const input = {
+      year: +$('#i-y', form).value, month: +$('#i-m', form).value, day: +$('#i-d', form).value,
+      calendar: $('#i-cal .on', form).dataset.v, leapMonth: $('#i-leap', form).checked,
+      hourUnknown: $('#i-unk', form).checked, hour: +$('#i-h', form).value, minute: +($('#i-mi', form).value || 0),
+      gender: $('#i-g .on', form).dataset.v,
+    };
+    if (!input.year || !input.month || !input.day) { err.hidden = false; err.textContent = '생년월일을 모두 넣어 주세요.'; return; }
+    if (!input.hourUnknown && ($('#i-h', form).value === '' || input.hour < 0 || input.hour > 23)) { err.hidden = false; err.textContent = '시간을 넣거나 "시간을 몰라요"를 체크해 주세요.'; return; }
+    try { const s = computeSaju(input); buildFacts(s); }
+    catch (e) { err.hidden = false; err.textContent = String(e.message || e).replace(/네\.|시게\./g, '요.'); return; }
+    store.set('profile', { input, nick: $('#i-nick', form).value.trim(), savedAt: Date.now() });
+    loadProfile();
+    const pending = store.get('pending', null); store.del('pending');
+    if (form.dataset.mode === 'type') navigate('#/type/result');
+    else navigate(pending || '#/now');
+  }
+
+  function viewNow() {
+    const f = state.facts; const now = nowCard(f); const il = ILGAN[f.ilgan.idx]; const key = f.movement.key;
+    const sig = f.movement.areas[key].signals.map(s => signalText(f, s));
+    const Y = f.seun[f.thisYear];
+    return `${topbar()}${strip()}
+      ${guide(now.headline)}
+      <div class="card"><div class="eyebrow">지금의 나 · ${f.thisYear}년 ${f.today.month}월</div><p class="lead">${esc(now.headline)}</p>${paras(now.lines)}</div>
+      <div class="card"><div class="eyebrow">다섯 영역의 움직임</div><p class="small">단계는 좋고 나쁨이 아니라 움직임의 크기예요. 영역을 누르면 질문 목록으로 가요.</p>
+        <div class="areas">${f.movement.order.map(k => `<button class="area${k === key ? ' key' : ''}" data-go="#/ask/${k}"><span class="name"><i class="dot ${k}"></i>${AREAS[k].label}</span><span class="why">${esc(areaReason(f, k))}</span>${lv(f.movement.areas[k].level)}</button>`).join('')}</div>
+        <details class="ev"><summary>왜 이렇게 나왔어요?</summary><div class="in">
+          <p>${termify(`${f.thisYear}년 세운 ${Y.gz.hanja}(${Y.gz.hangul})는 당신에게 ${Y.stemName}·${Y.branchName}이에요. 이달 ${f.thisMonth.gz.hanja}는 ${f.thisMonth.stemName}·${f.thisMonth.branchName}이에요.`)}</p>
+          ${sig.length ? `<ul>${sig.map(t => `<li>${termify(t)}</li>`).join('')}</ul>` : '<p>올해와 이달의 십성이 원국의 큰 자리와 부딪히지 않아요.</p>'}
+          <p class="small">규칙: 올해와 이달의 십성이 어느 영역을 건드리는지, 합·충이 걸린 자리가 어디인지를 세요. 0개 잔잔함, 1개 보통, 2개 이상 강함이에요.</p>
+          ${pillarsGrid([])}</div></details></div>
+      <div class="card"><div class="eyebrow">나의 사주 기본</div>
+        <div class="row"><span class="sym" style="width:56px;height:56px;color:var(--ink-2)">${symbolSvg(f.ilgan.idx)}</span><div><b>${il.name} ${il.h} · ${esc(il.nick)}</b><span class="small" style="display:block">${esc(il.keyword)}</span></div></div>
+        <ul style="padding-left:18px;margin:10px 0;color:var(--ink-2)">${il.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${ohengBars()}<p class="small">${termify(strengthEvidence(f))}</p>
+        ${btn('공유 카드 만들기', '#/type/result', 'sm')}</div>
+      <div class="card"><div class="eyebrow">요즘 뭐가 제일 궁금하세요?</div>
+        <div class="chips">${f.movement.order.map((k, i) => areaChip(k, i === 0)).join('')}</div>
+        ${questionList(key)}</div>
+      ${guide(GUIDE.ask)}
+      ${footer()}`;
+  }
+
+  function viewAsk(area) {
+    const f = state.facts; const a = AREA_LIST.includes(area) ? area : f.movement.key;
+    return `${topbar()}${strip()}
+      <section class="hero" style="padding-top:12px"><div class="eyebrow">질문 고르기</div><h1>${AREAS[a].label}, 무엇이 궁금하세요?</h1><p class="sub">${esc(areaReason(f, a))}. ${lv(f.movement.areas[a].level)}</p></section>
+      <div class="chips">${AREA_LIST.map(k => areaChip(k, k === a)).join('')}</div>
+      ${questionList(a)}
+      ${guide(GUIDE.ask)}
+      ${footer()}`;
+  }
+
+  function viewQ(id) {
+    const f = state.facts; const q = QUESTIONS.find(x => x.id === id); if (!q) return viewNotFound();
+    const a = answerQuestion(f, id); markSeen('questions', id);
+    const r = REPORT_DEFS[a.report];
+    return `${topbar()}${strip()}
+      <section class="hero" style="padding-top:12px"><div class="eyebrow">맛보기 · 무료 · ${AREAS[a.area].label}</div><h1>${esc(a.title)}</h1></section>
+      <div class="card">${paras(a.teaser)}</div>
+      <div class="row">${btn('더 자세히 보기', `#/detail/${id}`, 'primary')}${btn(`리포트 · ${r.title}`, `#/report/${a.report}`)}</div>
+      <div class="card tint"><div class="eyebrow">이어서 물어볼 수 있는 질문</div>
+        <div class="qlist locked">${a.followups.map(fu => `<button class="qitem" data-go="#/detail/${id}"><span><span class="t">${esc(fu.text)}</span><span class="meta">상세에서 열려요</span></span><span class="lock">잠김</span></button>`).join('')}</div>
+        <p class="small">${esc(GUIDE.locked)}</p></div>
+      ${btn('다른 질문 보기', `#/ask/${a.area}`, 'sm ghost')}
+      ${footer()}`;
+  }
+
+  function viewDetail(id) {
+    const f = state.facts; const q = QUESTIONS.find(x => x.id === id); if (!q) return viewNotFound();
+    const a = answerQuestion(f, id); markSeen('details', id);
+    const ctx = { question: id, area: a.area };
+    const groups = { love: [f.spouseGroup], money: ['재성', '식상'], work: ['관성', '인성'], people: ['비겁', '인성'], flow: ['인성'] }[a.area];
+    return `${topbar()}
+      <div class="banner">가안이라 결제 없이 열려요. 실제 서비스에서는 이 화면부터 단품 결제예요.</div>${strip()}
+      <section class="hero" style="padding-top:8px"><div class="eyebrow">단품 질문 상세 · ${AREAS[a.area].label}</div><h1>${esc(a.title)}</h1></section>
+      <div class="sec"><div class="no">결론</div><p class="concl">${termify(a.conclusion)}</p>${paras(a.body)}</div>
+      <div class="sec"><div class="no">근거</div><h3>내 사주 어디에서 이렇게 읽히나</h3><ul style="padding-left:18px;color:var(--ink-2)">${a.evidence.map(e => `<li>${termify(e)}</li>`).join('')}</ul>${pillarsGrid(groups)}</div>
+      ${a.timing ? `<div class="sec"><div class="no">시기</div><h3>${a.mode === 'clash' ? '흔들리기 쉬운 시기' : '움직이는 시기'}</h3>${yearsGrid(a.timing.years)}${monthsGrid(a.timing.months, `${f.thisYear}년 월별`)}<details class="ev"><summary>${f.nextYear}년 월별 보기</summary><div class="in">${monthsGrid(a.timing.monthsNext)}</div></details></div>` : ''}
+      ${a.daeun ? `<div class="sec"><div class="no">대운</div><h3>10년 단위의 흐름</h3>${daeunList(a.daeun)}</div>` : ''}
+      <div class="sec"><div class="no">조건</div><p class="concl" style="font-size:15.5px">${termify(a.condition)}</p>${a.guard ? `<p class="small">${esc(a.guard)}</p>` : ''}</div>
+      <div class="card tint"><div class="eyebrow">포함된 후속질문 2개</div><div class="qlist">${a.followups.map(fu => `<button class="qitem" data-chat="${esc(JSON.stringify(ctx))}" data-ask="${esc(fu.text)}"><span><span class="t">${esc(fu.text)}</span><span class="meta">누르면 상담에서 바로 답해요</span></span><span class="arrow">›</span></button>`).join('')}</div></div>
+      ${moreAsk(ctx)}
+      <div class="row" style="margin-top:14px">${btn(`리포트 · ${REPORT_DEFS[a.report].title}`, `#/report/${a.report}`)}${btn('다른 질문', `#/ask/${a.area}`, 'ghost')}</div>
+      ${footer()}`;
+  }
+
+  function viewReport(id) {
+    const f = state.facts; const def = REPORT_DEFS[id]; if (!def) return viewNotFound();
+    const r = buildReport(id, f); markSeen('reports', id);
+    const groups = { wealth: ['재성', '식상'], work: ['관성', '인성'], love: [f.spouseGroup], flow: ['관성', '인성'] }[id];
+    const secHtml = r.sections.map((s, i) => `<div class="sec" id="s${i}"><div class="no">${String(i).padStart(2, '0')}</div><h3>${esc(s.title)}</h3>
+      <p class="concl">${termify(s.conclusion)}</p>${paras(s.body)}
+      ${s.evidence && s.evidence.length ? `<details class="ev"><summary>근거 보기</summary><div class="in"><ul>${s.evidence.map(e => `<li>${termify(e)}</li>`).join('')}</ul>${i === 1 ? pillarsGrid(groups) : ''}</div></details>` : ''}
+      ${s.years ? yearsGrid(s.years) : ''}
+      ${s.table ? monthsGrid(s.table.rows, s.table.caption) : ''}
+      ${s.tableNext ? `<details class="ev"><summary>${esc(s.tableNext.caption)}</summary><div class="in">${monthsGrid(s.tableNext.rows)}</div></details>` : ''}
+      ${s.tableRest ? monthsGrid(s.tableRest.rows, s.tableRest.caption) : ''}
+      ${s.daeun ? daeunList(s.daeun) : ''}
+      ${moreAsk({ report: id, section: s.tag, area: r.area })}</div>`).join('');
+    return `${topbar()}
+      <div class="banner">가안이라 결제 없이 열려요. 실제 서비스에서는 이 리포트가 유료예요.</div>${strip()}
+      <div class="card" style="text-align:center;padding:26px 18px"><div class="eyebrow">리포트</div><h1 class="serif" style="font-size:26px">${esc(r.title)}</h1>
+        <span class="sym" style="display:block;width:72px;height:72px;margin:10px auto;color:var(--ink-2)">${symbolSvg(f.ilgan.idx)}</span>
+        <div class="stack" style="text-align:left">${paras(r.cover.summary, 'body')}</div>
+        <p class="small" style="margin-top:10px">가장 중요한 시기 · <b>${esc(r.cover.keyTime)}</b></p></div>
+      <div class="card tint"><div class="eyebrow">차례</div><ol style="margin:0;padding-left:20px;color:var(--ink-2)">${def.toc.map((t, i) => `<li><a href="#s${i}" data-scroll="s${i}">${esc(t)}</a></li>`).join('')}</ol></div>
+      ${secHtml}
+      <div class="card tint"><div class="eyebrow">08</div><h3 class="serif" style="font-size:20px;margin-bottom:8px">궁금증이 남았나요?</h3><p class="body">${esc(GUIDE.reportEnd)}</p>
+        <button class="btn primary block" data-chat="${esc(JSON.stringify({ report: id, section: 'end', area: r.area }))}">내 사주에 이어서 물어보기</button></div>
+      <div class="row"><button class="btn" data-action="print">PDF로 저장</button>${btn('다른 리포트', '#/', 'ghost')}</div>
+      <div class="card"><div class="eyebrow">다른 리포트</div>${reportCards()}</div>
+      ${footer()}`;
+  }
+
+  function viewTypeResult() {
+    const f = state.facts; const il = ILGAN[f.ilgan.idx]; const p = ILGAN[ILGAN_MATCH[f.ilgan.idx]];
+    return `${topbar()}
+      <div class="tcard"><div class="eyebrow">나의 사주 캐릭터</div><span class="sym">${symbolSvg(f.ilgan.idx)}</span>
+        <div class="hz">${il.h}</div><h2>${il.name}</h2><div class="nick">${esc(il.nick)}</div>
+        <ul>${il.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        <div class="kw">${esc(il.keyword)}</div></div>
+      <div class="card"><div class="eyebrow">오행 밸런스</div>${ohengBars()}<p class="small">${termify(strengthEvidence(f))}</p>
+        <p class="body"><b>잘 맞는 일간</b> · ${p.name} ${p.h}, ${esc(p.nick)}. 천간합으로 서로 끌어당기는 자리예요.</p></div>
+      <div class="card"><div class="eyebrow">공유 카드</div><canvas id="share" class="share-preview" width="1080" height="1920"></canvas>
+        <div class="row"><button class="btn" data-action="share-download">이미지로 저장</button><span class="small">인스타 스토리용 9:16</span></div></div>
+      ${guide(GUIDE.typeEnd)}
+      ${btn('지금 내 사주에서 움직이는 것 보기', '#/now', 'primary block')}
+      ${footer()}`;
+  }
+  function drawShareCard(canvas) {
+    const f = state.facts; const il = ILGAN[f.ilgan.idx]; const ctx = canvas.getContext('2d'); const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = '#F7F3EA'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#EFE9DC'; ctx.beginPath(); ctx.arc(W / 2, 640, 330, 0, Math.PI * 2); ctx.fill();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#8A8172'; ctx.font = '600 34px Pretendard, sans-serif'; ctx.fillText('나의 사주 캐릭터', W / 2, 200);
+    ctx.fillStyle = '#4E483F'; ctx.font = '400 60px "Gowun Batang", serif'; ctx.fillText(il.h, W / 2, 1090);
+    ctx.fillStyle = '#1F1C17'; ctx.font = '700 96px "Gowun Batang", serif'; ctx.fillText(il.name, W / 2, 1200);
+    ctx.fillStyle = '#4E483F'; ctx.font = '500 48px Pretendard, sans-serif'; ctx.fillText(il.nick, W / 2, 1275);
+    ctx.font = '400 38px Pretendard, sans-serif'; ctx.fillStyle = '#4E483F';
+    il.traits.forEach((t, i) => ctx.fillText(t, W / 2, 1400 + i * 64));
+    ctx.fillStyle = '#B5442F'; ctx.font = '600 32px Pretendard, sans-serif'; ctx.fillText(il.keyword.replace(/·/g, '  ·  '), W / 2, 1640);
+    ctx.fillStyle = '#8A8172'; ctx.font = '500 30px Pretendard, sans-serif'; ctx.fillText(`${APP_NAME} · 내 사주에서 지금 움직이는 것 보기`, W / 2, 1800);
+    const svg = symbolSvg(f.ilgan.idx).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" ').replace(/currentColor/g, '#4E483F').replace(/class="accent"/g, 'stroke="#B5442F"');
+    const img = new Image();
+    img.onload = () => { ctx.drawImage(img, W / 2 - 260, 380, 520, 520); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  const viewTarot = () => `${topbar()}<section class="hero"><div class="eyebrow">타로</div><h1>그림패는 다음 단계예요</h1><p class="sub">같은 브랜드 안에 두되 사주와 완전히 별도 시스템으로 만들어요. 가안에는 아직 없어요. 기존 허선생의 그림패는 아래에서 볼 수 있어요.</p></section><div class="row"><a class="btn" href="./heo/">허선생 그림패 보기</a>${btn('홈으로', '#/', 'ghost')}</div>`;
+  const viewNotFound = () => `${topbar()}<div class="card"><p class="lead">그 화면은 없어요.</p>${btn('홈으로', '#/', 'primary')}</div>`;
+
+  // ---------- 채팅(바텀시트) ----------
+  function ctxKey(ctx) { return ctx.report ? `r_${ctx.report}` : ctx.question ? `q_${ctx.question}` : 'free'; }
+  function ctxLabel(ctx) {
+    const f = state.facts;
+    if (ctx.report) { const d = REPORT_DEFS[ctx.report]; const i = d.sections.findIndex((_, k) => (buildReport(ctx.report, f).sections[k].tag === ctx.section)); return `${d.title} › ${ctx.section === 'end' ? '전체' : (d.toc[i] || '전체')}`; }
+    if (ctx.question) return `"${pickText(QUESTIONS.find(q => q.id === ctx.question).text, f.band)}"`;
+    return `내 사주 전체 · ${AREAS[ctx.area || f.movement.key].label}`;
+  }
+  function openChat(ctx, ask) {
+    const key = ctxKey(ctx); state.chat.ctx = ctx; state.chat.key = key;
+    const th = threads();
+    if (!th[key]) { th[key] = { ctx, label: ctxLabel(ctx), messages: [{ role: 'ai', text: `${ctxLabel(ctx)}에 대해 물어보세요. 생년월일은 다시 안 물어봐도 돼요.` }], updated: Date.now() }; store.set('threads', th); }
+    else { th[key].ctx = ctx; th[key].label = ctxLabel(ctx); store.set('threads', th); }
+    $('#backdrop').hidden = false; $('#sheet').hidden = false;
+    renderChat(suggestFor(state.facts, ctx));
+    if (ask) sendChat(ask);
+  }
+  function closeChat() { $('#backdrop').hidden = true; $('#sheet').hidden = true; state.chat.ctx = null; }
+  function renderChat(sug) {
+    const key = state.chat.key; const th = threads()[key]; const q = quotaOf(key);
+    const sheet = $('#sheet');
+    sheet.innerHTML = `<div class="hd"><div><div class="ctx">${esc(th.label)}에 대해 묻는 중</div><div class="quota">남은 질문 ${q}개 · 규칙 엔진</div></div><button class="btn sm ghost" data-action="chat-close">닫기</button></div>
+      <div class="msgs">${th.messages.map(m => `<div class="msg ${m.role}">${m.role === 'ai' ? m.text.split(' | ').map((s, i) => i === 0 ? `<b>${esc(s)}</b>` : esc(s)).join(' ') : esc(m.text)}</div>`).join('')}</div>
+      <div class="chips">${(sug || []).map(s => `<button class="chip q" data-send="${esc(s.text)}">${esc(s.text)}</button>`).join('')}${q <= 0 ? '<button class="chip" data-action="reset-quota">가안: 질문 수 초기화</button>' : ''}</div>
+      <form class="inp" id="chat-form"><input id="chat-in" placeholder="${esc(GUIDE.chatHint)}" autocomplete="off"><button class="btn indigo" type="submit">보내기</button></form>`;
+    const m = $('.msgs', sheet); m.scrollTop = m.scrollHeight;
+  }
+  async function consult(ctx, text) {
+    const api = window.APP_CONFIG && window.APP_CONFIG.consultApi;
+    if (api) {
+      try {
+        const r = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ctx, text, gz: state.facts.gz, gender: state.facts.gender, thisYear: state.facts.thisYear }) });
+        if (r.ok) { const j = await r.json(); if (j && j.sentences) return j; }
+      } catch (e) { /* 폴백 */ }
+    }
+    return consultReply(state.facts, ctx, text);
+  }
+  async function sendChat(text) {
+    text = (text || '').trim(); if (!text || state.chat.busy) return;
+    const key = state.chat.key; const th = threads(); const t = th[key];
+    if (quotaOf(key) <= 0) { t.messages.push({ role: 'sys', text: GUIDE.quota }); store.set('threads', th); renderChat([]); return; }
+    t.messages.push({ role: 'me', text }); t.updated = Date.now(); store.set('threads', th); renderChat([]);
+    state.chat.busy = true;
+    try {
+      const r = await consult(state.chat.ctx, text);
+      t.messages.push({ role: 'ai', text: r.sentences.join(' | ') }); t.updated = Date.now(); store.set('threads', th);
+      if (!r.fallback) setQuota(key, quotaOf(key) - 1);
+      renderChat(r.suggest || []);
+    } catch (e) {
+      t.messages.push({ role: 'sys', text: GUIDE.error }); store.set('threads', th); renderChat(suggestFor(state.facts, state.chat.ctx));
+    } finally { state.chat.busy = false; }
+  }
+
+  // ---------- 용어 풀이 ----------
+  let popTimer = null;
+  function showTerm(k) {
+    const pop = $('#pop'); pop.innerHTML = `<b>${esc(k)}</b>${esc(GLOSSARY[k] || '')}`; pop.hidden = false;
+    clearTimeout(popTimer); popTimer = setTimeout(() => { pop.hidden = true; }, 7000);
+  }
+
+  // ---------- 라우터 ----------
+  const NEED_PROFILE = ['now', 'ask', 'q', 'detail', 'report'];
+  function navigate(hash) { if (location.hash === hash) route(); else location.hash = hash; }
+  function route() {
+    const h = location.hash.replace(/^#\/?/, '');
+    const [path, arg, arg2] = h.split('/');
+    let html;
+    if (path === 'type' && arg === 'result') { html = state.facts ? viewTypeResult() : viewInput('type'); }
+    else if (path === 'type') { html = state.facts ? viewTypeResult() : viewInput('type'); }
+    else if (NEED_PROFILE.includes(path) && !state.facts) { store.set('pending', location.hash); html = viewInput(''); }
+    else if (path === '' || path === undefined) html = viewHome();
+    else if (path === 'input') html = viewInput(arg || '');
+    else if (path === 'now') html = viewNow();
+    else if (path === 'ask') html = viewAsk(arg);
+    else if (path === 'q') html = viewQ(arg);
+    else if (path === 'detail') html = viewDetail(arg);
+    else if (path === 'report') html = viewReport(arg);
+    else if (path === 'tarot') html = viewTarot();
+    else html = viewNotFound();
+    $('#app').innerHTML = html;
+    window.scrollTo(0, 0);
+    const c = $('#share'); if (c) drawShareCard(c);
+    void arg2;
+  }
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-go],[data-chat],[data-term],[data-action],[data-send],[data-scroll],.seg button');
+    if (!t) return;
+    if (t.dataset.go) { e.preventDefault(); navigate(t.dataset.go); return; }
+    if (t.dataset.scroll) { e.preventDefault(); const el = document.getElementById(t.dataset.scroll); if (el) el.scrollIntoView({ behavior: 'smooth' }); return; }
+    if (t.dataset.chat) { e.preventDefault(); if (!state.facts) { store.set('pending', location.hash || '#/now'); navigate('#/input'); return; } openChat(JSON.parse(t.dataset.chat), t.dataset.ask || ''); return; }
+    if (t.dataset.send) { e.preventDefault(); sendChat(t.dataset.send); return; }
+    if (t.dataset.term) { e.preventDefault(); showTerm(t.dataset.term); return; }
+    if (t.matches('.seg button')) { const seg = t.parentElement; seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === t)); if (seg.id === 'i-cal') { $('#i-leap-wrap').hidden = t.dataset.v !== 'lunar'; } return; }
+    const a = t.dataset.action;
+    if (a === 'chat-close') closeChat();
+    else if (a === 'print') window.print();
+    else if (a === 'reset-quota') { store.del('quota'); if (state.chat.key) renderChat(suggestFor(state.facts, state.chat.ctx)); else route(); }
+    else if (a === 'reset-all') { if (confirm('이 기기에 저장된 사주와 상담 기록을 지울까요?')) { ['profile', 'seen', 'threads', 'quota', 'pending'].forEach(k => store.del(k)); loadProfile(); closeChat(); navigate('#/'); route(); } }
+    else if (a === 'share-download') { const c = $('#share'); const l = document.createElement('a'); l.download = `my-ilgan-${ILGAN[state.facts.ilgan.idx].k}.png`; l.href = c.toDataURL('image/png'); l.click(); }
+  });
+  document.addEventListener('submit', e => {
+    if (e.target.id === 'f-input') { e.preventDefault(); submitInput(e.target); }
+    if (e.target.id === 'chat-form') { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); }
+  });
+  document.addEventListener('change', e => { if (e.target.id === 'i-unk') { const on = e.target.checked; $('#i-h').disabled = on; $('#i-mi').disabled = on; } });
+  $('#backdrop').addEventListener('click', closeChat);
+  $('#pop').addEventListener('click', () => { $('#pop').hidden = true; });
+  window.addEventListener('hashchange', route);
+
+  loadProfile();
+  route();
+})();
+
+</script>
+</body>
+</html>
