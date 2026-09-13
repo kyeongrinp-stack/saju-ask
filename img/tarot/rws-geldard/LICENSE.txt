@@ -1,0 +1,27 @@
+타로 기본 덱 — 이미지 출처 및 라이선스
+=====================================
+
+덱: Rider–Waite–Smith tarot (1909년 초판, 삽화 Pamela Colman Smith)
+  * Wikimedia Commons 파일 기록(Information 템플릿)상 date=1910으로 표기됨. 78개 파일 모두 동일.
+    통상 "1909년 판"으로 불리는 것과 같은 판본이며 카드별 연도 차이는 없음.
+
+권리 상태: 퍼블릭 도메인 (Public Domain)
+  - 삽화가 Pamela Colman Smith가 1951년 사망 → 사후 70년 경과(한국 등 life+70 국가 기준)
+  - 미국: 1929년 이전 출판물로 저작권 만료
+  - Wikimedia Commons 라이선스 태그: {{PD-old-70}} (78개 중 77개 파일), {{PD-old-auto-expired}} (1개 파일)
+    — 모두 "저작자 사후 70년 경과" 계열의 퍼블릭 도메인 템플릿이며, 별도 저작권 주장 없음
+    (extmetadata LicenseShortName은 78개 파일 전부 "Public domain")
+
+스캔 출처: Wikimedia Commons, 카테고리 "Rider-Waite-Smith tarot deck (Geldard)"
+  https://commons.wikimedia.org/wiki/Category:Rider-Waite-Smith_tarot_deck_(Geldard)
+
+파일별 상세 출처(Commons 파일명·페이지 URL·원본 URL·sha1·크기·라이선스)는 다음 문서 참조:
+  docs/tarot-deck-rws-geldard-source.json
+  docs/tarot-deck-rws-geldard-source.md
+
+생성일: 2026-09-14
+
+비고: 이 폴더(main-app/img/tarot/rws-geldard/)에는 웹 서비스용 축소본(WebP, 가로 600px)만 둔다.
+원본(고해상도 PNG, 일부는 Commons 원본 파일, 일부는 Commons 썸네일 파이프라인 고해상도본 — 상세는
+docs/tarot-deck-rws-geldard-source.md 참조)은 assets-src/tarot-rws-geldard/ 에 보존하며 git에는
+포함하지 않는다(.gitignore).
