@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>사주에 묻다 — 내 사주에 바로 물어보는 사주</title>
+<title>내 사주에 바로 물어보는 사주</title>
 <meta name="description" content="절기까지 맞춘 만세력으로 내 사주를 계산하고, 돈·일·사랑·흐름의 질문에 바로 답하는 사주 서비스. 가입 없이 30초.">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFFFFF'/%3E%3Cpath d='M32 10l4 12 12 4-12 4-4 12-4-12-12-4 12-4z' fill='%231F4FD8'/%3E%3C/svg%3E">
@@ -1026,7 +1026,18 @@ body{overflow-x:hidden}
 </head>
 <body>
 <div id="app"></div>
-<script>window.APP_CONFIG = { consultApi: '', img: 'img/' };</script>
+<script>
+/* 설정 한 곳. 브랜드명은 미확정이라 여기서만 바꾼다. firebase·pay는 서버 연결 때 채운다. */
+window.APP_CONFIG = {
+  brand: '사주에 묻다',            // 임시 브랜드명. 확정되면 이 값만 교체
+  tagline: '내 사주에 바로 물어보는 사주',
+  img: 'img/',
+  consultApi: '',                 // LLM 후속질문 서버 주소(2차). 비우면 규칙 엔진
+  firebase: null,                 // { apiKey, authDomain, projectId, appId, functionsRegion }
+  toss: null,                     // { clientKey }  테스트 키로 시작
+  kakao: null,                    // { jsKey }
+};
+</script>
 <script>
 var KoreanLunarCalendar = (function () {
   var module = { exports: {} }; var exports = module.exports;
@@ -4912,6 +4923,99 @@ function suggestFor(facts, ctx) {
 }
 
 /* ==========================================================================
+ * 서버 연결 — Firebase(Auth·Firestore·Functions) + 토스페이먼츠 v2 + 카카오 로그인
+ * APP_CONFIG.firebase 가 없으면 전부 꺼진다(기기 저장으로만 동작, 개발용).
+ * 구매 권한의 기준은 Firestore users/{uid}/entitlements/current. ms_owned 는 그 캐시.
+ * 결제 성공은 함수 confirmPayment 가 토스에 확인한 뒤에만 인정한다.
+ * ========================================================================== */
+const SERVER = (function () {
+  const CFG = window.APP_CONFIG || {};
+  const enabled = !!(CFG.firebase && CFG.firebase.apiKey);
+  const DEV = /[?&]dev=1/.test(location.search) || localStorage.getItem('ms_dev') === '1';
+  const base = () => location.origin + location.pathname;
+  let app = null, auth = null, db = null, fns = null, user = null, readyP = null;
+  const listeners = [];
+  function loadScript(src) { return new Promise((res, rej) => { if (document.querySelector('script[src="' + src + '"]')) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load fail ' + src)); document.head.appendChild(s); }); }
+  function cacheEntitlements(e) {
+    localStorage.setItem('ms_owned', JSON.stringify({ all: !!e.all, reports: e.reports || [], answers: e.answers || [], credits: e.credits || {} }));
+    localStorage.setItem('ms_quota', JSON.stringify({ used: e.quotaUsed || 0, extra: e.quotaExtra || 0 }));
+  }
+  async function syncEntitlements() {
+    if (!user) return null;
+    const snap = await db.doc('users/' + user.uid + '/entitlements/current').get();
+    const e = snap.exists ? snap.data() : { all: false, reports: [], answers: [], credits: {}, quotaUsed: 0, quotaExtra: 0 };
+    cacheEntitlements(e); return e;
+  }
+  function init() {
+    if (!enabled) return Promise.resolve(false);
+    if (readyP) return readyP;
+    readyP = (async () => {
+      const v = '10.14.1', g = 'https://www.gstatic.com/firebasejs/' + v + '/';
+      await loadScript(g + 'firebase-app-compat.js'); await loadScript(g + 'firebase-auth-compat.js'); await loadScript(g + 'firebase-firestore-compat.js'); await loadScript(g + 'firebase-functions-compat.js');
+      app = firebase.initializeApp(CFG.firebase); auth = firebase.auth(); db = firebase.firestore(); fns = app.functions(CFG.firebase.functionsRegion || 'asia-northeast3');
+      await new Promise(r => { const un = auth.onAuthStateChanged(u => { user = u; un(); r(); }); });
+      auth.onAuthStateChanged(async u => { user = u; if (u) await syncEntitlements(); else if (!DEV) { localStorage.removeItem('ms_owned'); localStorage.removeItem('ms_quota'); } listeners.forEach(l => l(u)); });
+      if (user) await syncEntitlements(); else if (!DEV) { localStorage.removeItem('ms_owned'); localStorage.removeItem('ms_quota'); }
+      try { if (await completeEmailLink()) return true; if (await completeKakao()) return true; } catch (e) { console.warn('login return', e); }
+      return true;
+    })();
+    return readyP;
+  }
+  // ---- 로그인 ----
+  async function signInEmail(email) {
+    await auth.sendSignInLinkToEmail(email, { url: base() + '?emaillink=1', handleCodeInApp: true });
+    localStorage.setItem('ms_email', email);
+  }
+  async function completeEmailLink() {
+    if (!auth.isSignInWithEmailLink(location.href)) return false;
+    let email = localStorage.getItem('ms_email') || window.prompt('로그인 링크를 받은 이메일을 입력해 주세요');
+    if (!email) return false;
+    await auth.signInWithEmailLink(email, location.href); localStorage.removeItem('ms_email');
+    history.replaceState(null, '', location.pathname + (localStorage.getItem('ms_after') || '#/home'));
+    return true;
+  }
+  async function signInKakao() {
+    if (!CFG.kakao || !CFG.kakao.jsKey) throw new Error('kakao not configured');
+    await loadScript('https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js');
+    if (!window.Kakao.isInitialized()) window.Kakao.init(CFG.kakao.jsKey);
+    window.Kakao.Auth.authorize({ redirectUri: base() + '?kakao=1' });
+  }
+  async function completeKakao() {
+    const p = new URLSearchParams(location.search);
+    if (p.get('kakao') !== '1' || !p.get('code')) return false;
+    const r = await fns.httpsCallable('kakaoLogin')({ code: p.get('code'), redirectUri: base() + '?kakao=1' });
+    await auth.signInWithCustomToken(r.data.token);
+    history.replaceState(null, '', location.pathname + (localStorage.getItem('ms_after') || '#/home'));
+    return true;
+  }
+  // ---- 결제 ----
+  async function checkout(o) {
+    if (!user) throw new Error('login');
+    const r = await fns.httpsCallable('createOrder')({ item: o.item, id: o.id || null });
+    const order = r.data;
+    if (order.amount === 0) { await fns.httpsCallable('confirmPayment')({ orderId: order.orderId, paymentKey: 'FREE', amount: 0 }); await syncEntitlements(); return { free: true, orderId: order.orderId }; }
+    if (!CFG.toss || !CFG.toss.clientKey) throw new Error('toss not configured');
+    await loadScript('https://js.tosspayments.com/v2/standard');
+    const toss = window.TossPayments(CFG.toss.clientKey); const payment = toss.payment({ customerKey: user.uid });
+    localStorage.setItem('ms_after', location.hash || '#/home');
+    await payment.requestPayment({ method: 'CARD', amount: { currency: 'KRW', value: order.amount }, orderId: order.orderId, orderName: order.orderName, successUrl: base() + '?pay=success', failUrl: base() + '?pay=fail', customerEmail: user.email || undefined });
+    return { redirect: true };
+  }
+  async function completePayment() {
+    const p = new URLSearchParams(location.search);
+    if (p.get('pay') === 'success' && p.get('paymentKey')) {
+      const r = await fns.httpsCallable('confirmPayment')({ paymentKey: p.get('paymentKey'), orderId: p.get('orderId'), amount: +p.get('amount') });
+      await syncEntitlements(); history.replaceState(null, '', location.pathname + '#/home');
+      return { ok: true, item: r.data.item, id: r.data.id };
+    }
+    if (p.get('pay') === 'fail') { history.replaceState(null, '', location.pathname + (localStorage.getItem('ms_after') || '#/home')); return { ok: false, message: p.get('message') || '결제가 취소되었거나 실패했어요.' }; }
+    return null;
+  }
+  async function useQuota() { if (!user) return; try { await fns.httpsCallable('useQuota')({}); } catch (e) { console.warn('useQuota', e); } }
+  return { enabled, init, user: () => user, useQuota, onAuth: l => listeners.push(l), signInEmail, signInKakao, signOut: () => auth && auth.signOut(), syncEntitlements, checkout, completePayment };
+})();
+
+/* ==========================================================================
  * 사주에 묻다 — 앱 (확정 화풍 v5.13을 실제 데이터에 연결)
  * 화면: #/home · #/input · #/calc · #/me · #/chart · #/now · #/ask/:area · #/q/:id
  *       #/intro/:report/:from? · #/buy/:report/:pick? · #/read/:report · #/fortune/:id? · #/mine
@@ -4920,8 +5024,8 @@ function suggestFor(facts, ctx) {
  * ========================================================================== */
 (function () {
   'use strict';
-  const APP_NAME = '사주에 묻다';
   const CFG = window.APP_CONFIG || {};
+  const APP_NAME = CFG.brand || '사주에 묻다';   // 브랜드명은 APP_CONFIG.brand 한 곳에서만
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const IMG = k => (CFG.img || 'img/') + k + '.webp';
@@ -5379,7 +5483,7 @@ function suggestFor(facts, ctx) {
     const key = state.chat.key; const th = threads(); const t = th[key];
     if (quotaLeft() <= 0) { t.messages.push({ role: 'sys', text: '포함된 질문을 다 썼어요. 추가 질문권 10회(4,900원)를 열면 이어서 물어볼 수 있어요.' }); store.set('threads', th); renderSheet(); return; }
     t.messages.push({ role: 'me', text }); t.updated = Date.now(); store.set('threads', th); renderSheet(); state.chat.busy = true;
-    try { const r = await consult(state.chat.ctx, text); t.messages.push({ role: 'ai', text: r.sentences.join(' | ') }); t.updated = Date.now(); store.set('threads', th); if (!r.fallback) { const q = quota(); q.used++; store.set('quota', q); } state.sheet.chips = (r.suggest || []).map(s => s.text); renderSheet(); }
+    try { const r = await consult(state.chat.ctx, text); t.messages.push({ role: 'ai', text: r.sentences.join(' | ') }); t.updated = Date.now(); store.set('threads', th); if (!r.fallback) { const q = quota(); q.used++; store.set('quota', q); if (typeof SERVER !== 'undefined' && SERVER.enabled) SERVER.useQuota(); } state.sheet.chips = (r.suggest || []).map(s => s.text); renderSheet(); }
     catch (e) { t.messages.push({ role: 'sys', text: GUIDE.error }); store.set('threads', th); renderSheet(); }
     finally { state.chat.busy = false; }
   }
@@ -5399,7 +5503,13 @@ function suggestFor(facts, ctx) {
     else if (item === 'extra') { const q = quota(); q.extra += 10; store.set('quota', q); }
     saveOwned(o);
   }
+  const loginHtml = () => '<p class="body">구매한 것을 잃지 않도록 여기서 한 번만 로그인해요. 무료 이용은 로그인이 필요 없어요.</p>' + (CFG.kakao && CFG.kakao.jsKey ? '<button class="btn primary block" data-act="login-kakao" style="background:#FEE500;color:#191919;border-color:#FEE500">카카오로 계속하기</button>' : '<p class="small">카카오 로그인은 설정이 끝나면 열려요.</p>') + '<form id="f-email" class="row" style="margin-top:10px;flex-wrap:nowrap"><input type="email" id="i-email" placeholder="이메일 주소" required style="flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit"><button class="btn primary" type="submit">링크 받기</button></form><p class="small" style="margin-top:6px">비밀번호 없이, 메일의 링크를 누르면 로그인돼요.</p><div id="login-msg" class="small" style="margin-top:6px"></div>';
   function pay(item, id, amount) {
+    if (typeof SERVER !== 'undefined' && SERVER.enabled) {
+      if (!SERVER.user()) { localStorage.setItem('ms_after', location.hash || '#/home'); state.modal = { login: true, title: '로그인', body: loginHtml() }; renderModal(); return; }
+      SERVER.checkout({ item, id }).then(r => { if (r && r.free) { toast('결제 없이 열렸어요'); afterPay(item, id); } }).catch(e => { console.warn(e); toast(e && e.message === 'toss not configured' ? '결제 연결 준비 중이에요' : '결제를 시작하지 못했어요'); });
+      return;
+    }
     const P = CFG.pay;
     if (P && typeof P.checkout === 'function') { P.checkout({ item, id, amount: +amount, profile: state.profile }).then(ok => { if (ok) { grant(item, id); toast('결제가 완료됐어요'); afterPay(item, id); } }); return; }
     if (DEV) { grant(item, id); toast('테스트 결제 · 열렸어요'); afterPay(item, id); return; }
@@ -5411,7 +5521,7 @@ function suggestFor(facts, ctx) {
     document.body.insertAdjacentHTML('beforeend', '<div class="modal" data-act="modal-close"><div class="box"><h3>' + esc(state.modal.title) + '</h3><div class="body">' + state.modal.body + '</div><div class="row" style="margin-top:10px"><button class="btn primary" data-act="modal-close">닫기</button></div></div></div>');
   }
   const DOCS = {
-    terms: ['이용약관', '<p>사주에 묻다는 전통 명리의 관점으로 생년월일시를 해석해 보여 주는 디지털 콘텐츠 서비스예요. 개인의 운명이나 미래를 단정하지 않아요.</p><p>구매한 리포트와 잠긴 답은 기간 제한 없이 이 서비스 안에서 다시 볼 수 있어요. 배송되는 물건은 없어요.</p><p>건강, 법률, 금융에 관한 판단은 전문가와 상의하세요.</p>'],
+    terms: ['이용약관', '<p>' + josa(APP_NAME, '은', '는') + ' 전통 명리의 관점으로 생년월일시를 해석해 보여 주는 디지털 콘텐츠 서비스예요. 개인의 운명이나 미래를 단정하지 않아요.</p><p>구매한 리포트와 잠긴 답은 기간 제한 없이 이 서비스 안에서 다시 볼 수 있어요. 배송되는 물건은 없어요.</p><p>건강, 법률, 금융에 관한 판단은 전문가와 상의하세요.</p>'],
     privacy: ['개인정보 처리방침', '<p>생년월일·시간·성별은 사주 계산에만 쓰고, 이 기기(브라우저)에만 저장돼요. 결제 시에는 결제 대행사가 결제 정보를 처리하고, 우리는 구매 내역(상품·일시)만 보관해요.</p><p>저장된 정보는 "내 사주 지우기"로 언제든 지울 수 있어요.</p>'],
     refund: ['환불 규정', '<p>디지털 콘텐츠 특성상, 리포트나 잠긴 답을 열람하기 전이라면 결제 후 7일 안에 전액 환불해요. 열람한 뒤에는 환불이 어렵지만, 계산 오류나 내용 누락처럼 서비스 문제가 있으면 확인 뒤 환불해요.</p><p>환불은 결제한 수단으로 돌려 드려요.</p>'],
   };
@@ -5461,18 +5571,25 @@ function suggestFor(facts, ctx) {
     else if (a === 'pay') pay(t.dataset.item, t.dataset.id, t.dataset.amount);
     else if (a === 'print') window.print();
     else if (a === 'doc') { const d = DOCS[t.dataset.doc]; state.modal = { title: d[0], body: d[1] }; renderModal(); }
+    else if (a === 'login-kakao') { SERVER.signInKakao().catch(e => { console.warn(e); toast('카카오 로그인을 시작하지 못했어요'); }); }
     else if (a === 'share') { const url = location.origin + location.pathname + '#/ilju?src=share'; if (navigator.share) navigator.share({ title: APP_NAME, text: '나는 ' + iljuName() + '. 내 일주도 확인해 보기', url }).catch(() => {}); else if (navigator.clipboard) { navigator.clipboard.writeText(url); toast('링크를 복사했어요'); } }
     else if (a === 'reset-all') { if (confirm('이 기기에 저장된 사주와 기록을 지울까요? 구매 기록은 남아요.')) { ['profile', 'seen', 'threads', 'pending'].forEach(k => store.del(k)); loadProfile(); closeSheet(); navigate('#/home'); route(); } }
   });
   document.addEventListener('submit', e => {
     if (e.target.id === 'f-input') { e.preventDefault(); submitInput(e.target); }
     if (e.target.id === 'chat-form') { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); }
+    if (e.target.id === 'f-email') { e.preventDefault(); const em = $('#i-email').value.trim(); if (!em) return; SERVER.signInEmail(em).then(() => { const m = $('#login-msg'); if (m) m.textContent = '메일을 보냈어요. 메일의 링크를 누르면 이 화면으로 돌아와요.'; }).catch(err => { console.warn(err); const m = $('#login-msg'); if (m) m.textContent = '메일을 보내지 못했어요. 주소를 확인해 주세요.'; }); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } });
   window.addEventListener('hashchange', route);
   window.MS = { state, store, owned, grant, route };
+  document.title = APP_NAME + ' · ' + (CFG.tagline || '');
   loadProfile();
-  if (!location.hash) location.hash = '#/home'; else route();
+  const boot = () => { localStorage.removeItem('ms_after'); if (!location.hash) location.hash = '#/home'; else route(); };
+  if (typeof SERVER !== 'undefined' && SERVER.enabled) {
+    SERVER.onAuth(u => { if (u && state.modal && state.modal.login) { state.modal = null; renderModal(); route(); } });
+    SERVER.init().then(async () => { const r = await SERVER.completePayment(); if (r && r.ok) { toast('결제가 완료됐어요'); afterPay(r.item, r.id); return; } if (r) toast(r.message); boot(); }).catch(e => { console.warn('server init', e); boot(); });
+  } else boot();
 })();
 
 </script>
