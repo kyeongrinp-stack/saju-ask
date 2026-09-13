@@ -1030,6 +1030,13 @@ body{overflow-x:hidden}
 .modal textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;resize:vertical}
 .orow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}.orow:last-of-type{border-bottom:0}.orow .small{display:block;margin-top:2px}
 
+/* 홈 단순화 */
+.e-svc .cta{margin-top:auto;font-size:12.5px;font-weight:700;color:var(--cob)}
+.e-svc.tarot .cta{color:#C2506B}
+.e-svc .cta+.go{margin-top:6px}
+.f-grid.one{grid-template-columns:1fr}
+.f-grid.one .f-tile{min-height:120px}
+
 </style>
 </head>
 <body>
@@ -5371,6 +5378,7 @@ const SERVER = (function () {
   const SP = SPS;
   const lk = t => '<span class="lk">' + LOCK + (t || '잠금') + '</span>';
   const IC2 = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4.5l8 7"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/></svg>',
     q: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4z"/><path d="M10.6 9.3c.3-1 1.3-1.5 2.2-1.3 1 .2 1.5 1 1.3 1.8-.3 1-1.6 1.1-1.6 2.3"/><circle cx="12.4" cy="14" r=".5" fill="currentColor"/></svg>',
     me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 5.5v2.5M12 16v2.5M5.5 12H8M16 12h2.5"/><path d="M12 9.6l1.4 2.4-1.4 2.4-1.4-2.4z"/></svg>',
     rep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5"/></svg>',
@@ -5389,10 +5397,10 @@ const SERVER = (function () {
   const eFoot = () => '<footer class="e-foot"><b>' + APP_NAME + '</b><div class="links"><button data-act="doc" data-doc="terms">이용약관</button><button data-act="doc" data-doc="privacy">개인정보 처리방침</button><button data-act="doc" data-doc="refund">환불 규정</button></div>사주 해석은 전통 명리의 관점이에요. 개인의 판단을 대신하지 않아요. 건강·법률·금융 판단은 전문가에게요.<br>생년월일은 이 기기에만 저장돼요.<br>© 2026 ' + APP_NAME + '.</footer>';
   const footer = eFoot;
   function bottomNav(active) {
-    const it = [['me', '내 사주', IC2.me, 'data-go="mine"'], ['q', '사주 질문', IC2.q, 'data-act="scrollto" data-target="#sec-q"'], ['fortune', '운세', IC2.star, 'data-go="fortune"'], ['rep', '리포트', IC2.rep, 'data-act="scrollto" data-target="#sec-reports"'], ['tarot', '타로', IC2.tarot, 'data-act="toast" data-msg="타로는 준비 중이에요. 열리면 여기서 바로 카드를 뽑을 수 있어요."']];
+    const it = [['home', '홈', IC2.home, 'data-go="home"'], ['me', '내 사주', IC2.me, 'data-go="mine"'], ['q', '질문', IC2.q, 'data-act="scrollto" data-target="#sec-q"'], ['tarot', '타로', IC2.tarot, 'data-go="tarot"'], ['rep', '리포트', IC2.rep, 'data-act="scrollto" data-target="#sec-reports"']];
     const onHome = state.screen === 'home';
     return '<nav class="e-nav" aria-label="하단 메뉴">' + it.map(x => { let attr = x[3]; if (!onHome) { if (x[0] === 'q') attr = 'data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '"'; if (x[0] === 'rep') attr = 'data-go="' + (isBuyer() ? 'read/' + OWN_REPORTS()[0] : 'intro/flow') + '"'; }
-      return '<button class="' + (active === x[0] ? 'on' : '') + '" ' + attr + '>' + x[2] + (active === x[0] ? SPS('') : '') + x[1] + (x[0] === 'tarot' ? '<i class="soon">준비 중</i>' : '') + '</button>'; }).join('') + '</nav>';
+      return '<button class="' + (active === x[0] ? 'on' : '') + '" ' + attr + '>' + x[2] + (active === x[0] ? SPS('') : '') + x[1] + '</button>'; }).join('') + '</nav>';
   }
   function termify(text) {
     let html = esc(text); const done = new Set();
@@ -5452,6 +5460,7 @@ const SERVER = (function () {
       { id: 'move', name: '이사 · 이동운', status: 'part', go: 'q/move_when', area: 'flow', desc: '옮기기 좋은 시기.' },
       { id: 'luck', name: '개운 · 행운 포인트', status: 'soon', desc: '올해 나에게 좋은 방향·습관.' }] }];
   const FORTUNE_HOME = ['today', 'newyear', 'match', 'money', 'love', 'job', 'exam', 'health'];
+  const FORTUNE_HOME_MIN = ['today', 'love', 'money']; // 홈 대표 운세: 준비 중 항목은 홈에 올리지 않는다
   const FIC = {
     today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></svg>',
     newyear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M2.5 19.5h19M12 4.5v2M6.7 6.7l1.4 1.4M17.3 6.7l-1.4 1.4M3.5 12h2M18.5 12h2"/></svg>',
@@ -5475,6 +5484,7 @@ const SERVER = (function () {
   const Q = QUESTIONS.map(q => ({ id: q.id, area: q.area, r: q.report, type: TYPE_A.includes(q.type) ? 'A' : 'B', get t() { return pickText(q.text, band()); }, raw: q }));
   const qById = id => Q.find(q => q.id === id);
   const HOME_Q = ['love_when', 'match_type', 'money_when', 'why_leak', 'change_job_ok', 'daeun_change'];
+  const HOME_Q_MIN = ['money_when', 'change_job_ok', 'love_when', 'match_type', 'daeun_change'];
   const CHAPTER_OF = { money_when: 6, invest_ok: 5, why_leak: 2, job_or_biz: 3, marry_money: 2, save_vs_invest: 3, partner_ok: 5, why_people_money: 2, job_when: 6, change_job_ok: 5, biz_continue: 3, biz_start_when: 6, work_style: 3, promotion: 6, love_when: 6, marriage_when: 6, spouse_shake: 2, why_love_fail: 2, match_type: 3, reunion_ok: 5, who_avoid: 2, family_when: 6, people_luck: 6, boundary: 3, daeun_change: 4, move_ok: 5, move_when: 6, this_year: 6, next_year: 6, rest_when: 6 };
   const areaChip = (k, on) => '<button class="chip area-' + k + (on ? ' on' : '') + '" data-go="ask/' + k + '">' + AREAS[k].label + '</button>';
   const qItem = (q, meta) => '<button class="qitem" data-go="q/' + q.id + '"><span><span class="t">' + esc(q.t) + '</span>' + (meta ? '<span class="meta">' + esc(meta) + '</span>' : '') + '</span><span class="arrow">›</span></button>';
@@ -5593,17 +5603,17 @@ const SERVER = (function () {
   // ---------- 화면 ----------
   const V = {};
   V.home = () => {
-    const qs = HOME_Q.map(qById);
+    const qs = HOME_Q_MIN.map(qById);
     return '<div class="ed2">' + eTop(false).replace('class="e-top"', 'class="e-top over"') +
-      '<section class="e-hero"><img src="' + IMG('hero-girl') + '" alt=""><div class="txt"><div class="e-kicker">사주와 타로, 두 가지 방법</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로. 당신에게 필요한 답을 바로 확인해보세요.</p></div></section>' +
-      '<div class="e-duo"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주로 물어보기</span><b>사주</b><p>나는 왜 이럴까,<br>앞으로 언제 달라질까?</p><small>타고난 모습부터 돈·일·사랑과 앞으로의 흐름을 봐요.</small><span class="go">→</span></button>' +
-      '<button class="e-svc tarot" data-act="toast" data-msg="타로는 준비 중이에요. 열리면 여기서 바로 카드를 뽑을 수 있어요."><span class="k">타로로 물어보기 <i class="soon">준비 중</i></span><b>타로</b><p>지금 마음에 걸리는<br>한 가지가 있나요?</p><small>그 사람의 마음, 연락, 선택처럼 지금 답이 필요한 질문을 카드에 물어봐요.</small><span class="go">→</span></button></div>' +
+      '<section class="e-hero"><img src="' + IMG('hero-girl') + '" alt=""><div class="txt"><div class="e-kicker">사주와 타로, 두 가지 방법</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로.</p></div></section>' +
+      '<div class="e-duo"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
+      '<button class="e-svc tarot" data-go="tarot"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></button></div>' +
       '<p class="e-tiny">' + (state.facts ? esc(nickname()) + '님, 지난번 이어서 볼까요? 아래에서 바로 질문할 수 있어요.' : '가입 없이 30초. 생년월일만 넣으면 돼요.') + '</p>' +
       (state.facts ? '<div class="e-band blue" style="margin-top:18px">' + todayBlock() + revisitBlock() + '</div>' : '') +
-      '<div class="e-band white" style="margin-top:18px"><section id="sec-fortune" class="e-sec"><div class="e-sech"><h2 class="e-h2">운세 보기</h2><button class="e-link" data-go="fortune">운세 전체보기 →</button></div><p class="e-cap">보고 싶은 주제를 골라 바로 봐요. 리포트와는 다른, 목적별 운세 콘텐츠예요.</p><p class="f-note">일부 콘텐츠는 순차적으로 열릴 예정이에요.</p><div class="f-grid">' + FORTUNE_HOME.map(id => fTile(fortuneById(id))).join('') + '</div></section></div>' +
-      '<div class="e-band white" style="padding-top:6px"><section id="sec-q" class="e-sec" style="border-top:1px solid var(--ln);padding-top:20px"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/money">전체보기 →</button></div><p class="e-cap">질문의 기본 답은 무료로 볼 수 있어요.</p><div class="chips">' + AREA_LIST.map(k => areaChip(k, false)).join('') + '</div><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div><div style="text-align:right;margin-top:14px"><span class="e-pen">좋은 질문이, 좋은 오늘을 만들어요.</span></div></section></div>' +
-      '<div class="e-band ivory"><section id="sec-reports" class="e-sec"><h2 class="e-h2">내 사주를 깊이 보는 네 가지 리포트</h2><p class="e-cap">궁금한 주제별로 자세히 읽고, PDF로 저장할 수 있어요.</p><div class="e-strip">' + REPORT_LIST.map(id => '<button data-go="' + (owns(id) ? 'read/' + id : 'intro/' + id) + '">' + cover(id, 110) + '<span>' + COV[id].main + (owns(id) ? ' · 보유' : '') + '</span></button>').join('') + '</div></section></div>' +
-      eFoot() + bottomNav('') + '</div>';
+      '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">질문의 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
+      '<div class="e-band white" style="padding-top:6px"><section id="sec-fortune" class="e-sec" style="border-top:1px solid var(--ln);padding-top:20px"><div class="e-sech"><h2 class="e-h2">운세</h2><button class="e-link" data-go="fortune">운세 전체보기 →</button></div><div class="f-grid one">' + fTile(fortuneById('today')) + '</div><div class="e-qs">' + FORTUNE_HOME_MIN.slice(1).map(id => fRow(fortuneById(id))).join('') + '</div></section></div>' +
+      '<div class="e-band ivory"><section id="sec-reports" class="e-sec"><h2 class="e-h2">더 깊이 알고 싶다면</h2><p class="e-cap">흐름 · 재물 · 일 · 사랑과 인연</p><div class="e-strip">' + REPORT_LIST.map(id => '<button data-go="' + (owns(id) ? 'read/' + id : 'intro/' + id) + '">' + cover(id, 110) + '<span>' + COV[id].main + (owns(id) ? ' · 보유' : '') + '</span></button>').join('') + '</div><div style="margin-top:10px"><button class="e-link" data-go="' + (isBuyer() ? 'read/' + OWN_REPORTS()[0] : 'intro/flow') + '">리포트 보기 →</button></div></section></div>' +
+      eFoot() + bottomNav('home') + '</div>';
   };
   V.fortune = p => {
     if (p && p.id) return fortuneItem(p.id);
@@ -5624,6 +5634,14 @@ const SERVER = (function () {
       (isBuyer() ? '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">내 리포트</h2><div class="e-qs" style="margin-top:6px">' + OWN_REPORTS().map(id => '<button class="e-q" data-go="read/' + id + '"><span>' + RMETA[id].title + '</span><i>›</i></button>').join('') + '</div></section>' : '') +
       '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">내 사주 관리</h2><div class="e-qs" style="margin-top:6px"><button class="e-q" data-go="input"><span>사주 정보 다시 입력</span><i>›</i></button><button class="e-q" data-act="reset-all"><span>이 기기에서 내 사주 지우기</span><i>›</i></button></div></section>' +
       eFoot() + bottomNav('me') + '</div>';
+  };
+  V.tarot = () => {
+    const saved = store.get('tarot_q', '');
+    return '<div class="ed2">' + eTop(true) +
+      '<div class="e-band pink" style="margin-top:6px"><section class="e-sec"><div class="e-kicker" style="color:#C2506B">타로</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">지금 궁금한 일을 카드에 물어보세요</h1><p class="e-cap">한 가지 일을 한 문장으로 적어 주세요. 예: 이 연락, 기다려도 될까요?</p>' +
+      '<form id="f-tarot" style="margin-top:12px"><input type="text" id="tarot-q" value="' + esc(saved) + '" placeholder="궁금한 일을 적어 주세요" maxlength="80" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--ln);border-radius:10px;font:inherit;background:#fff"><button class="e-btn" type="submit" style="margin-top:10px;width:100%">카드 섞기</button></form></section></div>' +
+      '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">타로는 이렇게 진행돼요</h2><div class="e-qs">' + ['질문', '셔플', '카드 오픈', '해석', '이어서 질문'].map((s, i) => '<div class="e-q"><span>' + (i + 1) + ' ' + s + '</span></div>').join('') + '</div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
   };
   V.input = () => {
     const e = state.entry; const pend = store.get('pending', null); const pq = pend && /^#\/q\//.test(pend) ? qById(pend.split('/')[2]) : null;
@@ -5914,6 +5932,7 @@ const SERVER = (function () {
     if (e.target.id === 'f-input') { e.preventDefault(); submitInput(e.target); }
     if (e.target.id === 'chat-form') { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); }
     if (e.target.id === 'f-email') { e.preventDefault(); const em = $('#i-email').value.trim(); if (!em) return; SERVER.signInEmail(em).then(() => { const m = $('#login-msg'); if (m) m.textContent = '메일을 보냈어요. 메일의 링크를 누르면 이 화면으로 돌아와요.'; }).catch(err => { console.warn(err); const m = $('#login-msg'); if (m) m.textContent = '메일을 보내지 못했어요. 주소를 확인해 주세요.'; }); }
+    if (e.target.id === 'f-tarot') { e.preventDefault(); const v = $('#tarot-q').value.trim(); store.set('tarot_q', v); toast(v ? '질문을 저장했어요. 카드 섞기는 타로 작업에서 이어져요.' : '궁금한 일을 한 줄 적어 주세요'); }
   });
   document.addEventListener('change', e => { if (e.target.id === 'ack-chk') { const b = $('[data-act="pay-ack"]'); if (b) b.disabled = !e.target.checked; } });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } });
