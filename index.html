@@ -1022,6 +1022,13 @@ body{overflow-x:hidden}
 .e-nav{margin:0!important;width:100%;box-sizing:border-box}
 .days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0 6px}.dcell{text-align:center;padding:8px 4px;border-radius:8px;background:#fff;border:1px solid var(--ln)}.dcell i{display:block;width:10px;height:10px;border-radius:50%;margin:0 auto 6px;background:#DCE4F2}.dcell.l1 i{background:#4DA3FF}.dcell.l2 i{background:#1F4FD8}.dcell b{display:block;font-size:12px;color:var(--navy)}.dcell small{font-size:10.5px;color:var(--mute)}.dcell.now{border-color:var(--cob);box-shadow:0 0 0 2px rgba(31,79,216,.12)}
 
+/* 결제 전 고지·구매 내역 */
+.modal .acklist{margin:0 0 10px;padding-left:18px}.modal .acklist li{margin:4px 0;word-break:keep-all;font-size:14px;line-height:1.55}
+.modal .ackbox{display:flex;gap:8px;align-items:flex-start;margin:10px 0 12px;font-size:13.5px;line-height:1.5;word-break:keep-all;cursor:pointer}.modal .ackbox input{margin-top:3px;flex:none}
+.modal .btn[disabled]{opacity:.45;cursor:not-allowed}
+.modal textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;resize:vertical}
+.orow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}.orow:last-of-type{border-bottom:0}.orow .small{display:block;margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -1037,6 +1044,8 @@ window.APP_CONFIG = {
   toss: null,                     // { clientKey }  테스트 키로 시작
   kakao: null,                    // { jsKey }
 };
+/* 정책·약관(환불 기준·고지 문구). src/policy.json 에서 빌드 때 채워진다. */
+window.POLICY = {"version":"2026-09-13","note":"정책·약관 문구는 이 파일에서만 바꾼다. 빌드가 클라이언트(window.POLICY)와 functions/policy.json 양쪽에 같은 내용을 넣는다. 부분환불 계산식과 최종 약관 문구는 미확정(partialFormula.status = draft).","refund":{"fullRefundDays":7,"items":{"answer":{"label":"잠긴 답","partial":false,"units":1},"one":{"label":"개별 리포트","partial":false,"units":1},"all":{"label":"리포트 4종 묶음","partial":true,"unit":"report","units":4},"extra":{"label":"질문 10회권","partial":true,"unit":"question","units":10}},"partialFormula":{"status":"draft","method":"unused_units_pro_rata","description":"미제공(미사용) 단위 수 ÷ 전체 단위 수 × 결제 금액. 확정 전이라 자동 계산하지 않고 스냅샷만 남긴다.","roundTo":100},"clauses":["결제 후 유료 콘텐츠(리포트·잠긴 답·질문권)를 제공받거나 열람하기 전이라면, 구매일로부터 7일 이내에 전액 환불해요.","잠긴 답과 개별 리포트는 콘텐츠 생성 또는 열람이 시작된 뒤에는 단순 변심에 의한 청약철회가 제한돼요.","리포트 4종 묶음은 하나도 열람하지 않았다면 7일 이내 전액 환불해요. 일부만 열람했다면 이미 제공된 리포트와 아직 제공되지 않은 리포트를 구매·열람 기록으로 구분해, 제공되지 않은 부분에 해당하는 금액을 환불해요.","질문 10회권은 한 번도 쓰지 않았다면 7일 이내 전액 환불해요. 일부 사용했다면 서버에 기록된 사용 횟수와 남은 횟수를 기준으로 남은 횟수에 해당하는 금액을 환불해요.","같은 상품을 중복 결제했거나 잘못 결제된 경우에는 전액 환불해요.","저희 쪽 문제로 콘텐츠가 정상적으로 만들어지지 않았거나 열리지 않으면, 다시 제공하거나 해당 금액을 환불해요.","표시·광고 내용이나 계약 내용과 다르게 제공된 경우에는 관련 법령의 청약철회 기준을 따라요.","환불은 결제한 수단으로 돌려 드려요. 환불 요청 시각과 콘텐츠 제공 시작 시각은 서버 기록(구매 시각·콘텐츠 생성 시작 시각·최초 열람 시각·질문 사용 횟수)을 기준으로 판단해요."],"footnote":"환불 문의는 내 사주 화면의 구매 내역에서 보낼 수 있어요. 확인 뒤 결제 수단으로 돌려 드려요.","notice":{"title":"결제 전 확인해 주세요","lines":["이 상품은 디지털 콘텐츠예요. 결제하면 바로 열려요.","열람하기 전이라면 7일 이내 전액 환불돼요.","리포트나 잠긴 답을 열람하기 시작하면 단순 변심 환불이 제한돼요.","리포트 묶음과 질문권은 사용하지 않은 부분만 환불돼요."],"checkbox":"위 내용을 확인했어요. 열람을 시작하면 단순 변심 환불이 제한되는 것에 동의해요.","button":"확인하고 결제하기"},"requestIntro":"환불 요청 시각이 기록돼요. 열람 전이면 7일 이내 전액, 일부 사용이면 사용하지 않은 부분을 기준으로 확인한 뒤 결제 수단으로 돌려 드려요."}};
 </script>
 <script>
 var KoreanLunarCalendar = (function () {
@@ -5277,7 +5286,7 @@ const SERVER = (function () {
   // ---- 결제 ----
   async function checkout(o) {
     if (!user) throw new Error('login');
-    const r = await fns.httpsCallable('createOrder')({ item: o.item, id: o.id || null });
+    const r = await fns.httpsCallable('createOrder')({ item: o.item, id: o.id || null, noticeAck: o.noticeAck || null });
     const order = r.data;
     if (order.amount === 0) { await fns.httpsCallable('confirmPayment')({ orderId: order.orderId, paymentKey: 'FREE', amount: 0 }); await syncEntitlements(); return { free: true, orderId: order.orderId }; }
     if (!CFG.toss || !CFG.toss.clientKey) throw new Error('toss not configured');
@@ -5297,8 +5306,13 @@ const SERVER = (function () {
     if (p.get('pay') === 'fail') { history.replaceState(null, '', location.pathname + (localStorage.getItem('ms_after') || '#/home')); return { ok: false, message: p.get('message') || '결제가 취소되었거나 실패했어요.' }; }
     return null;
   }
+  // 콘텐츠 제공 개시 기록(생성 시작·최초 열람). 서버는 처음 한 번만 시각을 남긴다.
+  async function markContent(kind, id, events) { if (!user) return false; const r = await fns.httpsCallable('markContent')({ kind, id, events: events || ['generate', 'view'] }); return !!(r && r.data); }
+  // 내 주문 목록(구매 내역). 정렬은 클라이언트에서(복합 색인 불필요).
+  async function orders() { if (!user) return []; const q = await db.collection('orders').where('uid', '==', user.uid).limit(100).get(); return q.docs.map(d => Object.assign({ orderId: d.id }, d.data())); }
+  async function requestRefund(orderId, reason) { const r = await fns.httpsCallable('requestRefund')({ orderId, reason: reason || '' }); return r.data; }
   async function useQuota() { if (!user) return; try { await fns.httpsCallable('useQuota')({}); } catch (e) { console.warn('useQuota', e); } }
-  return { enabled, init, user: () => user, useQuota, onAuth: l => listeners.push(l), signInEmail, signInKakao, signOut: () => auth && auth.signOut(), syncEntitlements, checkout, completePayment };
+  return { enabled, init, user: () => user, useQuota, onAuth: l => listeners.push(l), signInEmail, signInKakao, signOut: () => auth && auth.signOut(), syncEntitlements, checkout, completePayment, markContent, orders, requestRefund };
 })();
 
 /* ==========================================================================
@@ -5322,6 +5336,7 @@ const SERVER = (function () {
   const PRICE = { answer: 2900, one: 9900, all: 19900, extra: 4900 };
 
   // ---------- 저장 ----------
+  const POLICY = window.POLICY || { version: '', refund: null };
   const store = {
     get(k, d) { try { const v = localStorage.getItem('ms_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('ms_' + k, JSON.stringify(v)); } catch (e) {} },
@@ -5515,7 +5530,7 @@ const SERVER = (function () {
       return '<div class="mcell' + (locked ? ' locked' : ' l' + r.level) + (past ? ' past' : '') + (now ? ' now' : '') + (isStar ? ' star' : '') + '" title="' + r.month + '월"><i></i><b>' + r.month + '</b></div>'; }).join('') + '</div><div class="legend"><span><i></i>잔잔함</span><span><i class="i1"></i>보통</span><span><i class="i2"></i>강함</span>' + (o.unlocked ? '<span>' + SP('') + '가장 강한 달</span>' : '<span>' + lk('세기·핵심 달') + '</span>') + '</div>';
   }
   function lockedScreen(q) {
-    const f = state.facts; const a = answerQuestion(f, q.id); const un = unlocked(q.id);
+    const f = state.facts; const a = answerQuestion(f, q.id); const un = unlocked(q.id); if (un) markContent('answer', q.id);
     const rows = a.timing ? a.timing.months : []; const upcoming = rows.filter(r => r.month >= f.today.month);
     const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenesHtml = pool && pool.scenes ? '<ul class="e-scenes" style="margin:8px 0 4px">' + pool.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' : '';
     const bands = bandsOf(upcoming); const open = bands[0]; const rest = bands.slice(1);
@@ -5640,8 +5655,19 @@ const SERVER = (function () {
       '<div class="tcard opal"><div class="art">' + ilganImg() + '<span class="hz">' + iljuHanja() + '</span><span class="en">My Day Pillar</span></div><div class="eyebrow" style="margin-top:12px">' + SP('pink') + ' 나의 일주 ' + SP('pink') + '</div><h2>나는 ' + iljuName() + '</h2><div class="nick">' + esc(il.nick) + '</div>' +
       '<ul>' + il.traits.map(t => '<li>' + SP('') + esc(t) + '</li>').join('') + '</ul><div class="kws">' + il.keyword.split('·').map(k => '<span>' + esc(k) + '</span>').join('') + '</div><p class="small" style="margin-top:12px;padding:0 18px">일주는 태어난 날의 기운이에요. 사주에서 나를 가장 먼저 보여주는 자리예요.</p></div>' +
       '<div class="stack">' + (pend ? '<button class="btn primary block" data-act="pending">내 질문 답 보기</button>' + btn('내 명식 먼저 보기', 'chart', 'ghost sm') : btn('내 명식 보기', 'chart', 'primary block') + btn('요즘 내 흐름 보기', 'now', 'ghost sm')) + '</div>' +
-      '<div class="card"><div class="eyebrow">공유 카드</div><div class="share"><div class="mini" style="background-image:url(' + IMG('bg-blue-portrait') + ')">' + ilganImg() + '<div class="t">나는 ' + iljuName() + '</div><div class="s">' + APP_NAME + '</div></div><div><p class="body">일간 그림과 일주 이름만 들어가요.</p><div class="row"><button class="btn sm line" data-act="share">친구에게 보내기</button></div></div></div></div>' + footer();
+      ordersCard() + '<div class="card"><div class="eyebrow">공유 카드</div><div class="share"><div class="mini" style="background-image:url(' + IMG('bg-blue-portrait') + ')">' + ilganImg() + '<div class="t">나는 ' + iljuName() + '</div><div class="s">' + APP_NAME + '</div></div><div><p class="body">일간 그림과 일주 이름만 들어가요.</p><div class="row"><button class="btn sm line" data-act="share">친구에게 보내기</button></div></div></div></div>' + footer();
   };
+  const ordersCard = () => (typeof SERVER !== 'undefined' && SERVER.enabled && SERVER.user()) ? '<div class="card" id="orders-card"><div class="eyebrow">구매 내역</div><p class="small">불러오는 중이에요.</p></div>' : '';
+  const orderLabel = o => o.item === 'answer' ? '잠긴 답 · ' + (qById(o.id) ? pickText(qById(o.id).text, state.facts ? state.facts.band : '30s') : o.id) : o.item === 'one' ? (RMETA[o.id] ? RMETA[o.id].title : o.id) : o.item === 'all' ? '전체 리포트 4개' : '추가 질문권 10회';
+  const fmtTs = ts => { if (!ts) return ''; const d = new Date(ts.seconds ? ts.seconds * 1000 : ts); const z = n => String(n).padStart(2, '0'); return d.getFullYear() + '.' + z(d.getMonth() + 1) + '.' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()); };
+  async function loadOrders() {
+    if (!$('#orders-card')) return;
+    try {
+      const list = (await SERVER.orders()).filter(o => o.status === 'paid').sort((a, b) => ((b.paidAt && b.paidAt.seconds) || 0) - ((a.paidAt && a.paidAt.seconds) || 0));
+      const el = $('#orders-card'); if (!el) return;
+      el.innerHTML = '<div class="eyebrow">구매 내역</div>' + (list.length ? list.map(o => '<div class="orow"><div><b>' + esc(orderLabel(o)) + '</b><span class="small">' + esc(fmtTs(o.paidAt)) + ' · ' + (o.amount || 0).toLocaleString() + '원' + (o.refundRequestedAt ? ' · 환불 요청됨' : '') + '</span></div>' + (o.refundRequestedAt ? '' : '<button class="btn sm line" data-act="refund" data-order="' + esc(o.orderId) + '">환불 문의</button>') + '</div>').join('') : '<p class="small">아직 구매한 것이 없어요.</p>') + '<button class="e-link" data-act="doc" data-doc="refund" style="margin-top:8px">환불 규정 보기</button>';
+    } catch (e) { console.warn(e); const el = $('#orders-card'); if (el) el.innerHTML = '<div class="eyebrow">구매 내역</div><p class="small">불러오지 못했어요.</p>'; }
+  }
   V.chart = () => {
     const f = state.facts; const c = f.counts; const max = Math.max(...c); const top = ELEMENTS[c.indexOf(max)]; const zero = ELEMENTS.filter((e, i) => c[i] === 0).map(e => e.k + '(' + e.h + ')');
     return topbar(true) + strip() + '<div class="card"><span class="en" style="font-size:13px">My Chart</span><div class="eyebrow">내 명식 한눈에</div>' + pillarsGrid([]) +
@@ -5725,7 +5751,7 @@ const SERVER = (function () {
   }
   V.read = p => {
     const list = OWN_REPORTS(); if (!list.length) return V.intro({ report: p.report || 'flow' });
-    const cur = (p.report && list.includes(p.report)) ? p.report : (list.includes(state.book) ? state.book : list[0]); state.book = cur; markSeen('reports', cur);
+    const cur = (p.report && list.includes(p.report)) ? p.report : (list.includes(state.book) ? state.book : list[0]); state.book = cur; markSeen('reports', cur); markContent('report', cur);
     const rep = readableReport(cur); const meta = RMETA[cur];
     const bar = '<div class="rd-bar"><button class="rd-back" data-act="back" aria-label="뒤로">‹</button><b>' + esc(meta.title) + '</b><span>남은 질문 ' + quotaLeft() + '개</span><button class="rd-pdf" data-act="print">PDF</button></div>';
     const tabs = list.length > 1 ? '<div class="rd-tabs">' + list.map(id => '<button class="' + (id === cur ? 'on' : '') + '" data-go="read/' + id + '">' + esc(RMETA[id].title.replace('나의 ', '')) + '</button>').join('') + '</div>' : '';
@@ -5790,16 +5816,32 @@ const SERVER = (function () {
     saveOwned(o);
   }
   const loginHtml = () => '<p class="body">구매한 것을 잃지 않도록 여기서 한 번만 로그인해요. 무료 이용은 로그인이 필요 없어요.</p>' + (CFG.kakao && CFG.kakao.jsKey ? '<button class="btn primary block" data-act="login-kakao" style="background:#FEE500;color:#191919;border-color:#FEE500">카카오로 계속하기</button>' : '<p class="small">카카오 로그인은 설정이 끝나면 열려요.</p>') + '<form id="f-email" class="row" style="margin-top:10px;flex-wrap:nowrap"><input type="email" id="i-email" placeholder="이메일 주소" required style="flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit"><button class="btn primary" type="submit">링크 받기</button></form><p class="small" style="margin-top:6px">비밀번호 없이, 메일의 링크를 누르면 로그인돼요.</p><div id="login-msg" class="small" style="margin-top:6px"></div>';
-  function pay(item, id, amount) {
-    if (typeof SERVER !== 'undefined' && SERVER.enabled) {
-      if (!SERVER.user()) { localStorage.setItem('ms_after', location.hash || '#/home'); state.modal = { login: true, title: '로그인', body: loginHtml() }; renderModal(); return; }
-      SERVER.checkout({ item, id }).then(r => { if (r && r.free) { toast('결제 없이 열렸어요'); afterPay(item, id); } }).catch(e => { console.warn(e); toast(e && e.message === 'toss not configured' ? '결제 연결 준비 중이에요' : '결제를 시작하지 못했어요'); });
+  // 콘텐츠 제공 개시 기록(환불 판단 근거). 기기에 먼저 남기고, 서버가 켜져 있으면 서버 시각으로도 남긴다.
+  function markContent(kind, id, events) {
+    const evs = events || ['generate', 'view']; const u = store.get('usage', {}); const key = kind + ':' + id; const c = u[key] || {}; let changed = false; const now = new Date().toISOString();
+    evs.forEach(ev => { const k = ev === 'generate' ? 'generatedAt' : 'firstViewedAt'; if (!c[k]) { c[k] = now; changed = true; } });
+    if (changed) { u[key] = c; store.set('usage', u); }
+    if ((changed || !c.synced) && typeof SERVER !== 'undefined' && SERVER.enabled && SERVER.user()) SERVER.markContent(kind, id, evs).then(() => { const u2 = store.get('usage', {}); u2[key] = Object.assign({}, u2[key] || c, { synced: true }); store.set('usage', u2); }).catch(e => console.warn('markContent', e));
+  }
+  // 결제 전 청약철회 제한 고지: 사용자가 확인란을 직접 체크해야 결제로 넘어간다. 확인 시각은 기기와 주문(서버)에 남는다.
+  function openAck(item, id, amount) {
+    const n = POLICY.refund.notice;
+    state.modal = { title: n.title, body: '<ul class="acklist">' + n.lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><label class="ackbox"><input type="checkbox" id="ack-chk"><span>' + esc(n.checkbox) + '</span></label><button class="btn primary block" data-act="pay-ack" data-item="' + esc(item) + '" data-id="' + esc(id || '') + '" data-amount="' + esc(amount == null ? '' : amount) + '" disabled>' + esc(n.button) + '</button><button class="e-link" data-act="doc" data-doc="refund" style="margin-top:8px">환불 규정 전체 보기</button>' };
+    renderModal();
+  }
+  function pay(item, id, amount, acked) {
+    const server = typeof SERVER !== 'undefined' && SERVER.enabled; const P = CFG.pay;
+    const canPay = server || (P && typeof P.checkout === 'function') || DEV;
+    if (!canPay) { state.modal = { title: '결제 준비 중', body: '결제 연결을 마무리하고 있어요. 곧 이 자리에서 카드·간편결제로 열려요.' }; renderModal(); return; }
+    if (server && !SERVER.user()) { localStorage.setItem('ms_after', location.hash || '#/home'); state.modal = { login: true, title: '로그인', body: loginHtml() }; renderModal(); return; }
+    if (!acked && POLICY.refund && POLICY.refund.notice) { openAck(item, id, amount); return; }
+    const noticeAck = store.get('ack', null);
+    if (server) {
+      SERVER.checkout({ item, id, noticeAck }).then(r => { if (r && r.free) { toast('결제 없이 열렸어요'); afterPay(item, id); } }).catch(e => { console.warn(e); toast(e && e.message === 'toss not configured' ? '결제 연결 준비 중이에요' : '결제를 시작하지 못했어요'); });
       return;
     }
-    const P = CFG.pay;
-    if (P && typeof P.checkout === 'function') { P.checkout({ item, id, amount: +amount, profile: state.profile }).then(ok => { if (ok) { grant(item, id); toast('결제가 완료됐어요'); afterPay(item, id); } }); return; }
-    if (DEV) { grant(item, id); toast('테스트 결제 · 열렸어요'); afterPay(item, id); return; }
-    state.modal = { title: '결제 준비 중', body: '결제 연결을 마무리하고 있어요. 곧 이 자리에서 카드·간편결제로 열려요.' }; renderModal();
+    if (P && typeof P.checkout === 'function') { P.checkout({ item, id, amount: +amount, profile: state.profile, noticeAck }).then(ok => { if (ok) { grant(item, id); toast('결제가 완료됐어요'); afterPay(item, id); } }); return; }
+    grant(item, id); toast('테스트 결제 · 열렸어요'); afterPay(item, id);
   }
   function afterPay(item, id) { if (item === 'answer') route(); else if (item === 'one') navigate('#/read/' + id); else if (item === 'all') navigate('#/read/' + (state.book || 'flow')); else renderSheet(); }
   function renderModal() {
@@ -5809,7 +5851,7 @@ const SERVER = (function () {
   const DOCS = {
     terms: ['이용약관', '<p>' + josa(APP_NAME, '은', '는') + ' 전통 명리의 관점으로 생년월일시를 해석해 보여 주는 디지털 콘텐츠 서비스예요. 개인의 운명이나 미래를 단정하지 않아요.</p><p>구매한 리포트와 잠긴 답은 기간 제한 없이 이 서비스 안에서 다시 볼 수 있어요. 배송되는 물건은 없어요.</p><p>건강, 법률, 금융에 관한 판단은 전문가와 상의하세요.</p>'],
     privacy: ['개인정보 처리방침', '<p>생년월일·시간·성별은 사주 계산에만 쓰고, 이 기기(브라우저)에만 저장돼요. 결제 시에는 결제 대행사가 결제 정보를 처리하고, 우리는 구매 내역(상품·일시)만 보관해요.</p><p>저장된 정보는 "내 사주 지우기"로 언제든 지울 수 있어요.</p>'],
-    refund: ['환불 규정', '<p>디지털 콘텐츠 특성상, 리포트나 잠긴 답을 열람하기 전이라면 결제 후 7일 안에 전액 환불해요. 열람한 뒤에는 환불이 어렵지만, 계산 오류나 내용 누락처럼 서비스 문제가 있으면 확인 뒤 환불해요.</p><p>환불은 결제한 수단으로 돌려 드려요.</p>'],
+    refund: ['환불 규정', (POLICY.refund ? '<ol style="padding-left:18px;margin:0">' + POLICY.refund.clauses.map(c => '<li style="margin:0 0 8px">' + esc(c) + '</li>').join('') + '</ol><p class="small">' + esc(POLICY.refund.footnote || '') + '</p>' : '<p>환불 규정을 준비하고 있어요.</p>')],
   };
 
   // ---------- 토스트·용어 ----------
@@ -5833,6 +5875,7 @@ const SERVER = (function () {
     else html = viewNotFound();
     $('#app').innerHTML = '<div class="page">' + html + '</div>';
     window.scrollTo(0, 0); renderSheet(); renderModal();
+    if (state.screen === 'me') loadOrders();
     if (state.screen === 'calc') { const lines = $('#calc-lines').children; [0, 1, 2].forEach(i => setTimeout(() => { lines[i].classList.add('on'); }, 300 + i * 450)); setTimeout(() => { if (state.screen === 'calc') { navigate('#/me'); } }, 1900); }
   }
   function goPending() { const p = store.get('pending', null); store.del('pending'); navigate(p && !/calc|input/.test(p) ? p : '#/now'); }
@@ -5850,7 +5893,10 @@ const SERVER = (function () {
     else if (a === 'toast') toast(t.dataset.msg || '');
     else if (a === 'scrollto') { const el = $(t.dataset.target); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else navigate('#/home'); }
     else if (a === 'sheet-close') closeSheet();
-    else if (a === 'modal-close') { state.modal = null; renderModal(); }
+    else if (a === 'modal-close') { if (t.classList.contains('modal') && e.target !== t) return; state.modal = null; renderModal(); }
+    else if (a === 'pay-ack') { const c = $('#ack-chk'); if (!c || !c.checked) { toast('확인란에 체크해 주세요'); return; } store.set('ack', { at: new Date().toISOString(), version: POLICY.version, item: t.dataset.item, id: t.dataset.id || null }); state.modal = null; renderModal(); pay(t.dataset.item, t.dataset.id || undefined, t.dataset.amount, true); }
+    else if (a === 'refund') { state.modal = { title: '환불 문의', body: '<p class="body">' + esc(POLICY.refund ? POLICY.refund.requestIntro : '') + '</p><textarea id="refund-reason" rows="3" placeholder="사유를 적어 주세요(선택)"></textarea><button class="btn primary block" data-act="refund-send" data-order="' + esc(t.dataset.order) + '" style="margin-top:8px">환불 요청 보내기</button>' }; renderModal(); }
+    else if (a === 'refund-send') { const reason = ($('#refund-reason') || {}).value || ''; t.disabled = true; SERVER.requestRefund(t.dataset.order, reason).then(() => { state.modal = null; renderModal(); toast('환불 요청을 접수했어요'); route(); }).catch(err => { console.warn(err); t.disabled = false; toast('요청을 보내지 못했어요'); }); }
     else if (a === 'unk') { const b = t; const on = !b.classList.contains('on'); b.classList.toggle('on', on); b.textContent = on ? '몰라요 선택됨' : '몰라요'; $('#i-h').disabled = on; $('#i-mi').disabled = on; state.unk = on; }
     else if (a === 'pending') goPending();
     else if (a === 'ask-send') askFromInput(t.dataset.q);
@@ -5866,6 +5912,7 @@ const SERVER = (function () {
     if (e.target.id === 'chat-form') { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); }
     if (e.target.id === 'f-email') { e.preventDefault(); const em = $('#i-email').value.trim(); if (!em) return; SERVER.signInEmail(em).then(() => { const m = $('#login-msg'); if (m) m.textContent = '메일을 보냈어요. 메일의 링크를 누르면 이 화면으로 돌아와요.'; }).catch(err => { console.warn(err); const m = $('#login-msg'); if (m) m.textContent = '메일을 보내지 못했어요. 주소를 확인해 주세요.'; }); }
   });
+  document.addEventListener('change', e => { if (e.target.id === 'ack-chk') { const b = $('[data-act="pay-ack"]'); if (b) b.disabled = !e.target.checked; } });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } });
   window.addEventListener('hashchange', route);
   window.MS = { state, store, owned, grant, route };
