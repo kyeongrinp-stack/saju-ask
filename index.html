@@ -1015,7 +1015,8 @@ body{margin:0;background:#fff;color:#1E2740;font-family:var(--sans);font-size:15
 .e-nav{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:30}
 @media (min-width:720px){.e-nav{max-width:720px;left:50%;right:auto;transform:translateX(-50%);border-radius:14px 14px 0 0}}
 .calc{min-height:100vh}
-@media print{.e-nav,.rd-bar,.rd-tabs,.rd-end,.e-top,.more,.backdrop,.sheet{display:none!important}.page{padding:0;max-width:none}body{background:#fff}.rd-ch{page-break-inside:auto}}
+@media print{@page{size:A4;margin:14mm 12mm}.e-nav,.rd-bar,.rd-tabs,.rd-end,.e-top,.more,.backdrop,.sheet,.modal,.toast,.rd-link{display:none!important}.page{padding:0;max-width:none}body{background:#fff}.rd-print{display:block!important}.rd-ch{break-before:page;border-top:0!important;padding-top:0}.rd-head,.rd-toc,.rd-brief,.concl,.rd-body table,.rd-body .mstrip,.rd-body ul.chk,.rd-body details{break-inside:avoid}.rd-body p{orphans:3;widows:3}.rd-body details>summary{display:none}.rd-body details{border:0;padding:0}.rd-body details::before{content:"근거";display:block;font-size:11px;color:#6a7280;margin:6px 0 2px}}
+.rd-print{display:none;font-size:11px;color:#6a7280;border-bottom:1px solid #dde3ec;padding-bottom:6px;margin:0 0 12px}
 @media (min-width:720px){.page>:not(.ed2){max-width:680px;margin-left:auto;margin-right:auto}}
 body{overflow-x:hidden}
 .e-qhead{overflow:hidden}
@@ -5519,7 +5520,7 @@ const SERVER = (function () {
   const NOTE_KO = { 편재: '기회로 오는 큰돈', 정재: '정해진 돈', 식신: '꾸준히 만드는 힘', 상관: '말재주·벌이는 힘', 비견: '내 편이자 경쟁자', 겁재: '나눠 쓰는 사람', 정관: '자리와 규칙', 편관: '책임과 압박', 정인: '나를 받쳐주는 힘', 편인: '남다른 배움·직감', 합: '묶이는 자리', 충: '흔들리는 자리', 역마: '이동', 도화: '사람을 끄는 자리' };
   function bandLines(b, area) {
     const stars = [...new Set(b.notes)]; const what = stars.map(s => NOTE_KO[s] ? s + '(' + NOTE_KO[s] + ')' : s).join(', ');
-    const l1 = what ? what + '이 들어오는 구간이에요.' : '움직임이 있는 구간이에요.';
+    const last = stars[stars.length - 1] || ''; const l1 = what ? what + (hasBatchim(last) ? '이' : '가') + ' 들어오는 구간이에요.' : '움직임이 있는 구간이에요.';
     const l2 = { money: '이 달에는 들어오는 만큼 나가는 폭도 커요. 큰 결정은 나눠서 하세요.', love: '이 달에는 만남을 미루지 말고, 결정은 다음 달로 넘기는 게 맞아요.', work: '이 달에 자리 이야기가 나와요. 조건은 문서로 받으세요.', people: '이 달에는 사람이 늘어요. 역할과 돈은 먼저 나누세요.', flow: '이 달에 움직임이 생겨요. 서두르지 말고 준비만 해 두세요.' }[area];
     return [l1, l2];
   }
@@ -5753,6 +5754,7 @@ const SERVER = (function () {
     const list = OWN_REPORTS(); if (!list.length) return V.intro({ report: p.report || 'flow' });
     const cur = (p.report && list.includes(p.report)) ? p.report : (list.includes(state.book) ? state.book : list[0]); state.book = cur; markSeen('reports', cur); markContent('report', cur);
     const rep = readableReport(cur); const meta = RMETA[cur];
+    const phead = '<div class="rd-print"><b>' + esc(APP_NAME) + '</b> · ' + esc(meta.title) + ' · ' + esc(ownerLabel()) + ' · ' + esc(new Date().toISOString().slice(0, 10).replace(/-/g, '.')) + '</div>';
     const bar = '<div class="rd-bar"><button class="rd-back" data-act="back" aria-label="뒤로">‹</button><b>' + esc(meta.title) + '</b><span>남은 질문 ' + quotaLeft() + '개</span><button class="rd-pdf" data-act="print">PDF</button></div>';
     const tabs = list.length > 1 ? '<div class="rd-tabs">' + list.map(id => '<button class="' + (id === cur ? 'on' : '') + '" data-go="read/' + id + '">' + esc(RMETA[id].title.replace('나의 ', '')) + '</button>').join('') + '</div>' : '';
     const head = '<header class="rd-head"><div class="rd-no">No. 00 · ' + esc(meta.toc[0]) + '</div><h1>' + esc(rep.one) + '</h1><p>' + rep.brief.map(esc).join(' ') + '</p>' + (rep.cover3 ? '<ol class="rd-c3">' + rep.cover3.map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>' : '') + '</header>';
@@ -5762,7 +5764,7 @@ const SERVER = (function () {
       const body = c ? c.html.replace('</div>', '</div>' + briefHtml) : '';
       return '<section class="rd-ch" id="rd-' + cur + '-' + i + '"><div class="rd-no">No. 0' + i + '</div><h2>' + esc(tt) + '</h2><div class="rd-body full">' + body + '</div></section>'; }).join('');
     const end = '<div class="rd-end"><div class="e-kicker">궁금증이 남았나요?</div><p>방금 읽은 리포트를 아는 상태에서 이어서 물어볼 수 있어요.</p><button class="e-btn" data-chat="' + esc(JSON.stringify({ report: cur, section: 'end', area: meta.area })) + '">내 사주에 이어서 물어보기 <span>→</span></button></div>';
-    return '<div class="ed2 rd">' + bar + tabs + head + toc + chapters + end + eFoot() + bottomNav('rep') + '</div>';
+    return '<div class="ed2 rd">' + bar + phead + tabs + head + toc + chapters + end + eFoot() + bottomNav('rep') + '</div>';
   };
   const viewNotFound = () => topbar(true) + '<div class="card"><p class="lead">그 화면은 없어요.</p>' + btn('홈으로', 'home', 'primary') + '</div>';
 
@@ -5901,7 +5903,7 @@ const SERVER = (function () {
     else if (a === 'pending') goPending();
     else if (a === 'ask-send') askFromInput(t.dataset.q);
     else if (a === 'pay') pay(t.dataset.item, t.dataset.id, t.dataset.amount);
-    else if (a === 'print') window.print();
+    else if (a === 'print') { setDetails(true); window.print(); }
     else if (a === 'doc') { const d = DOCS[t.dataset.doc]; state.modal = { title: d[0], body: d[1] }; renderModal(); }
     else if (a === 'login-kakao') { SERVER.signInKakao().catch(e => { console.warn(e); toast('카카오 로그인을 시작하지 못했어요'); }); }
     else if (a === 'share') { const url = location.origin + location.pathname + '#/ilju?src=share'; if (navigator.share) navigator.share({ title: APP_NAME, text: '나는 ' + iljuName() + '. 내 일주도 확인해 보기', url }).catch(() => {}); else if (navigator.clipboard) { navigator.clipboard.writeText(url); toast('링크를 복사했어요'); } }
@@ -5914,6 +5916,9 @@ const SERVER = (function () {
   });
   document.addEventListener('change', e => { if (e.target.id === 'ack-chk') { const b = $('[data-act="pay-ack"]'); if (b) b.disabled = !e.target.checked; } });
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } });
+  // 인쇄(PDF)할 때는 근거 보기를 펼치고, 끝나면 원래대로
+  function setDetails(open) { document.querySelectorAll('.rd-body details').forEach(d => { if (open) { d.dataset.po = d.open ? '1' : ''; d.open = true; } else if (d.dataset.po !== undefined) { d.open = d.dataset.po === '1'; delete d.dataset.po; } }); }
+  window.addEventListener('beforeprint', () => setDetails(true)); window.addEventListener('afterprint', () => setDetails(false));
   window.addEventListener('hashchange', route);
   window.MS = { state, store, owned, grant, route };
   document.title = APP_NAME + ' · ' + (CFG.tagline || '');
