@@ -5570,7 +5570,8 @@ window.TAROT_TEMPLATES = {
     },
     reason: {
       open: '{core1|이가} 바탕에 있고, {area3}까지 이어져요.',
-      conditional: '{core1|이가} 바탕에 있어요. 다만 {area2}에 머무르기보다 {area3} 쪽으로 가는 것이 먼저예요.',
+      conditional: '{core1|이가} 바탕에 있어요. 다만 {block|이가} 걸려 있어서, 이걸 풀어야 {area3|으로로} 이어져요.',
+      closeFit: '{core1|이가} 바탕에 있어요. 부담을 먼저 정리하고 나면 {area3|을를} 받아들일 여지가 생겨요.',
       later: '{core1|이가} 바탕에 있어서 길은 보여요. 다만 지금은 {area3|이라서}, 서둘러 결과를 내는 단계는 아니에요.',
       early: '지금은 {area1|이고} {area3|이라서}, 정하기엔 재료가 부족해요.',
       hard: '지금은 {area1|이고}, {area2}까지 겹쳐 있어요.',
@@ -5578,11 +5579,12 @@ window.TAROT_TEMPLATES = {
     },
     financeWords: ['투자', '주식', '코인', '펀드', '매수', '매도', '부동산', '집을', '청약', '대출', '빌려', '보증', '계약금', '적금', '예금', '환전', '비트', '선물', '레버리지', '갈아타'],
     finance: {
-      open: '카드에서는 {action} 쪽의 흐름이 열려 있는 것으로 읽혀요. 다만 {area2|은는} 먼저 정리하라는 신호예요.',
+      open: '카드에서는 {action} 쪽을 막는 흐름은 보이지 않아요. 다만 {area2|은는} 먼저 정리하라는 신호예요.',
       conditional: '카드에서는 지금 바로 {actionNow} 쪽으로 강하게 기울지는 않아요. {area2|을를} 정리하고 판단 기준을 먼저 분명히 하라는 흐름이 강해요.',
       later: '카드에서는 {action} 쪽의 가능성은 있어도 지금이 그 단계는 아니라고 읽혀요. {area3|이라서}, 서두르지 않는 쪽이에요.',
       early: '카드에서는 {action}지 아직 어느 쪽으로도 기울지 않은 것으로 읽혀요. {area3|이라서} 판단 재료가 더 필요해요.',
       hard: '카드에서는 {action} 쪽보다 정리하고 지키는 쪽으로 읽혀요. {area1|이고}, {area2}까지 겹쳐 있어서예요.',
+      short: { open: '기준을 세운 뒤에 정하는 쪽', conditional: '당장 {actionNow} 것을 정하기보다 판단 기준을 먼저 세우는 쪽', later: '지금은 정하지 않고 지켜보는 쪽', early: '아직 판단 재료가 부족한 쪽', hard: '지금은 벌리기보다 정리하고 지키는 쪽' },
       willNote: '카드는 돈의 흐름을 비출 뿐이라, 실제 결정은 조건과 숫자를 따져서 하세요.',
       note: '카드는 돈의 흐름을 비출 뿐이라, 실제 결정은 조건과 숫자를 따져서 하세요.',
     },
@@ -6323,11 +6325,11 @@ function suggestFor(facts, ctx) {
     if (type === 'when') { S.subj = extractSubject(question) || t.when.subjFallback; S.name3 = c3.name; return { verdict: null, text: fill(t.when.lead, S) + ' ' + fill(t.when.after[c3.energy] || t.when.after.hold, S) + (finance ? ' ' + t.finance.note : '') }; }
     if (type === 'ok') {
       const action = extractAction(question) || t.ok.actionFallback; S.action = action; S.actionNow = action.replace(/(^|\s)(지금|당장|바로)\s/g, '$1');
-      if (finance) return { verdict, kind: 'finance', text: fill(t.finance[verdict], S) + ' ' + final(t.shortOk[verdict]) + ' ' + t.finance.note };
+      if (finance) return { verdict, kind: 'finance', text: fill(t.finance[verdict], S) + ' ' + final(fill(t.finance.short[verdict], S)) + ' ' + t.finance.note };
       if (actionKind(action) === 'close') {
         const heavy = cards.filter(c => c.tone === 'heavy').length, bright = cards.filter(c => c.tone === 'bright').length;
         const fit = heavy - bright + ((c3.energy === 'end' || c3.energy === 'rest' || c3.energy === 'hold') ? 1 : (c3.energy === 'begin' || c3.energy === 'move') ? -1 : 0);
-        if (fit >= 1 || cards.some(c => c.energy === 'end')) return { verdict: 'open', kind: 'close', text: fill(t.ok.closeFit, S) + ' ' + fill(t.reason.open, S) + ' ' + final(t.ok.shortClose.fit) };
+        if (fit >= 1 || cards.some(c => c.energy === 'end')) return { verdict: 'open', kind: 'close', text: fill(t.ok.closeFit, S) + ' ' + fill(t.reason.closeFit, S) + ' ' + final(t.ok.shortClose.fit) };
         if (fit <= -1) return { verdict: 'later', kind: 'close', text: fill(t.ok.closeLater, S) + ' ' + fill(t.reason.later, S) + ' ' + final(t.ok.shortClose.later) };
         return { verdict: 'conditional', kind: 'close', text: fill(t.ok.closeMixed, S) + ' ' + final(t.ok.shortClose.mixed) };
       }
