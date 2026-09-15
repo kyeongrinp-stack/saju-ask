@@ -5476,14 +5476,13 @@ window.TAROT_NAMES = {
 };
 
 /* 타로 해석 템플릿 — 출력 문장의 틀. 카드 데이터(tarot-cards.js)와 분리한다.
- * 슬롯: {질문} {name} {kw1} {kw2} {core} {situation} {block} {advice} {area} {action} {subj} {need} {kw3} {area1}
+ * 슬롯: {질문} {name} {kw1} {kw2} {core} {situation} {block} {advice} {area} {action} {actionNow} {subj} {kw3} {area1} {area2} {area3} {core1} {situation1} {blockPart} {dir}
  * 슬롯 뒤 조사는 엔진이 받침을 보고 붙인다: {slot|이가} {slot|은는} {slot|을를} {slot|과와} {slot|이라서} {slot|이니} {slot|이고} {slot|예요} {slot|으로로} {slot|이지만}
- * 도입 문장(open)은 2~3종을 순환한다(엔진이 카드 번호 합으로 고른다. 무작위 아님).
- * 서비스 단위: 한 질문 + 3장 + 완성된 해석 = 타로 1회. 같은 질문에 카드를 더 뽑는 흐름은 없다. */
+ * 원칙: 메이저 개수·tone·energy·자리 이름 같은 엔진 내부 판정은 사용자 문장에 쓰지 않는다. 카드 데이터를 설명하지 않고 질문을 해석한다.
+ * 서비스 단위: 한 질문 + 3장 + 완성된 해석 = 타로 1회. */
 window.TAROT_TEMPLATES = {
   areaLabel: { love: '연애', work: '일', money: '돈', general: '일반' },
   posLabel: { situation: '지금 상황', block: '걸리는 것', advice: '조언' },
-  // 약한 연애 단어: 일·돈 단서가 없을 때만 연애로 센다. 가족·친구 단어가 있으면 세지 않는다.
   loveWeak: ['관계', '연락', '마음이 있', '마음'],
   neutralPeople: ['친구', '가족', '부모', '형제', '동생', '언니', '오빠', '누나', '자녀', '아이', '엄마', '아빠'],
   areaKeywords: {
@@ -5491,7 +5490,6 @@ window.TAROT_TEMPLATES = {
     work: ['일', '회사', '이직', '직장', '면접', '사업', '취업', '승진', '팀', '상사', '동료', '프로젝트', '창업', '퇴사', '합격', '시험', '공부', '직업', '커리어', '알바', '계약', '제안', '부서', '가게'],
     money: ['돈', '투자', '월급', '빚', '대출', '주식', '코인', '저축', '수입', '재정', '매출', '계약금', '부동산', '집값', '적금', '지출', '용돈', '재산', '이익', '손해', '수익', '집을', '전세', '월세', '보증금', '돈을 벌', '돈이 되', '벌 수'],
   },
-  // 질문 유형 판정(순서: why → when → mind → what → ok → will → default)
   questionType: {
     ok: ['도 될까', '도 되나', '도 괜찮', '야 할까', '야 하나', '야 되나', '야 할지', '는 게 맞을까', '는 게 나을까', '는 게 좋을까', '할까요', '할까 말까', '해야 할까', '해도 될까'],
     when: ['언제', '시기', '타이밍'],
@@ -5500,27 +5498,23 @@ window.TAROT_TEMPLATES = {
     what: ['뭘까', '무엇', '뭐가', '어떤 ', '어디', '필요한 건', '어떻게 해야', '어떻게 하'],
     will: ['될까', '풀릴까', '어떨까', '이어질까', '잘될까', '괜찮을까', '성공할까', '합격할까', '맞을까', '있을까', '올까', '나아질까', '닿을까', '잡을까', '오를까', '받을까', '생길까', '될 수', '수 있을'],
   },
-  // 행동의 성격: 닫는 행동(정리·마무리)인지 여는 행동(시작·확장)인지. 결론 방향 계산에 쓴다.
   closeVerbs: ['갚', '정리', '그만두', '그만하', '끝내', '헤어지', '팔', '줄이', '접', '포기', '끊', '퇴사', '떠나', '정산', '해지', '깨', '미루', '쉬'],
   openVerbs: ['시작', '사', '투자', '사귀', '고백', '만나', '맡', '늘리', '도전', '지원', '옮기', '이직', '창업', '꺼내', '내', '빌려주', '들어가', '나가', '계약', '결혼', '연락하', '기다리', '계속', '이어가'],
   intro: {
     withQ: '"{질문}"에 대해 세 장의 카드를 해석해 드릴게요.',
     noQ: '오늘 마음에 걸리는 것에 대해 세 장의 카드를 해석해 드릴게요.',
   },
-  // 1장: 지금 상황
   situation: {
     open: ['첫 장은 {name}, {kw1|과와} {kw2}의 카드예요.', '지금 상황 자리에는 {name|이가} 나왔어요. {kw1|과와} {kw2}의 카드예요.', '{name|이가} 먼저 나왔어요. {kw1|과와} {kw2|을를} 뜻하는 카드예요.'],
     body: '지금 상황을 보면, {situation|예요}.',
     area: { love: '연애로 보면 {area|예요}.', work: '일로 보면 {area|예요}.', money: '돈으로 보면 {area|예요}.', general: '한마디로 {area|예요}.' },
     core: '이 카드가 첫 자리에 온 건 {core|이가} 지금의 바탕이라는 뜻이에요.',
   },
-  // 2장: 걸리는 것
   block: {
     open: ['둘째 장 {name|은는} 걸리는 것을 보여 줘요.', '걸리는 것 자리에는 {name|이가} 놓였어요.', '다음은 {name}, 걸리는 것을 짚는 자리예요.'],
     body: '걸리는 건 {block|이에요}.',
     area: { love: '연애에서는 이게 {area|으로로} 나타나기 쉬워요.', work: '일에서는 이게 {area|으로로} 나타나기 쉬워요.', money: '돈에서는 이게 {area|으로로} 나타나기 쉬워요.', general: '겉으로는 {area|으로로} 보이기 쉬워요.' },
   },
-  // 3장: 조언 — 첫 문장(frame)과 끝 문장(tail)이 카드의 energy에 따라 달라진다. 범용 행동형 꼬리문장은 쓰지 않는다.
   advice: {
     frame: {
       begin: '지금은 시작하는 쪽에 조금 더 무게가 실려요.',
@@ -5541,28 +5535,19 @@ window.TAROT_TEMPLATES = {
       rest: '{lead} {area|이니}, 지금은 서두르지 않는 게 맞아요.',
     },
   },
-  // 종합: 세 장의 조합 규칙(5가지 유지)
-  summary: {
-    majors2: '메이저 카드가 두 장 이상이라 큰 흐름이 움직이는 질문이에요. 내가 정하기보다 흐름이 정하는 부분이 커요.',
-    majors3: '세 장 모두 메이저 카드예요. 지금은 내 의지보다 큰 흐름이 움직이는 때라, 흐름을 읽는 게 먼저예요.',
-    bright2: '흐름은 열려 있어요. 걸리는 것 하나만 치우면 돼요.',
-    heavy2: '지금은 밀어붙이는 때가 아니에요. 걸리는 것을 먼저 푸는 게 순서예요.',
-    mixed: '좋은 카드와 무거운 카드가 섞여 있어요. 조언 카드가 말하는 순서대로 가면 돼요.',
-    suit: { wands: '같은 완드가 두 장이라, 의욕과 행동이 이 질문의 열쇠예요.', cups: '같은 컵이 두 장이라, 감정이 이 질문의 열쇠예요.', swords: '같은 소드가 두 장이라, 생각과 말이 이 질문의 열쇠예요.', pentacles: '같은 펜타클이 두 장이라, 현실과 돈이 이 질문의 열쇠예요.' },
-    suit3: { wands: '세 장 모두 완드라, 이 질문은 결국 행동으로 풀려요.', cups: '세 장 모두 컵이라, 이 질문은 결국 마음으로 풀려요.', swords: '세 장 모두 소드라, 이 질문은 결국 판단과 말로 풀려요.', pentacles: '세 장 모두 펜타클이라, 이 질문은 결국 현실을 챙기는 걸로 풀려요.' },
-    court2: '사람 카드가 두 장 이상이라, 이 질문에는 사람이 크게 얽혀 있어요.',
-    endStart: '마무리 카드와 시작 카드가 같이 나왔어요. 하나를 닫아야 다음이 열리는 모양이에요.',
+  // 종합: 세 장이 함께 만드는 흐름을 상담 문장으로. (조합 규칙은 내부 판정에만 쓰고 문장에 드러내지 않는다)
+  synth: {
+    flow: '세 장을 함께 보면, {situation1|예요}. 다만 {block|이가} 아직 남아 있어요.',
+    flowMild: '세 장을 함께 보면, {situation1|예요}. {block|이가} 작게 걸리는 정도예요.',
+    then: '그래서 {dir}',
+    fallback: { begin: '작게라도 첫발을 떼는 일이 먼저예요.', move: '실제로 움직여 보는 일이 먼저예요.', hold: '가진 것을 지키며 다지는 일이 먼저예요.', turn: '방향을 바꾸는 결정이 먼저예요.', end: '지금 것을 마무리하는 일이 먼저예요.', rest: '서둘러 결과를 내기보다 한 번 더 확인하는 시간이 먼저예요.' },
+    contrast: { begin: '', move: '생각만 더 하기보다 ', hold: '새로 벌리기보다 ', turn: '같은 방식으로 밀기보다 ', end: '다음으로 넘어가기 전에 ', rest: '서둘러 결과를 내기보다 ' },
   },
-  // 결론: 질문 유형 × 분야 × 세 장의 역할·방향으로 판정(verdict)을 먼저 정하고 이유를 붙인다. 사건을 예언하거나 결과를 확정하지 않는다.
+  // 결론: 질문 유형 × 분야 × 세 장의 역할·의미로 판정을 먼저 정하고 이유를 붙인다. 사건을 예언하거나 결과를 확정하지 않는다.
   answer: {
-    // 판정 5종: open 가능성 열림 · conditional 가능하지만 조건 · later 가능성은 있지만 아직 그 단계 아님 · early 아직 판단하기 이름 · hard 현재 흐름에서는 어려움
     short: { open: '가능성이 열려 있다', conditional: '가능하지만 조건이 있다', later: '가능성은 있지만 아직 그 단계는 아니다', early: '아직 판단하기 이르다', hard: '지금 흐름으로는 어렵다' },
     shortOk: { open: '해도 되는 쪽', conditional: '조건을 갖추면 해도 되는 쪽', later: '가더라도 지금은 아닌 쪽', early: '아직 정하기 이른 쪽', hard: '지금은 하지 않는 쪽' },
     final: '그래서 지금의 답은 "{short}"에 가까워요.',
-    // 조언 카드 energy → "먼저 필요한 것"
-    need: { begin: '작게라도 첫발을 떼는 일', move: '실제로 움직여 보는 일', hold: '지금 가진 것을 지키며 다지는 시간', turn: '방향을 바꾸는 결정', end: '지금 것을 마무리하는 일', rest: '멈춰서 가능성을 확인하고 방향을 정리하는 시간' },
-    energyWord: { begin: '시작', move: '움직임', hold: '지킴', turn: '전환', end: '마무리', rest: '멈춤' },
-    // 될까·풀릴까 (will) — {subj}는 질문에서 뽑은 "이 일로 돈을 벌 수 있을" 같은 구절
     will: {
       subjFallback: '바라는 대로 될',
       open: '{subj} 가능성은 열려 있어 보여요.',
@@ -5571,7 +5556,6 @@ window.TAROT_TEMPLATES = {
       early: '{subj}지는 아직 판단하기 일러요.',
       hard: '지금 흐름에서는 {subj} 가능성이 높아 보이지 않아요.',
     },
-    // 해도 될까 (ok) — {action}은 "이직하는" 같은 구절
     ok: {
       actionFallback: '그 선택을 하는',
       open: '{action} 쪽에 무게가 실려요.',
@@ -5579,40 +5563,42 @@ window.TAROT_TEMPLATES = {
       later: '{action} 쪽 가능성은 있어요. 다만 지금이 그 단계는 아니에요.',
       early: '{action}지는 아직 정하기 일러요.',
       hard: '지금 흐름에서는 {action} 쪽에 무게가 실리지 않아요.',
-      // 닫는 행동(갚기·정리·그만두기)일 때
       closeFit: '새 것을 벌리기보다 {action} 쪽에 무게가 실려요. 지금 부담을 정리해 다음 시작을 가볍게 만드는 흐름이에요.',
       closeLater: '{action} 것 자체보다 그다음 시작에 무게가 실려요. 정리는 새 흐름을 막지 않는 선에서 가볍게 하면 돼요.',
       closeMixed: '{action} 쪽도 미루는 쪽도 아니에요. {advice|이니}, 그 한 가지를 먼저 하고 나서 정하는 게 맞아요.',
       shortClose: { fit: '지금은 정리하는 쪽', later: '정리보다 다음 시작이 먼저인 쪽', mixed: '조건을 확인한 뒤 정하는 쪽' },
     },
-    // 판정별 이유 문장(모든 유형 공통). 걸림 카드는 조건·이유로만 쓰고, 첫 문장(판정)에는 넣지 않는다.
     reason: {
-      open: '{core1|이가} 바탕에 있고, 조언 자리도 {energy3|을를} 가리켜서예요.',
-      conditional: '{core1|이가} 바탕에 있어요. 다만 {block|이가} 조건으로 붙어서, 그 부분을 먼저 손보면 흐름이 맞아요.',
-      later: '{core1|이가} 있어서 가능성은 보여요. 다만 {laterLead} {need|이가} 먼저 필요해 보여요.',
-      early: '지금 상황이 {situation1|이고}, 조언 자리도 {need|을를} 말해요. 지금 정하기엔 재료가 부족해요.',
-      hard: '{core1|이가} 지금의 바탕이라 흐름이 무거워요. 여기에 {block|이가} 겹쳐 있어요.',
-      hardHope: '다만 조언 자리는 {energy3|을를} 가리켜서, 움직이면 흐름이 달라질 여지는 있어요.',
+      open: '{core1|이가} 바탕에 있고, {area3}까지 이어져요.',
+      conditional: '{core1|이가} 바탕에 있어요. 다만 {area2}에 머무르기보다 {area3} 쪽으로 가는 것이 먼저예요.',
+      later: '{core1|이가} 바탕에 있어서 길은 보여요. 다만 지금은 {area3|이라서}, 서둘러 결과를 내는 단계는 아니에요.',
+      early: '지금은 {area1|이고} {area3|이라서}, 정하기엔 재료가 부족해요.',
+      hard: '지금은 {area1|이고}, {area2}까지 겹쳐 있어요.',
+      hardHope: '다만 {area3} 쪽으로 움직이면 흐름이 달라질 여지는 있어요.',
     },
-    laterLead: { love: '관계가 빨리 정해지는 흐름보다', work: '빠르게 결과가 나는 흐름보다', money: '빠르게 수익이 나는 흐름보다', general: '빨리 결론이 나는 흐름보다' },
-    // 금융 의사결정 질문(투자·주식·코인·대출·매매 등): 실제 금융 행동을 직접 권하지 않고, 흐름과 판단을 분리한다.
     financeWords: ['투자', '주식', '코인', '펀드', '매수', '매도', '부동산', '집을', '청약', '대출', '빌려', '보증', '계약금', '적금', '예금', '환전', '비트', '선물', '레버리지', '갈아타'],
     finance: {
-      open: '카드 흐름만 놓고 보면, 지금은 열려 있는 쪽에 가까워요.',
-      conditional: '카드 흐름만 놓고 보면, 열려 있지만 조건이 붙는 쪽이에요.',
-      later: '카드 흐름만 놓고 보면, 가능성은 있어도 지금이 그 단계는 아니에요.',
-      early: '카드 흐름만 놓고 보면, 아직 어느 쪽으로도 기울지 않았어요.',
-      hard: '카드 흐름만 놓고 보면, 지금은 벌리기보다 정리하고 지키는 쪽에 가까워요.',
+      open: '카드에서는 {action} 쪽의 흐름이 열려 있는 것으로 읽혀요. 다만 {area2|은는} 먼저 정리하라는 신호예요.',
+      conditional: '카드에서는 지금 바로 {actionNow} 쪽으로 강하게 기울지는 않아요. {area2|을를} 정리하고 판단 기준을 먼저 분명히 하라는 흐름이 강해요.',
+      later: '카드에서는 {action} 쪽의 가능성은 있어도 지금이 그 단계는 아니라고 읽혀요. {area3|이라서}, 서두르지 않는 쪽이에요.',
+      early: '카드에서는 {action}지 아직 어느 쪽으로도 기울지 않은 것으로 읽혀요. {area3|이라서} 판단 재료가 더 필요해요.',
+      hard: '카드에서는 {action} 쪽보다 정리하고 지키는 쪽으로 읽혀요. {area1|이고}, {area2}까지 겹쳐 있어서예요.',
+      willNote: '카드는 돈의 흐름을 비출 뿐이라, 실제 결정은 조건과 숫자를 따져서 하세요.',
       note: '카드는 돈의 흐름을 비출 뿐이라, 실제 결정은 조건과 숫자를 따져서 하세요.',
     },
-    why: '질문에 답하자면, 카드는 걸리는 자리에 놓인 {name2}, 곧 {kw2|을를} 먼저 살펴보라고 해요. 원인을 확정하는 게 아니라, 지금 눈에 띄는 걸림부터 짚는 거예요.',
+    why: '카드에서는 지금 {area1|으로로} 읽혀요. 원인을 하나로 못 박기보다, {blockPart|을를} 먼저 살펴보라고 해요.',
     what: '질문에 답하자면, 카드가 가리키는 건 {kw3|이에요}. {advice|이에요}.',
     when: {
-      lead: '카드는 시기를 날짜로 짚어 주지 않아요.',
-      begin: '흐름으로 보면 지금 움직이기 시작해도 되는 때예요.', move: '흐름으로 보면 지금 움직이기 시작해도 되는 때예요.',
-      hold: '흐름으로 보면 아직은 지키며 기다리는 때에 가까워요.', rest: '흐름으로 보면 아직은 기다리는 때에 가까워요.',
-      end: '흐름으로 보면 지금 것을 마무리한 뒤가 때예요.', turn: '흐름으로 보면 방향을 바꾼 뒤가 때예요.',
-      reason: '{core1|이가} 바탕에 있고, 걸리는 자리에는 {block|이가} 있어서예요.',
+      lead: '정확한 시점을 날짜로 짚기는 어렵지만, 흐름의 순서는 보여요. 지금의 {kw1|과와} {kw2}의 흐름을 지나 {area3|으로로} 접어드는 때가 {subj} 시기와 맞닿아 있어요.',
+      subjFallback: '그',
+      after: {
+        begin: '마지막 {name3|이가} 시작을 가리키고 있어서, 그 가능성 자체는 닫혀 있지 않아요.',
+        move: '마지막 {name3|이가} 움직임을 가리키고 있어서, 그 흐름은 생각보다 가까이 와 있어요.',
+        hold: '다만 마지막 {name3|이가} 지킴을 가리켜서, 그 때는 서두른다고 앞당겨지지 않아요.',
+        rest: '다만 마지막 {name3|이가} 기다림을 가리켜서, 그 때는 서두른다고 앞당겨지지 않아요.',
+        end: '지금 것을 매듭지은 뒤에 그 흐름이 열려요.',
+        turn: '방향을 바꾸는 결정이 그 시점을 앞당겨요.',
+      },
     },
     mind: '상대 마음을 카드가 단정하진 못해요. 흐름으로 보면 {area1|이고}, 그 사이에 {block|이가} 놓여 있어요.',
   },
@@ -6206,9 +6192,9 @@ function suggestFor(facts, ctx) {
 /* ==========================================================================
  * 타로 해석 엔진 — 카드 데이터(TAROT_CARDS) × 템플릿(TAROT_TEMPLATES) 조립.
  * 입력: tarotRead({ question, area, cards: [id, id, id] })  (area 생략 시 질문에서 판정)
- * 출력: { question, area, areaLabel, questionType, verdict, cards: [...], paragraphs: [{ key, text }], summaryKeys }
- * 문단: intro → situation → block → advice → summary → answer(판정 → 이유 → 한 줄 답) → closing
- * 결론은 질문 유형 × 분야 × 세 장의 역할(상황·걸림·조언)과 방향(tone·energy)으로 판정을 먼저 정한 뒤 이유를 붙인다.
+ * 출력: { question, area, areaLabel, questionType, verdict, cards, paragraphs: [{ key, text }], summaryKeys }
+ * 문단: intro → situation → block → advice → summary(세 장이 만드는 흐름) → answer(판정 → 이유 → 한 줄 답) → closing
+ * 원칙: 메이저 개수·tone·energy·자리 이름은 내부 판정에만 쓴다. 카드 데이터를 설명하지 않고 질문을 해석한다.
  * 서비스 단위: 한 질문 + 3장 + 완성된 해석 = 1회. 이미지·화면·결제는 모른다. 사주 코드에 의존하지 않는다.
  * ========================================================================== */
 (function () {
@@ -6257,17 +6243,16 @@ function suggestFor(facts, ctx) {
     let s = String(raw).replace(/\s+$/, ''); if (!s) return '';
     const last = s.slice(-1); if (!/[가-힣]/.test(last)) return s;
     let [l, v, t] = decompose(last);
-    if (t === 0 && (last === '아' || last === '어')) return s.slice(0, -1);      // 갚아 → 갚, 먹어 → 먹
-    if (last === '해') return s.slice(0, -1) + '하';                              // 이직해 → 이직하
+    if (t === 0 && (last === '아' || last === '어')) return s.slice(0, -1);
+    if (last === '해') return s.slice(0, -1) + '하';
     if (last === '돼') return s.slice(0, -1) + '되';
-    if (t === 0 && v === 6) return s.slice(0, -1) + compose(l, 20, 0);            // ㅕ → ㅣ: 줄여 → 줄이, 옮겨 → 옮기
-    if (t === 0 && v === 9) return s.slice(0, -1) + compose(l, 8, 0);             // ㅘ → ㅗ: 봐 → 보
-    if (t === 0 && v === 14) return s.slice(0, -1) + compose(l, 13, 0);           // ㅝ → ㅜ: 줘 → 주, 미뤄 → 미루
+    if (t === 0 && v === 6) return s.slice(0, -1) + compose(l, 20, 0);
+    if (t === 0 && v === 9) return s.slice(0, -1) + compose(l, 8, 0);
+    if (t === 0 && v === 14) return s.slice(0, -1) + compose(l, 13, 0);
     return s;
   }
-  const withNeun = stem => { const last = stem.slice(-1); if (/[가-힣]/.test(last)) { const [l, v, t] = decompose(last); if (t === 8) return stem.slice(0, -1) + compose(l, v, 0) + '는'; } return stem + '는'; }; // 팔 → 파는
+  const withNeun = stem => { const last = stem.slice(-1); if (/[가-힣]/.test(last)) { const [l, v, t] = decompose(last); if (t === 8) return stem.slice(0, -1) + compose(l, v, 0) + '는'; } return stem + '는'; };
   const clean = s => String(s).replace(/[?？!.\s]+$/, '').replace(/[,，]\s*/g, ' ').trim();
-  // "빚을 먼저 갚아야 할까" → "빚을 먼저 갚는"
   function extractAction(question) {
     const q = clean(question);
     let m = q.match(/^(.*?는)\s*게\s*(맞|나|좋|어떨)/); if (m) return m[1].trim();
@@ -6276,26 +6261,47 @@ function suggestFor(facts, ctx) {
     m = q.match(/^(.*?[가-힣])할까/); if (m && m[1].length <= 12) return m[1] + '하는';
     return '';
   }
-  // "이 일로 돈을 벌 수 있을까요" → "이 일로 돈을 벌 수 있을" (미래 관형형 -ㄹ 로 끝나는 마지막 낱말까지)
+  // "이 일로 돈을 벌 수 있을까요" → "이 일로 돈을 벌 수 있을" / "언제쯤 새 인연이 올까요" → "새 인연이 올"
   function extractSubject(question) {
-    const q = clean(question); const m = q.match(/^(.*?)\s*([가-힣]+)까요?$/); if (!m) return '';
+    const q = clean(question).replace(/^(언제쯤|언제|어느 때|몇 살에|몇 월에)\s*/, ''); const m = q.match(/^(.*?)\s*([가-힣]+)까요?$/); if (!m) return '';
     const word = m[2]; if (jong(word) !== 8) return '';
     const subj = (m[1] + ' ' + word).trim(); return subj.length >= 2 && subj.length <= 30 ? subj : '';
   }
   function actionKind(action) {
     const t = T(); const a = action.replace(/는$/, '');
     const hit = list => (list || []).some(v => a.endsWith(v) || (a.indexOf(v) >= 0 && a.length - a.lastIndexOf(v) <= v.length + 1));
-    if (hit(t.closeVerbs)) return 'close'; return 'open';
+    return hit(t.closeVerbs) ? 'close' : 'open';
   }
-  // ---- 판정: 상황 카드의 가능성 × (조언 카드 + 걸림 카드)의 준비도 ----
+  // ---- 조언 구절("…라는 뜻") → "…이 먼저예요" 방향 문장 ----
+  function adviceToDirection(advice, energy) {
+    const t = T().synth; let s = String(advice);
+    const rules = [
+      [/봐도 좋다는 뜻$/, '보는 것이 먼저예요.'], [/([아어여워줘려겨쳐혀둬뤄])도 좋다는 뜻$/, '$1 보는 것이 먼저예요.'],
+      [/(해|가|와)도 좋다는 뜻$/, '$1 보는 것이 먼저예요.'], [/도 좋다는 뜻$/, ' 보는 것이 먼저예요.'],
+      [/게 맞다는 뜻$/, '게 먼저예요.'], [/(이|가) 맞다는 뜻$/, '$1 먼저예요.'], [/차례라는 뜻$/, '차례예요.'], [/때라는 뜻$/, '때예요.'],
+      [/쓰라는 뜻$/, '쓰는 것이 먼저예요.'], [/살펴보라는 뜻$/, '살펴보는 것이 먼저예요.'], [/보라는 뜻$/, '보는 것이 먼저예요.'], [/라는 뜻$/, '는 것이 먼저예요.'],
+    ];
+    let out = null; for (const [re, rep] of rules) { if (re.test(s)) { out = s.replace(re, rep); break; } }
+    if (!out) return '지금은 ' + (t.fallback[energy] || t.fallback.hold);
+    out = out.replace(/^(지금은|이제는|이제|지금)\s+/, ''); // 앞의 '지금은'은 아래에서 한 번만 붙인다
+    const contrast = (t.contrast[energy] || ''); return '지금은 ' + (contrast && out.indexOf('보다') < 0 ? contrast : '') + out;
+  }
+  // ---- 판정: 상황 카드의 가능성 × (조언 카드 + 걸림 카드)의 준비도. 한 카드의 energy 하나가 결론을 지배하지 않게 톤과 뜻을 함께 본다 ----
   function possibility(c1) { let s = { bright: 2, mixed: 1, heavy: 0 }[c1.tone]; if (c1.energy === 'begin' || c1.energy === 'move') s += 0.5; if (c1.energy === 'end' || c1.energy === 'rest') s -= 0.5; return s >= 2 ? 'high' : s < 0.5 ? 'low' : 'mid'; }
-  function readiness(c2, c3) { let s = { begin: 2, move: 2, turn: 1, hold: 1, rest: 0, end: 0 }[c3.energy]; if (c2.tone === 'heavy') s -= 1; else if (c2.tone === 'mixed') s -= 0.5; if (c3.tone === 'heavy') s -= 0.5; return s >= 1.5 ? 'ready' : s <= 0 ? 'notYet' : 'cond'; }
+  function readiness(c2, c3) {
+    let s = { begin: 2, move: 2, turn: 1.5, hold: 1, rest: 0.5, end: 0.5 }[c3.energy];
+    if (c3.tone === 'bright') s += 0.5; else if (c3.tone === 'heavy') s -= 0.5;
+    if (c2.tone === 'heavy') s -= 1; else if (c2.tone === 'mixed') s -= 0.5;
+    let r = s >= 2 ? 'ready' : s < 0.5 ? 'notYet' : 'cond';
+    if (r === 'notYet' && c3.tone === 'bright') r = 'cond'; // 밝은 조언 카드는 '아직 아님'으로만 읽지 않는다
+    return r;
+  }
   function verdictOf(cards) {
     const p = possibility(cards[0]), r = readiness(cards[1], cards[2]);
     const M = { high: { ready: 'open', cond: 'conditional', notYet: 'later' }, mid: { ready: 'open', cond: 'conditional', notYet: 'early' }, low: { ready: 'conditional', cond: 'hard', notYet: 'hard' } };
     let v = M[p][r];
     const bright = cards.filter(c => c.tone === 'bright').length, heavy = cards.filter(c => c.tone === 'heavy').length;
-    if (v === 'hard' && bright >= 2) v = 'early'; if (v === 'open' && heavy >= 2) v = 'conditional'; // 세 장 전체 톤과 어긋나지 않게
+    if (v === 'hard' && bright >= 2) v = 'early'; if (v === 'open' && heavy >= 2) v = 'conditional';
     return v;
   }
   function reasonFor(verdict, cards, S) {
@@ -6306,17 +6312,18 @@ function suggestFor(facts, ctx) {
   }
   function answerFor(type, question, area, cards) {
     const t = T().answer; const [c1, c2, c3] = cards;
-    const S = { block: c2.pos.block, advice: c3.pos.advice, kw3: c3.keywords[0], area1: c1.area[area] || c1.area.general, core1: c1.core, situation1: c1.pos.situation, need: t.need[c3.energy] || t.need.hold, energy3: t.energyWord[c3.energy] || '지킴', name2: c2.name, kw2: c2.keywords[0], laterLead: (t.laterLead || {})[area] || '빨리 결론이 나는 흐름보다' };
+    const A = c => c.area[area] || c.area.general;
+    const S = { block: c2.pos.block, blockPart: c2.pos.block.replace(/것$/, '부분'), advice: c3.pos.advice, kw1: c1.keywords[0], kw2: c2.keywords[0], kw3: c3.keywords[0], area1: A(c1), area2: A(c2), area3: A(c3), core1: c1.core, situation1: c1.pos.situation };
     const verdict = verdictOf(cards);
-    const finance = (t.financeWords || []).some(w => String(question).indexOf(w) >= 0); // 금융 의사결정 질문: 행동을 직접 권하지 않는다
+    const finance = (t.financeWords || []).some(w => String(question).indexOf(w) >= 0);
     const final = key => fill(t.final, { short: key });
     if (type === 'why') return { verdict: null, text: fill(t.why, S) };
     if (type === 'what') return { verdict: null, text: fill(t.what, S) };
     if (type === 'mind') return { verdict: null, text: fill(t.mind, S) };
-    if (type === 'when') return { verdict: null, text: t.when.lead + ' ' + (t.when[c3.energy] || t.when.hold) + ' ' + fill(t.when.reason, S) + (finance ? ' ' + t.finance.note : '') };
-    if (finance) return { verdict, text: t.finance[verdict] + ' ' + reasonFor(verdict, cards, S) + ' ' + final(t.short[verdict]) + ' ' + t.finance.note };
+    if (type === 'when') { S.subj = extractSubject(question) || t.when.subjFallback; S.name3 = c3.name; return { verdict: null, text: fill(t.when.lead, S) + ' ' + fill(t.when.after[c3.energy] || t.when.after.hold, S) + (finance ? ' ' + t.finance.note : '') }; }
     if (type === 'ok') {
-      const action = extractAction(question) || t.ok.actionFallback; S.action = action;
+      const action = extractAction(question) || t.ok.actionFallback; S.action = action; S.actionNow = action.replace(/(^|\s)(지금|당장|바로)\s/g, '$1');
+      if (finance) return { verdict, kind: 'finance', text: fill(t.finance[verdict], S) + ' ' + final(t.shortOk[verdict]) + ' ' + t.finance.note };
       if (actionKind(action) === 'close') {
         const heavy = cards.filter(c => c.tone === 'heavy').length, bright = cards.filter(c => c.tone === 'bright').length;
         const fit = heavy - bright + ((c3.energy === 'end' || c3.energy === 'rest' || c3.energy === 'hold') ? 1 : (c3.energy === 'begin' || c3.energy === 'move') ? -1 : 0);
@@ -6326,9 +6333,8 @@ function suggestFor(facts, ctx) {
       }
       return { verdict, text: fill(t.ok[verdict], S) + ' ' + reasonFor(verdict, cards, S) + ' ' + final(t.shortOk[verdict]) };
     }
-    // will · default: 질문에서 뽑은 구절로 판정을 말하고 이유와 한 줄 답을 붙인다
     const subj = extractSubject(question) || t.will.subjFallback; S.subj = subj;
-    return { verdict, text: fill(t.will[verdict], S) + ' ' + reasonFor(verdict, cards, S) + ' ' + final(t.short[verdict]) };
+    return { verdict, kind: finance ? 'finance' : null, text: fill(t.will[verdict], S) + ' ' + reasonFor(verdict, cards, S) + ' ' + final(t.short[verdict]) + (finance ? ' ' + t.finance.willNote : '') };
   }
   // ---- 본 조립 ----
   function tarotRead(input) {
@@ -6338,29 +6344,28 @@ function suggestFor(facts, ctx) {
     const area = ['love', 'work', 'money', 'general'].includes(input.area) ? input.area : detectArea(question);
     const type = detectType(question);
     const cards = ids.map((id, i) => Object.assign({}, byId(id), { position: POS[i], positionLabel: t.posLabel[POS[i]] }));
-    const [c1, c2, c3] = cards;
-    const rot = (cards.reduce((s, c) => s + (c.rank || 0), 0) + question.length) % 3; // 도입 문장 순환(무작위 아님)
+    const [c1, c2, c3] = cards; const A = c => c.area[area] || c.area.general;
+    const rot = (cards.reduce((s, c) => s + (c.rank || 0), 0) + question.length) % 3;
     const pick = arr => Array.isArray(arr) ? arr[rot % arr.length] : arr;
     const paragraphs = [];
     paragraphs.push({ key: 'intro', text: question ? fill(t.intro.withQ, { 질문: question }) : t.intro.noQ });
-    const s1 = { name: c1.name, kw1: c1.keywords[0], kw2: c1.keywords[1], situation: c1.pos.situation, area: c1.area[area] || c1.area.general, core: c1.core };
+    const s1 = { name: c1.name, kw1: c1.keywords[0], kw2: c1.keywords[1], situation: c1.pos.situation, area: A(c1), core: c1.core };
     paragraphs.push({ key: 'situation', text: [fill(pick(t.situation.open), s1), fill(t.situation.body, s1), fill(t.situation.area[area], s1), fill(t.situation.core, s1)].join(' ') });
-    const s2 = { name: c2.name, block: c2.pos.block, area: c2.area[area] || c2.area.general };
+    const s2 = { name: c2.name, block: c2.pos.block, area: A(c2) };
     paragraphs.push({ key: 'block', text: [fill(pick(t.block.open), s2), fill(t.block.body, s2), fill(t.block.area[area], s2)].join(' ') });
-    const s3 = { name: c3.name, advice: c3.pos.advice, area: c3.area[area] || c3.area.general, lead: t.advice.lead[area] };
+    const s3 = { name: c3.name, advice: c3.pos.advice, area: A(c3), lead: t.advice.lead[area] };
     paragraphs.push({ key: 'advice', text: [t.advice.frame[c3.energy] || t.advice.frame.hold, fill(pick(t.advice.open), s3), fill(t.advice.tail[c3.energy] || t.advice.tail.hold, s3)].join(' ') });
+    // 종합: 세 장이 만드는 흐름(내부 조합 규칙은 키로만 남긴다)
     const majors = cards.filter(c => c.arcana === 'major').length;
     const bright = cards.filter(c => c.tone === 'bright').length, heavy = cards.filter(c => c.tone === 'heavy').length;
     const suitCount = {}; cards.filter(c => c.suit).forEach(c => { suitCount[c.suit] = (suitCount[c.suit] || 0) + 1; });
-    const court = cards.filter(c => c.suit && c.rank >= 11).length;
-    const keys = []; const lines = [];
-    if (majors === 3) { keys.push('majors3'); lines.push(t.summary.majors3); } else if (majors === 2) { keys.push('majors2'); lines.push(t.summary.majors2); }
-    if (bright >= 2) { keys.push('bright2'); lines.push(t.summary.bright2); } else if (heavy >= 2) { keys.push('heavy2'); lines.push(t.summary.heavy2); } else { keys.push('mixed'); lines.push(t.summary.mixed); }
-    const suit3 = Object.keys(suitCount).find(s => suitCount[s] === 3); const suit2 = Object.keys(suitCount).find(s => suitCount[s] === 2);
-    if (suit3) { keys.push('suit3:' + suit3); lines.push(t.summary.suit3[suit3]); } else if (suit2) { keys.push('suit2:' + suit2); lines.push(t.summary.suit[suit2]); }
-    if (court >= 2) { keys.push('court2'); lines.push(t.summary.court2); }
-    if (cards.some(c => c.energy === 'end') && cards.some(c => c.energy === 'begin')) { keys.push('endStart'); lines.push(t.summary.endStart); }
-    paragraphs.push({ key: 'summary', text: lines.join(' ') });
+    const keys = []; if (majors >= 2) keys.push('majors' + majors); keys.push(bright >= 2 ? 'bright2' : heavy >= 2 ? 'heavy2' : 'mixed');
+    const suit3 = Object.keys(suitCount).find(s => suitCount[s] === 3); const suit2 = Object.keys(suitCount).find(s => suitCount[s] === 2); if (suit3) keys.push('suit3:' + suit3); else if (suit2) keys.push('suit2:' + suit2);
+    if (cards.filter(c => c.suit && c.rank >= 11).length >= 2) keys.push('court2');
+    if (cards.some(c => c.energy === 'end') && cards.some(c => c.energy === 'begin')) keys.push('endStart');
+    const flowTpl = c2.tone === 'bright' ? t.synth.flowMild : t.synth.flow;
+    const synth = fill(flowTpl, { situation1: c1.pos.situation, block: c2.pos.block }) + ' ' + fill(t.synth.then, { dir: adviceToDirection(c3.pos.advice, c3.energy) });
+    paragraphs.push({ key: 'summary', text: synth });
     const ans = answerFor(type, question, area, cards);
     paragraphs.push({ key: 'answer', text: ans.text });
     paragraphs.push({ key: 'closing', text: t.closing });
@@ -6372,7 +6377,7 @@ function suggestFor(facts, ctx) {
     while (out.length < (n || 3) && pool.length) { const i = Math.floor(rand() * pool.length); out.push(pool.splice(i, 1)[0]); }
     return out;
   }
-  window.tarotRead = tarotRead; window.tarotDetectArea = detectArea; window.tarotDetectType = detectType; window.tarotExtractAction = extractAction; window.tarotExtractSubject = extractSubject; window.tarotDraw = tarotDraw;
+  window.tarotRead = tarotRead; window.tarotDetectArea = detectArea; window.tarotDetectType = detectType; window.tarotExtractAction = extractAction; window.tarotExtractSubject = extractSubject; window.tarotDraw = tarotDraw; window.tarotAdviceToDirection = adviceToDirection;
 })();
 
 /* ==========================================================================
