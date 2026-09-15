@@ -1066,6 +1066,21 @@ body{overflow-x:hidden}
 .tk-concl-lbl{display:block;font-size:11px;font-weight:700;color:#8E3A55;margin-bottom:4px}
 .e-btn[disabled],.e-link[disabled]{opacity:.4;cursor:not-allowed}
 
+/* 타로 목업(UX 확인용) */
+.tk-mock{max-width:680px;margin:6px auto 0;padding:6px 10px;border-radius:8px;background:var(--yellow-soft);font-size:11.5px;color:var(--ink-2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;line-height:1.4}
+.tk-mock b{color:var(--ink)}
+.tk-mock .e-link{font-size:11.5px}
+.tk-row.n7 .tk-slot,.tk-row.n7 .tk-flip{width:76px}
+.tk-row.n7 .tk-inner{height:170px}
+.tk-row+.tk-row{margin-top:10px}
+.tk-read-cards.n5{gap:8px}.tk-read-cards.n5 .c,.tk-read-cards.n5 img{width:60px}
+.tk-read-cards.center{justify-content:center}
+.tk-read-cards+.tk-read-cards{margin-top:8px}
+.tk-grp{margin:16px 0 6px;display:flex;flex-direction:column;gap:2px}
+.tk-grp .tk-concl-lbl{margin:0}
+.tk-row.n5 .tk-slot,.tk-row.n7 .tk-slot{justify-content:flex-end}
+.tk-read-cards.n5 .pos,.tk-read-cards.n7 .pos{min-height:26px;display:flex;align-items:flex-end;justify-content:center}
+
 </style>
 </head>
 <body>
@@ -7104,6 +7119,370 @@ const SERVER = (function () {
   function toast(t) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1800); }
   let popTimer = null;
   function showTerm(k) { let pop = $('#pop'); if (!pop) { pop = document.createElement('div'); pop.id = 'pop'; pop.className = 'pop'; pop.addEventListener('click', () => { pop.hidden = true; }); document.body.appendChild(pop); } pop.innerHTML = '<b>' + esc(k) + '</b>' + esc(GLOSSARY[k] || ''); pop.hidden = false; clearTimeout(popTimer); popTimer = setTimeout(() => { pop.hidden = true; }, 7000); }
+
+  /* ==========================================================================
+ * 타로 스프레드 3/5/7장 목업 — UX 확인용. 숨은 라우트 #/tarot-mock/...
+ * build.mjs가 app.js IIFE 안(라우터 바로 위) 마커 자리에 이 파일을 끼워 넣는다.
+ * 실제 #/tarot 흐름·핸들러와 완전히 분리한다: 상태 키는 ms_tarot_mock, 액션 이름은 mock-*.
+ * 결제·로그인·무료 횟수·가격은 이 화면에 없다. 기존 토큰·컴포넌트만 쓴다.
+ * ========================================================================== */
+(function () {
+  // ---------- 샘플 질문·카드 (설계 v2 §8) ----------
+  const MQ = '이 일로 돈을 벌 수 있을까요?';
+  const MCARDS = {
+    3: ['swords_01_ace', 'major_02_high_priestess', 'major_12_hanged_man'],
+    5: ['swords_01_ace', 'pentacles_08_eight', 'major_02_high_priestess', 'wands_03_three', 'major_12_hanged_man'],
+    7: ['swords_01_ace', 'pentacles_08_eight', 'major_01_magician', 'major_02_high_priestess', 'wands_03_three', 'pentacles_07_seven', 'major_12_hanged_man'],
+  };
+  const MSAMPLE_QS = ['이직해도 될까요?', '이 일로 돈을 벌 수 있을까요?', '요즘 왜 계속 관계가 같은 이유로 끝날까요?'];
+
+  // ---------- 자리 표시명 ----------
+  const MSTRENGTH = {
+    love: { will: '이어질 힘', ok: '관계에 도움이 되는 요소', when: '인연을 당기는 힘', why: '관계를 받치는 것', mind: '마음을 이어 주는 것', what: '지금 살릴 수 있는 힘', default: '이어질 힘' },
+    work: { will: '풀리게 하는 힘', ok: '선택에 도움이 되는 요소', when: '흐름을 당기는 힘', why: '일을 받치는 것', mind: '관계를 이어 주는 것', what: '지금 살릴 수 있는 힘', default: '일을 키울 힘' },
+    money: { will: '수익 가능성을 살리는 요소', ok: '결정에 도움이 되는 요소', when: '흐름을 당기는 힘', why: '돈을 받치는 것', mind: '관계를 이어 주는 것', what: '지금 살릴 수 있는 힘', default: '돈이 될 강점' },
+    general: { will: '가능성을 살리는 요소', ok: '도움이 되는 요소', when: '흐름을 당기는 힘', why: '받쳐 주는 것', mind: '마음을 이어 주는 것', what: '지금 살릴 수 있는 힘', default: '강점' },
+  };
+  const MLABELS = {
+    3: {
+      love: ['현재 관계', '관계를 막는 것', '지금 필요한 태도'],
+      work: ['현재 일의 상태', '일을 막는 것', '지금 필요한 선택'],
+      money: ['현재 돈의 흐름', '수익을 막는 것', '지금 필요한 선택'],
+      general: ['지금 상황', '걸리는 것', '조언'],
+    },
+    5: {
+      love: ['현재 관계', '이어질 가능성', '관계를 막는 것', '관계가 흘러가는 쪽', '지금 필요한 태도'],
+      work: ['현재 일의 상태', '풀릴 가능성', '일을 막는 것', '일이 흘러가는 쪽', '지금 필요한 선택'],
+      money: ['현재 돈의 흐름', '수익 가능성', '수익을 막는 것', '돈이 흘러가는 쪽', '지금 필요한 선택'],
+      general: ['지금 상황', '핵심 가능성', '걸리는 것', '앞으로의 흐름', '조언'],
+    },
+    7: { // 3번째 자리(빈 칸)는 분야 x 질문 유형으로 mockLabels에서 채운다
+      love: ['현재 관계', '관계의 바탕', '', '관계를 막는 것', '가까운 변화', '관계가 향하는 방향', '지금 필요한 태도'],
+      work: ['현재 일의 상태', '일의 바탕', '', '일을 막는 것', '가까운 변화', '일이 향하는 방향', '지금 필요한 선택'],
+      money: ['현재 돈의 흐름', '수익 가능성의 바탕', '', '수익을 막는 것', '가까운 변화', '수익의 방향', '지금 필요한 선택'],
+      general: ['지금 상황', '바탕·원인', '', '걸림', '가까운 변화', '이후 방향', '조언'],
+    },
+  };
+  const mockAreaOf = a => (['love', 'work', 'money', 'general'].includes(a) ? a : 'general');
+  function mockLabels(n, area, question) {
+    const a = mockAreaOf(area);
+    const arr = (MLABELS[n] || MLABELS[3])[a].slice();
+    if (n === 7) { const tb = MSTRENGTH[a]; let ty = 'default'; try { ty = tarotDetectType(question || ''); } catch (e) {} arr[2] = tb[ty] || tb.default; }
+    return arr;
+  }
+
+  // ---------- 추천(목업용 간이 규칙) ----------
+  const MSPREAD_NAME = { 3: '3장 · 가볍게 묻기', 5: '5장 · 자세히 묻기', 7: '7장 · 깊이 묻기' };
+  const MSPREAD_CHIP = { 3: '3장 가볍게', 5: '5장 자세히', 7: '7장 깊이' };
+  const MREC_TEXT = {
+    3: '이 질문은 가볍게 세 장으로 보는 게 맞아요. 지금 상황과 걸리는 것, 조언까지 볼게요.',
+    5: '이 질문은 조금 더 자세히 보는 게 좋아요. 현재 상황뿐 아니라 가능성과 앞으로의 흐름까지 함께 볼게요.',
+    7: '이 질문은 깊이 보는 게 맞아요. 왜 그런지, 무엇으로 풀 수 있는지, 가까운 변화와 이후 방향까지 볼게요.',
+  };
+  function mockScores(q) {
+    const s = { 3: 0, 5: 0, 7: 0 };
+    const question = String(q == null ? '' : q);
+    if (!question.trim()) return s;
+    let ty = 'default'; try { ty = tarotDetectType(question); } catch (e) {}
+    const n = question.trim().length;
+    const cause = /(원인|바탕|왜 자꾸|계속|반복|근본|매번|방향|장기)/.test(question);
+    const compound = /(그리고|그런데|동시에|아니면)/.test(question);
+    // 질문 유형(2점)
+    if ((ty === 'will' || ty === 'why') && cause) s[7] += 2;
+    else if (ty === 'will' || ty === 'when') s[5] += 2;
+    else s[3] += 2;
+    // 관점 단어(1점)
+    if (/(지금|오늘|이번에|이거 하나)/.test(question)) s[3] += 1;
+    else if (/(가능성|앞으로|흐름|전망|기회)/.test(question)) s[5] += 1;
+    else if (cause) s[7] += 1;
+    // 시간 폭(1점)
+    if (/(오늘|지금|이번 주)/.test(question)) s[3] += 1;
+    else if (/(올해|당분간|몇 달)/.test(question)) s[5] += 1;
+    else if (/(내년|몇 년|장기|언젠가|앞으로 계속)/.test(question)) s[7] += 1;
+    // 복합 구조
+    if (compound) s[7] += 4; // 두 질문이 붙은 복합 질문은 7장 쪽으로 확실히(목업용 가중치)
+    else if (ty === 'ok' && /(그러면|되면|하면)[\s\S]*(될까|있을까)/.test(question)) s[5] += 1;
+    else if (ty === 'ok') s[3] += 1;
+    // 길이(1점)
+    if (n <= 18) s[3] += 1; else if (n <= 28) s[5] += 1; else s[7] += 1;
+    // 무게(1점)
+    if (/(연락|소개팅|오늘 결정)/.test(question)) s[3] += 1;
+    else if (/(사귀|이직)/.test(question)) s[5] += 1;
+    else if (/(결혼|이혼|재회|창업|진로 전환|같은 이유|반복)/.test(question)) s[7] += 1;
+    return s;
+  }
+  function mockRecommend(q) {
+    if (!String(q == null ? '' : q).trim()) return 3;
+    const s = mockScores(q);
+    return [3, 5, 7].reduce((a, b) => (s[b] > s[a] ? b : a), 3); // 최고점, 동점이면 적은 장수
+  }
+
+  // ---------- 상태(ms_tarot_mock) ----------
+  const getMock = () => store.get('tarot_mock', null);
+  const setMock = s => store.set('tarot_mock', s);
+  let mockAreaLock = null;   // 분야 칩을 직접 누르면 고정
+  let mockSpreadLock = null; // 장수 칩을 직접 누르면 고정
+  const mockN = st => ([3, 5, 7].includes(st && st.spread) ? st.spread : 3);
+  function mockEnsure(n) {
+    let t = getMock();
+    if (!t || t.spread !== n || !Array.isArray(t.deck) || t.deck.length < 20) {
+      t = { question: MQ, area: 'money', spread: n, deck: tarotDraw(78), picked: [], cards: [], flipped: [] };
+      setMock(t);
+    }
+    return t;
+  }
+
+  // ---------- 목업 띠 ----------
+  const mockComma = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  function mockBar(o) {
+    const opt = o || {};
+    const links = [['목록', 'tarot-mock'], ['3장', 'tarot-mock/read/3'], ['5장', 'tarot-mock/read/5'], ['7장', 'tarot-mock/read/7']]
+      .map(l => '<button class="e-link" type="button" data-go="' + l[1] + '">' + l[0] + '</button>').join('<span aria-hidden="true">·</span>');
+    return '<div class="tk-mock"><b>목업 · UX 확인용</b>' +
+      (opt.chars ? '<span>본문 <b>' + mockComma(opt.chars) + '</b>자</span>' : '') +
+      links +
+      (opt.note ? '<span style="width:100%">5·7장 해석은 설계 v2 샘플 문장이에요(질문·카드 고정).</span>' : '') +
+      '</div>';
+  }
+
+  // ---------- 0. 목록 ----------
+  function mockListView() {
+    const rows = [
+      ['1 질문 입력 · 추천', 'tarot-mock/entry'], ['2 3장 선택', 'tarot-mock/pick/3'], ['3 5장 선택', 'tarot-mock/pick/5'], ['4 7장 선택', 'tarot-mock/pick/7'],
+      ['5 3장 결과', 'tarot-mock/read/3'], ['6 5장 결과', 'tarot-mock/read/5'], ['7 7장 결과', 'tarot-mock/read/7'],
+    ];
+    return '<div class="ed2">' + eTop(true) + mockBar({}) +
+      '<section class="e-sec" style="border-top:0;margin-top:6px"><div class="e-kicker" style="color:#C2506B">타로 목업</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">타로 스프레드 목업</h1><p class="e-cap">UX 확인용이에요. 결제·로그인 없이 화면만 봐요.</p>' +
+      '<div class="card"><div class="e-qs">' + rows.map(r => '<button class="e-q" data-go="' + r[1] + '"><span>' + esc(r[0]) + '</span><i>›</i></button>').join('') + '</div></div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+
+  // ---------- 1. 질문 입력 · 추천 ----------
+  const mockChips = area => TAROT_AREAS.map(([k, label]) => '<button type="button" class="chip' + (k === area ? ' on' : '') + '" data-act="mock-area" data-area="' + k + '">' + label + '</button>').join('');
+  function mockRecBlock(q, spread) {
+    const rec = mockRecommend(q);
+    const on = [3, 5, 7].includes(+spread) ? +spread : rec;
+    return '<div class="card tint" id="mock-rec"><div class="eyebrow">추천 스프레드</div><b style="display:block">' + esc(MSPREAD_NAME[rec]) + '</b>' +
+      '<p class="small" style="margin-top:4px">' + esc(MREC_TEXT[rec]) + '</p>' +
+      '<div class="chips">' + [3, 5, 7].map(k => '<button type="button" class="chip' + (k === on ? ' on' : '') + '" data-act="mock-spread" data-n="' + k + '">' + esc(MSPREAD_CHIP[k]) + (k === rec ? '<span class="new">추천</span>' : '') + '</button>').join('') + '</div></div>';
+  }
+  function mockEntryView() {
+    mockAreaLock = null; mockSpreadLock = null;
+    const t = getMock();
+    const q = (t && t.question) || MQ;
+    const area = ['love', 'work', 'money', 'general'].includes(t && t.area) ? t.area : tarotDetectArea(q);
+    const steps = ['질문', '장수 선택', '셔플', '카드 오픈', '해석', '새 질문'];
+    return '<div class="ed2">' + eTop(true) + mockBar({}) +
+      '<div class="e-band pink" style="margin-top:6px"><section class="e-sec"><div class="e-kicker" style="color:#C2506B">타로 목업</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">지금 궁금한 일을 카드에 물어보세요</h1><p class="e-cap">한 가지 일을 한 문장으로 적어 주세요. 예: 이 연락, 기다려도 될까요?</p>' +
+      '<form id="f-tarot-mock" style="margin-top:12px"><input type="text" id="tarot-mock-q" value="' + esc(q) + '" placeholder="궁금한 일을 적어 주세요" maxlength="80" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--ln);border-radius:10px;font:inherit;background:#fff">' +
+      '<div class="chips" id="tarot-mock-area-chips" style="margin-top:10px">' + mockChips(area) + '</div>' +
+      mockRecBlock(q, null) +
+      '<p class="e-cap">예시 질문을 눌러 볼 수 있어요.</p><div class="chips">' + MSAMPLE_QS.map((s, i) => '<button type="button" class="chip q" data-act="mock-sample-q" data-i="' + i + '">' + esc(s) + '</button>').join('') + '</div>' +
+      '<button class="e-btn" type="submit" style="margin-top:10px;width:100%">카드 섞기</button></form></section></div>' +
+      '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">타로는 이렇게 진행돼요</h2><div class="e-qs">' + steps.map((s, i) => '<div class="e-q"><span>' + (i + 1) + ' ' + s + '</span></div>').join('') + '</div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+  function mockSyncEntry(v) {
+    const area = mockAreaLock || tarotDetectArea(v);
+    document.querySelectorAll('#tarot-mock-area-chips .chip').forEach(b => b.classList.toggle('on', b.dataset.area === area));
+    const rec = $('#mock-rec'); if (rec) rec.outerHTML = mockRecBlock(v, mockSpreadLock);
+  }
+
+  // ---------- 2. 카드 선택 ----------
+  function mockPickView(n) {
+    const t = mockEnsure(n);
+    const labels = mockLabels(n, t.area, t.question);
+    const picked = t.picked || [];
+    const grid = t.deck.slice(0, 20).map((id, i) => {
+      const pos = picked.indexOf(i);
+      return '<button type="button" class="tk-card' + (pos !== -1 ? ' picked' : '') + '" data-act="mock-pick" data-idx="' + i + '"><b class="tk-label"' + (pos !== -1 ? '' : ' hidden') + '>' + (pos !== -1 ? (pos + 1) + ' ' + esc(labels[pos]) : '') + '</b></button>';
+    }).join('');
+    return '<div class="ed2">' + eTop(true) + mockBar({}) +
+      '<section class="e-sec" style="border-top:0;margin-top:6px"><div class="e-kicker" style="color:#C2506B">타로 목업 · ' + n + '장</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">카드를 섞었어요</h1>' +
+      '<p class="e-cap">마음 가는 순서대로 ' + n + '장을 골라 주세요.</p>' +
+      '<p class="e-cap">' + esc(labels.map((l, i) => (i + 1) + ' ' + l).join(' · ')) + '</p>' +
+      '<div class="tk-wrap"><div class="tk-grid" id="mock-grid">' + grid + '</div></div>' +
+      '<div class="tk-wrap" style="display:flex;gap:10px;margin-top:16px"><button class="e-btn ghost" type="button" data-act="mock-reshuffle" style="flex:1">다시 섞기</button><button class="e-btn" type="button" id="mock-open-btn" data-act="mock-open" style="flex:1"' + (picked.length === n ? '' : ' disabled') + '>카드 뒤집기</button></div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+
+  // ---------- 3. 뒤집기 ----------
+  const MROWS = { 3: [3], 5: [3, 2], 7: [3, 4] };
+  function mockOpenView(n) {
+    const t = mockEnsure(n);
+    if (!Array.isArray(t.cards) || t.cards.length !== n) { t.cards = MCARDS[n].slice(); t.flipped = MCARDS[n].map(() => false); setMock(t); }
+    const flipped = (Array.isArray(t.flipped) && t.flipped.length === n) ? t.flipped : MCARDS[n].map(() => false);
+    const labels = mockLabels(n, t.area, t.question);
+    let i = 0;
+    const rows = MROWS[n].map(cnt => {
+      let out = '';
+      for (let k = 0; k < cnt; k++, i++) {
+        out += '<div class="tk-slot"><span class="tk-pos">' + esc(labels[i]) + '</span><div class="tk-flip" data-act="mock-flip" data-i="' + i + '"><div class="tk-inner' + (flipped[i] ? ' up' : '') + '"><div class="tk-face back"></div><div class="tk-face front">' + tarotCardFace(t.cards[i]) + '</div></div></div></div>';
+      }
+      return '<div class="tk-row n' + n + '">' + out + '</div>';
+    }).join('');
+    const allUp = flipped.every(Boolean);
+    return '<div class="ed2">' + eTop(true) + mockBar({}) +
+      '<section class="e-sec" style="border-top:0;margin-top:6px"><div class="e-kicker" style="color:#C2506B">타로 목업 · ' + n + '장</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">카드를 뒤집어 보세요</h1><p class="e-cap">눌러서 한 장씩, 또는 한 번에 뒤집어요.</p>' +
+      '<div class="tk-wrap">' + rows + '<div style="text-align:center;margin-top:10px"><button class="e-link" type="button" data-act="mock-flip-all">한 번에 뒤집기</button></div>' +
+      '<button class="e-btn block" type="button" id="mock-read-btn" data-act="mock-read" style="margin-top:16px"' + (allUp ? '' : ' disabled') + '>해석 보기</button></div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+
+  // ---------- 4~6. 해석 ----------
+  const mockName = id => { const c = tarotCard(id); return (c && c.name) || (typeof TAROT_NAMES !== 'undefined' && TAROT_NAMES[id]) || id; };
+  function mockReadCards(n, labels, ids) {
+    const cell = i => '<div class="c"><img src="' + TAROT_DECK.base + TAROT_DECK.cards[ids[i]] + '" alt="' + esc(mockName(ids[i])) + '"><span class="pos">' + esc(labels[i]) + '</span><span class="nm">' + esc(mockName(ids[i])) + '</span></div>';
+    let out = '';
+    if (n === 5) { for (let i = 0; i < 5; i++) out += cell(i); return '<div class="tk-read-cards n5">' + out + '</div>'; }
+    if (n === 7) { let a = '', b = ''; for (let i = 0; i < 3; i++) a += cell(i); for (let i = 3; i < 7; i++) b += cell(i); return '<div class="tk-read-cards center">' + a + '</div><div class="tk-read-cards center">' + b + '</div>'; }
+    for (let i = 0; i < n; i++) out += cell(i);
+    return '<div class="tk-read-cards">' + out + '</div>';
+  }
+  function mockClosing() {
+    try { return tarotRead({ question: MQ, area: 'money', cards: MCARDS[3] }).paragraphs.find(p => p.key === 'closing').text; }
+    catch (e) { console.warn(e); return ''; }
+  }
+  const mockButtons = n => '<div class="row" style="margin-top:16px;display:flex;align-items:center;gap:14px"><button class="e-btn" type="button" data-act="mock-new">새 질문</button><button class="e-link" type="button" data-go="tarot-mock/open/' + n + '">카드 다시 보기</button></div>';
+
+  // 3장: 엔진 v1 실제 출력. 카드 위 자리 표시명만 분야별 표로 바꾼다.
+  function mockRead3View() {
+    const t = mockEnsure(3);
+    let r;
+    try { r = tarotRead({ question: t.question, area: t.area, cards: MCARDS[3] }); }
+    catch (e) { console.warn(e); toast('해석을 만들지 못했어요'); return mockListView(); }
+    const labels = mockLabels(3, r.area, r.question);
+    const chars = r.paragraphs.reduce((s, p) => s + p.text.length, 0);
+    const body = r.paragraphs.map(p => {
+      if (p.key === 'answer') return '<div class="concl"><span class="tk-concl-lbl">결론</span>' + esc(p.text) + '</div>';
+      if (p.key === 'closing') return '<p class="small">' + esc(p.text) + '</p>';
+      return '<p class="read">' + esc(p.text) + '</p>';
+    }).join('');
+    return '<div class="ed2">' + eTop(true) + mockBar({ chars: chars }) +
+      '<section class="e-sec" style="border-top:0;margin-top:6px"><div class="e-kicker" style="color:#C2506B">타로 · ' + esc(r.areaLabel) + '</div><h1 class="e-h2" style="font-size:22px;margin-top:6px">' + (r.question ? '“' + esc(r.question) + '”' : '오늘 마음에 걸리는 것') + '</h1>' +
+      '<div class="tk-wrap">' + mockReadCards(3, labels, MCARDS[3]) + body + mockButtons(3) + '</div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+
+  // 5·7장: 설계 v2 샘플 문장 고정(질문·카드도 고정)
+  const MREAD = {
+    5: {
+      intro: '“' + MQ + '”에 대해 다섯 장의 카드를 해석해 드릴게요.',
+      groups: [
+        { idx: [0, 1], text: '지금 돈의 흐름은 머릿속이 갑자기 명확해지는 상태예요. 그 위에서 수익 가능성은 한 가지를 반복하며 다듬는 숙련도에서 나와요. 돈으로 보면 꾸준히 쌓아 실력이 값이 되는 흐름이라, 가능성이 또렷한 자리예요.' },
+        { idx: [2], text: '걸리는 건 확신이 없어서 말을 아끼고 있는 것이에요. 돈에서는 이게 섣불리 움직이지 않고 지켜보는 때로 나타나기 쉬워요.' },
+        { idx: [3, 4], text: '돈이 흘러가는 쪽은 보내둔 것의 답을 기다리는 구간이에요. 잠시 멈추는 흐름이지만, 그 안에서 먼저 할 것은 버티기보다 내려놓는 거예요.' },
+      ],
+      summary: '다섯 장을 함께 보면, 머릿속이 갑자기 명확해지는 상태예요. 숙련도에서 가능성이 나오지만, 확신이 없어서 말을 아끼고 있는 것이 아직 남아 있어요. 흐름은 보내둔 것의 답을 기다리는 쪽으로 잠시 멈춰요. 그래서 지금은 버티기보다 내려놓는 게 먼저예요.',
+      answer: '이 일로 돈을 벌 수 있을 가능성은 있어 보여요. 다만 조건이 하나 붙어요. 한 가지를 반복하며 다듬는 숙련도가 가능성을 받치고 있지만, 확신이 없어서 말을 아끼고 있는 것이 걸려 있어요. 흐름은 보내둔 것의 답이 돌아온 뒤에 열리는 쪽이라, 수익도 그 뒤에 따라와요. 그래서 지금의 답은 "가능하지만 조건이 있다"에 가까워요.',
+    },
+    7: {
+      intro: '“' + MQ + '”에 대해 일곱 장의 카드를 해석해 드릴게요.',
+      groups: [
+        { idx: [0, 1], text: '지금 돈의 흐름은 머릿속이 갑자기 명확해지는 상태예요. 그 바탕에는 한 가지를 반복하며 다듬는 숙련도가 있어요. 지금 흐름은 같은 일을 반복하며 실력을 쌓는 데서 시작됐어요.' },
+        { idx: [2, 3], text: '쓸 수 있는 힘은 재능과 집중이에요. 돈으로 보면 가진 자원을 굴리기 시작할 때로 나타나요. 걸리는 건 확신이 없어서 말을 아끼고 있는 것이에요. 힘은 있는데 확신이 그걸 붙잡고 있는 모양이에요.' },
+        { idx: [4, 5], text: '가까운 시기에는 보내둔 것의 답을 기다리는 구간이 먼저 와요. 그 뒤 흐름은 성과가 나오길 기다리는 시기를 지나 여물어 가는 쪽으로 향해요.' },
+        { idx: [6], text: '카드 흐름은 서두르기보다 멈추는 쪽을 가리켜요. 마지막 매달린 사람이 건네는 말은 지금은 버티기보다 내려놓는 게 맞다는 뜻이에요. 돈으로 옮기면 묶여서 당장은 못 움직이는 흐름이니, 지금은 서두르지 않는 게 맞아요.' },
+      ],
+      summary: '숙련도에서 시작해 지금은 머릿속이 갑자기 명확해지는 상태예요. 쓸 수 있는 힘은 재능이고, 걸리는 건 확신이 없어서 말을 아끼고 있는 것이에요. 가까운 시기에는 답을 기다리는 구간이 먼저 오고, 그 뒤에는 여물어 가는 쪽으로 향해요. 그래서 지금은 버티기보다 내려놓는 게 먼저예요.',
+      answer: '이 일로 돈을 벌 수 있을 가능성은 있어 보여요. 다만 조건이 하나 붙어요. 숙련도가 바탕이고 재능과 집중이 힘이 되지만, 확신이 없어서 말을 아끼고 있는 것이 걸려 있어요. 가까운 시기에는 보내둔 것의 답이 돌아오는 구간이 먼저 오고, 그 뒤에는 여물어 가는 쪽이라 수익은 그 변화 뒤에 열려요. 그래서 지금의 답은 "가능하지만 조건이 있다"에 가까워요.',
+    },
+  };
+  function mockReadNView(n) {
+    const d = MREAD[n];
+    const labels = mockLabels(n, 'money', MQ);
+    const ids = MCARDS[n];
+    const closing = mockClosing();
+    const chars = d.intro.length + d.groups.reduce((s, g) => s + g.text.length, 0) + d.summary.length + d.answer.length + closing.length;
+    const groups = d.groups.map(g =>
+      '<div class="tk-grp"><span class="tk-concl-lbl">' + esc(g.idx.map(i => labels[i]).join(' · ')) + '</span><span class="small">' + esc(g.idx.map(i => mockName(ids[i])).join(' · ')) + '</span></div><p class="read">' + esc(g.text) + '</p>').join('');
+    return '<div class="ed2">' + eTop(true) + mockBar({ chars: chars, note: true }) +
+      '<section class="e-sec" style="border-top:0;margin-top:6px"><div class="e-kicker" style="color:#C2506B">타로 · 돈</div><h1 class="e-h2" style="font-size:22px;margin-top:6px">“' + esc(MQ) + '”</h1>' +
+      '<div class="tk-wrap">' + mockReadCards(n, labels, ids) +
+      '<p class="read" style="margin-top:12px">' + esc(d.intro) + '</p>' + groups +
+      '<p class="read">' + esc(d.summary) + '</p>' +
+      '<div class="concl"><span class="tk-concl-lbl">결론</span>' + esc(d.answer) + '</div>' +
+      '<p class="small">' + esc(closing) + '</p>' + mockButtons(n) + '</div></section>' +
+      eFoot() + bottomNav('tarot') + '</div>';
+  }
+
+  // ---------- 라우트 ----------
+  V['tarot-mock'] = p => {
+    const id = p && p.id;
+    const n = [3, 5, 7].includes(+(p && p.pick)) ? +p.pick : 3;
+    if (id === 'entry') return mockEntryView();
+    if (id === 'pick') return mockPickView(n);
+    if (id === 'open') return mockOpenView(n);
+    if (id === 'read') return n === 3 ? mockRead3View() : mockReadNView(n);
+    return mockListView();
+  };
+
+  // ---------- 이벤트(mock-* 만 처리) ----------
+  document.addEventListener('click', e => {
+    if (!(e.target instanceof Element)) return;
+    const t = e.target.closest('[data-act^="mock-"]');
+    if (!t) return;
+    const a = t.dataset.act;
+    if (a === 'mock-area') { mockAreaLock = t.dataset.area; document.querySelectorAll('#tarot-mock-area-chips .chip').forEach(b => b.classList.toggle('on', b === t)); return; }
+    if (a === 'mock-spread') { mockSpreadLock = +t.dataset.n; document.querySelectorAll('#mock-rec .chip').forEach(b => b.classList.toggle('on', b === t)); return; }
+    if (a === 'mock-sample-q') { const inp = $('#tarot-mock-q'); if (!inp) return; inp.value = MSAMPLE_QS[+t.dataset.i] || ''; mockAreaLock = null; mockSpreadLock = null; mockSyncEntry(inp.value); return; }
+    if (a === 'mock-pick') {
+      const st = getMock(); if (!st) return;
+      const n = mockN(st);
+      const labels = mockLabels(n, st.area, st.question);
+      const idx = +t.dataset.idx; const picked = st.picked || (st.picked = []);
+      const pos = picked.indexOf(idx);
+      if (pos !== -1) picked.splice(pos, 1);
+      else if (picked.length >= n) { toast(n + '장을 다 골랐어요'); return; }
+      else picked.push(idx);
+      setMock(st);
+      document.querySelectorAll('#mock-grid .tk-card').forEach(el => {
+        const i = +el.dataset.idx; const p = picked.indexOf(i); const on = p !== -1;
+        el.classList.toggle('picked', on);
+        const lab = el.querySelector('.tk-label'); if (lab) { lab.hidden = !on; lab.textContent = on ? (p + 1) + ' ' + labels[p] : ''; }
+      });
+      const ob = $('#mock-open-btn'); if (ob) ob.disabled = picked.length !== n;
+      return;
+    }
+    if (a === 'mock-reshuffle') { const st = getMock(); if (!st) return; st.deck = tarotDraw(78); st.picked = []; setMock(st); route(); return; }
+    if (a === 'mock-open') {
+      const st = getMock(); if (!st) return;
+      const n = mockN(st);
+      if ((st.picked || []).length !== n) return;
+      st.cards = MCARDS[n].slice(); st.flipped = MCARDS[n].map(() => false); setMock(st); // 목업은 결과 카드를 샘플로 고정
+      navigate('#/tarot-mock/open/' + n); return;
+    }
+    if (a === 'mock-flip') {
+      const i = +t.dataset.i; const st = getMock(); if (!st || !Array.isArray(st.flipped) || st.flipped[i]) return;
+      st.flipped[i] = true; setMock(st);
+      const inner = t.querySelector('.tk-inner'); if (inner) inner.classList.add('up');
+      if (st.flipped.every(Boolean)) { const rb = $('#mock-read-btn'); if (rb) rb.disabled = false; }
+      return;
+    }
+    if (a === 'mock-flip-all') {
+      const st = getMock(); if (!st || !Array.isArray(st.cards) || !st.cards.length) return;
+      st.flipped = st.cards.map(() => true); setMock(st);
+      document.querySelectorAll('.tk-flip .tk-inner').forEach(el => el.classList.add('up'));
+      const rb = $('#mock-read-btn'); if (rb) rb.disabled = false;
+      return;
+    }
+    if (a === 'mock-read') { navigate('#/tarot-mock/read/' + mockN(getMock())); return; }
+    if (a === 'mock-new') { store.del('tarot_mock'); mockAreaLock = null; mockSpreadLock = null; navigate('#/tarot-mock/entry'); return; }
+  });
+  document.addEventListener('submit', e => {
+    if (e.target.id !== 'f-tarot-mock') return;
+    e.preventDefault();
+    const inp = $('#tarot-mock-q'); const q = inp ? inp.value.trim() : '';
+    const area = mockAreaLock || tarotDetectArea(q);
+    const spread = [3, 5, 7].includes(mockSpreadLock) ? mockSpreadLock : mockRecommend(q);
+    setMock({ question: q, area: area, spread: spread, deck: tarotDraw(78), picked: [], cards: [], flipped: [] });
+    navigate('#/tarot-mock/pick/' + spread);
+  });
+  document.addEventListener('input', e => { if (e.target.id !== 'tarot-mock-q') return; mockSyncEntry(e.target.value); });
+
+  window.MOCK = { recommend: mockRecommend, scores: mockScores, labels: mockLabels, SAMPLE_CARDS: MCARDS, SAMPLE_Q: MQ };
+})();
+ // 목업 화면(src/mock-tarot.js)이 있으면 빌드가 여기에 끼워 넣는다. 파일을 지우면 목업도 사라진다.
 
   // ---------- 라우터 ----------
   const NEED_PROFILE = ['me', 'chart', 'now', 'ask', 'q', 'intro', 'buy', 'read', 'mine', 'calc'];
