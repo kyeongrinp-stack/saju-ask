@@ -5540,6 +5540,8 @@ window.TAROT_TEMPLATES = {
     flow: '세 장을 함께 보면, {situation1|예요}. 다만 {block|이가} 아직 남아 있어요.',
     flowMild: '세 장을 함께 보면, {situation1|예요}. {block|이가} 작게 걸리는 정도예요.',
     then: '그래서 {dir}',
+    // 정리형 행동(갚기·정리·그만두기)에 '지금은 정리하는 쪽' 판정이 났을 때만: 정리 → 그다음 새 시작의 시간 순서로
+    thenClose: '그래서 지금은 남아 있는 부담을 먼저 정리하고, 그다음 {area3|을를} 보는 순서가 자연스러워요.',
     fallback: { begin: '작게라도 첫발을 떼는 일이 먼저예요.', move: '실제로 움직여 보는 일이 먼저예요.', hold: '가진 것을 지키며 다지는 일이 먼저예요.', turn: '방향을 바꾸는 결정이 먼저예요.', end: '지금 것을 마무리하는 일이 먼저예요.', rest: '서둘러 결과를 내기보다 한 번 더 확인하는 시간이 먼저예요.' },
     contrast: { begin: '', move: '생각만 더 하기보다 ', hold: '새로 벌리기보다 ', turn: '같은 방식으로 밀기보다 ', end: '다음으로 넘어가기 전에 ', rest: '서둘러 결과를 내기보다 ' },
   },
@@ -6365,10 +6367,12 @@ function suggestFor(facts, ctx) {
     const suit3 = Object.keys(suitCount).find(s => suitCount[s] === 3); const suit2 = Object.keys(suitCount).find(s => suitCount[s] === 2); if (suit3) keys.push('suit3:' + suit3); else if (suit2) keys.push('suit2:' + suit2);
     if (cards.filter(c => c.suit && c.rank >= 11).length >= 2) keys.push('court2');
     if (cards.some(c => c.energy === 'end') && cards.some(c => c.energy === 'begin')) keys.push('endStart');
-    const flowTpl = c2.tone === 'bright' ? t.synth.flowMild : t.synth.flow;
-    const synth = fill(flowTpl, { situation1: c1.pos.situation, block: c2.pos.block }) + ' ' + fill(t.synth.then, { dir: adviceToDirection(c3.pos.advice, c3.energy) });
-    paragraphs.push({ key: 'summary', text: synth });
     const ans = answerFor(type, question, area, cards);
+    const flowTpl = c2.tone === 'bright' ? t.synth.flowMild : t.synth.flow;
+    const closeFirst = ans.kind === 'close' && ans.verdict === 'open'; // 정리형 행동에 '정리하는 쪽' 판정: 종합 마지막 문장도 정리 → 새 시작 순서로
+    const thenText = closeFirst ? fill(t.synth.thenClose, { area3: A(c3) }) : fill(t.synth.then, { dir: adviceToDirection(c3.pos.advice, c3.energy) });
+    const synth = fill(flowTpl, { situation1: c1.pos.situation, block: c2.pos.block }) + ' ' + thenText;
+    paragraphs.push({ key: 'summary', text: synth });
     paragraphs.push({ key: 'answer', text: ans.text });
     paragraphs.push({ key: 'closing', text: t.closing });
     return { question, area, areaLabel: t.areaLabel[area], questionType: type, verdict: ans.verdict, actionKind: ans.kind || null, cards: cards.map(c => ({ id: c.id, name: c.name, keywords: c.keywords.slice(0, 2), position: c.position, positionLabel: c.positionLabel, energy: c.energy, tone: c.tone })), paragraphs, summaryKeys: keys };
