@@ -1137,17 +1137,23 @@ body{overflow-x:hidden}
 .e-arow.flow .on{background:var(--flow)}
 
 /* 사주/타로 카드 이미지(design-mock 전용, has-img) — 기존 .e-svc는 실제 홈에서도 쓰이므로
-   무수정. 카드 내부를 좌(텍스트 58%)·우(이미지 42%) 두 영역으로 구조적으로 나눠서, 위치
-   계산으로 겹침을 피하던 이전 방식 대신 flex 컬럼 자체가 겹침을 원천 차단하게 한다.
+   무수정. 이미지 컬럼(.svc-imgcol)은 position:absolute + right:0/top:0/bottom:0으로 카드의
+   진짜 안쪽 가장자리(패딩 바깥쪽 테두리)에 직접 맞춘다 — 이전에는 flex 마지막 아이템에
+   음수 margin-right로 붙이려 했는데, margin-right는 "다음 형제와의 간격"에만 작용하고
+   자기 자신의 오른쪽 끝 위치는 못 바꿔서 오른쪽에 여백이 남는 버그가 있었다. 절대배치로
+   바꾸면서 이미지 컬럼 폭도 61px→72px로 넓혀 원본 오브젝트의 왼쪽이 조금 덜 잘리게 했다.
+   텍스트 폭은 58%→57%까지만 줄였다 — 56% 밑으로 내려가면 CTA "~하기 →"가 두 줄로
+   접혀서 카드 높이가 176px→186px로 늘어나버려(카드 크기 고정 요건과 충돌), 그 경계
+   바로 위인 57%가 카드 높이를 지키면서 이미지에 더 줄 수 있는 폭의 한계였다.
    화살표 버튼(원형)은 제거하고 CTA 한 줄 텍스트 링크로 통합("~하기 →"). */
-.e-svc.has-img{overflow:hidden;display:flex;flex-direction:row;align-items:stretch;gap:10px}
-.e-svc.has-img .svc-txt{flex:0 0 58%;max-width:58%;min-width:0;display:flex;flex-direction:column;gap:3px}
+.e-svc.has-img{overflow:hidden;position:relative}
+.e-svc.has-img .svc-txt{width:57%;max-width:57%;min-width:0;display:flex;flex-direction:column;gap:3px;position:relative;z-index:1}
 .e-svc.has-img .cta{word-break:keep-all;margin-top:auto;font-size:12.5px;font-weight:700;color:var(--cob)}
 .e-svc.tarot.has-img .cta{color:#C2506B}
-.e-svc.has-img .svc-imgcol{flex:0 0 42%;max-width:42%;position:relative;border-radius:6px;overflow:hidden;margin:-16px -14px -14px 0}
+.e-svc.has-img .svc-imgcol{position:absolute;top:0;right:0;bottom:0;width:72px;overflow:hidden}
 .e-svc.has-img .svc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
-.e-svc.saju.has-img .svc-img{object-position:66% 38%}
-.e-svc.tarot.has-img .svc-img{object-position:40% 42%}
+.e-svc.saju.has-img .svc-img{object-position:100% 40%}
+.e-svc.tarot.has-img .svc-img{object-position:100% 45%}
 .e-tdy-title{margin-top:4px}
 
 /* Hero 브랜드 타이틀 강조(design-mock 전용, mock-kicker) — 실제 홈의 .e-kicker는 무수정 */
