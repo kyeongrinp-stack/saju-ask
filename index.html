@@ -442,7 +442,7 @@ details.ev .in{padding:0 13px 12px;font-size:13.5px;color:var(--ink-2)}
 /* ---------- 반응형: 데스크톱/태블릿 (컨테이너 폭 기준) ---------- */
 .svcrow{display:block}
 @media (min-width:720px){
-  .page{--gut:max(40px,calc((100vw - 1080px)/2))}
+  .page{--gut:40px}
   .topline{justify-content:flex-end;margin:12px 0 0}
   .topbar{padding:18px 0 10px}
   .brand{font-size:21px}
@@ -1002,8 +1002,13 @@ mark.hl{background:linear-gradient(transparent 58%,var(--butter) 58%);color:inhe
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:#fff;color:#1E2740;font-family:var(--sans);font-size:15px;line-height:1.6;letter-spacing:-.01em}
 #app{min-height:100vh}
+/* 공통 데스크톱 콘텐츠 폭: .page가 max-width:1160px + margin:0 auto로 하나의 기준을 잡는다.
+   --gut(좌우 여백)은 데스크톱에서 고정 40px — 예전에는 100vw 기준 수식이라 .page의
+   max-width와 이중으로 겹쳐 넓은 화면일수록 콘텐츠가 오히려 좁아졌다(1920px에서 320px까지).
+   이제 콘텐츠 폭은 항상 1160-40*2=1080px로 고정되고, .ed2/.e-band 등 --gut을 쓰는
+   모든 섹션(히어로·서비스·질문·운세·리포트·푸터)이 같은 --gut을 상속해 같은 끝선을 쓴다. */
 .page{--gut:16px;padding:0 var(--gut) 96px;max-width:1160px;margin:0 auto;position:relative}
-@media (min-width:720px){.page{--gut:max(40px,calc((100vw - 1080px)/2))}}
+@media (min-width:720px){.page{--gut:40px}}
 .ed2{margin:0 calc(-1*var(--gut));padding:0 var(--gut)}
 .e-band{margin:0 calc(-1*var(--gut));padding:20px var(--gut) 24px}
 .rd-bar{margin:0 calc(-1*var(--gut));padding:10px var(--gut)}
