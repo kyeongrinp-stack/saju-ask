@@ -6583,8 +6583,9 @@ const SERVER = (function () {
   const eTop = back => '<header class="e-top">' + (back ? '<button class="e-iconbtn" data-act="back">' + IC2.back + '뒤로</button>' : '<button class="e-brand" data-go="home"><span class="mk">' + STAR2 + '</span>' + APP_NAME + '</button>') + '<button class="e-iconbtn" aria-label="내 사주" data-go="mine">' + IC2.menu + '</button></header>';
   const eFoot = () => '<footer class="e-foot"><b>' + APP_NAME + '</b><div class="links"><button data-act="doc" data-doc="terms">이용약관</button><button data-act="doc" data-doc="privacy">개인정보 처리방침</button><button data-act="doc" data-doc="refund">환불 규정</button></div>사주 해석은 전통 명리의 관점이에요. 개인의 판단을 대신하지 않아요. 건강·법률·금융 판단은 전문가에게요.<br>생년월일은 이 기기에만 저장돼요.<br>© 2026 ' + APP_NAME + '.</footer>';
   const footer = eFoot;
-  function bottomNav(active) {
+  function bottomNav(active, labelOverride) {
     const it = [['home', '홈', IC2.home, 'data-go="home"'], ['me', '내 사주', IC2.me, 'data-go="mine"'], ['q', '질문', IC2.q, 'data-act="scrollto" data-target="#sec-q"'], ['tarot', '타로', IC2.tarot, 'data-go="tarot"'], ['rep', '리포트', IC2.rep, 'data-act="scrollto" data-target="#sec-reports"']];
+    if (labelOverride) it.forEach(x => { if (labelOverride[x[0]]) x[1] = labelOverride[x[0]]; }); // 목업 전용 라벨 교체(기본 호출은 영향 없음)
     const onHome = state.screen === 'home';
     return '<nav class="e-nav" aria-label="하단 메뉴">' + it.map(x => { let attr = x[3]; if (!onHome) { if (x[0] === 'q') attr = 'data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '"'; if (x[0] === 'rep') attr = 'data-go="' + (isBuyer() ? 'read/' + OWN_REPORTS()[0] : 'intro/flow') + '"'; }
       return '<button class="' + (active === x[0] ? 'on' : '') + '" ' + attr + '>' + x[2] + (active === x[0] ? SPS('') : '') + x[1] + '</button>'; }).join('') + '</nav>';
@@ -7497,8 +7498,7 @@ const SERVER = (function () {
 
 /* ==========================================================================
  * 홈 디자인 목업 (#/design-mock) — UX/비주얼 확인용. 실제 홈(V.home)은 건드리지 않는다.
- * 라이브 V.home과 같은 섹션(사주·타로 듀오, 질문5, 운세, 리포트)을 그대로 재사용하고,
- * 히어로 사진과 "네 가지 결" 사진 그리드만 새로 확보한 실사 이미지로 바꿔서 비교한다.
+ * 순서: Hero -> 오늘의 운세 -> 사주/타로 -> 다섯 가지 결 -> 이런 질문을 많이 해요 -> 리포트 -> Footer.
  * build.mjs가 이 파일을 app.js와 같은 클로저 안에 주입한다(app.js의 목업 마커 자리, mock-tarot.js 다음).
  * ========================================================================== */
 (function () {
@@ -7514,15 +7514,21 @@ const SERVER = (function () {
     return '<div class="ed2">' + eTop(false).replace('class="e-top"', 'class="e-top over"') +
       '<div class="e-mockbar">목업 · design-mock · 디자인 확인용, 실제 데이터·결제 없음</div>' +
       '<section class="e-hero"><img src="img/mock-hero.png" alt=""><div class="txt"><div class="e-kicker">' + esc(CFG.tagline || '') + '</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로.</p></div></section>' +
-      '<div class="e-duo"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
+
+      '<div class="e-band blue" style="margin-top:18px"><section id="sec-fortune" class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><div class="e-sech"><h2 class="e-h2">운세</h2><button class="e-link" data-go="fortune">운세 전체보기 →</button></div><div class="f-grid one">' + fTile(fortuneById('today')) + '</div></section></div>' +
+
+      '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
       '<button class="e-svc tarot" data-go="tarot"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></button></div>' +
       '<p class="e-tiny">' + (state.facts ? esc(nickname()) + '님, 지난번 이어서 볼까요? 아래에서 바로 질문할 수 있어요.' : '가입 없이 30초. 생년월일만 넣으면 돼요.') + '</p>' +
+
       '<div class="e-band white" style="margin-top:18px"><section class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><h2 class="e-h2">다섯 가지 결로 물어보세요</h2><p class="e-cap">사랑과 인연, 돈과 재물, 일과 진로, 나의 성향까지.</p>' +
       '<div class="e-catgrid">' + CAT.map(c => '<button class="e-cat" data-go="' + c.go + '"><img src="img/' + c.img + '" alt=""><span class="ct"><b>' + c.label + '</b><span>' + esc(c.desc) + '</span></span></button>').join('') + '</div></section></div>' +
-      '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">질문의 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
-      '<div class="e-band white" style="padding-top:6px"><section id="sec-fortune" class="e-sec" style="border-top:1px solid var(--ln);padding-top:20px"><div class="e-sech"><h2 class="e-h2">운세</h2><button class="e-link" data-go="fortune">운세 전체보기 →</button></div><div class="f-grid one">' + fTile(fortuneById('today')) + '</div><div class="e-qs">' + FORTUNE_HOME_MIN.slice(1).map(id => fRow(fortuneById(id))).join('') + '</div></section></div>' +
+
+      '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">사주를 기준으로 답을 보는 질문이에요. 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
+
       '<div class="e-band ivory"><section id="sec-reports" class="e-sec"><h2 class="e-h2">더 깊이 알고 싶다면</h2><p class="e-cap">흐름 · 재물 · 일 · 사랑과 인연</p><div class="e-strip">' + REPORT_LIST.map(id => '<button data-go="' + (owns(id) ? 'read/' + id : 'intro/' + id) + '">' + cover(id, 110) + '<span>' + COV[id].main + (owns(id) ? ' · 보유' : '') + '</span></button>').join('') + '</div><div style="margin-top:10px"><button class="e-link" data-go="' + (isBuyer() ? 'read/' + OWN_REPORTS()[0] : 'intro/flow') + '">리포트 보기 →</button></div></section></div>' +
-      eFoot() + bottomNav('home') + '</div>';
+
+      eFoot() + bottomNav('home', { q: '사주 질문' }) + '</div>';
   };
 })();
  // 목업 화면(src/mock-tarot.js)이 있으면 빌드가 여기에 끼워 넣는다. 파일을 지우면 목업도 사라진다.
