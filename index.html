@@ -1120,6 +1120,9 @@ body{overflow-x:hidden}
 .e-svc.has-img .go{margin-right:108px}
 .e-svc.has-img .svc-img{position:absolute;right:6px;bottom:6px;width:100px;height:auto;pointer-events:none}
 
+/* Hero 브랜드 타이틀 강조(design-mock 전용, mock-kicker) — 실제 홈의 .e-kicker는 무수정 */
+.mock-kicker{font-size:13.5px}
+
 </style>
 </head>
 <body>
@@ -7574,7 +7577,7 @@ const SERVER = (function () {
 
     return '<div class="ed2">' + eTop(false).replace('class="e-top"', 'class="e-top over"') +
       '<div class="e-mockbar">목업 · design-mock · 디자인 확인용, 실제 데이터·결제 없음</div>' +
-      '<section class="e-hero"><img src="img/mock-hero.png" alt=""><div class="txt"><div class="e-kicker">' + esc(CFG.tagline || '') + '</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로.</p></div></section>' +
+      '<section class="e-hero"><img src="img/mock-hero.png" alt=""><div class="txt"><div class="e-kicker mock-kicker">' + esc(CFG.tagline || '') + '</div><h1 class="e-h1">오늘,<br>무엇이<br>고민인가요?</h1><p class="sub">태어난 순간의 흐름을 읽는 사주,<br>지금 마음을 비추는 타로.<br>두 가지 시선으로, 당신의 오늘을 함께 살펴보세요.</p></div></section>' +
 
       '<div style="margin-top:18px">' + todaySection + '</div>' +
 
