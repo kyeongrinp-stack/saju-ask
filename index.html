@@ -680,6 +680,20 @@ mark.hl{background:linear-gradient(transparent 58%,var(--butter) 58%);color:inhe
 .e-qs{display:flex;flex-direction:column;margin-top:4px}
 .e-q{display:flex;justify-content:space-between;align-items:center;gap:8px;border:0;border-bottom:1px solid var(--ln);background:transparent;padding:11px 2px;font-size:13.5px;font-weight:600;color:var(--ink);text-align:left;font-family:inherit}
 .e-q i{color:var(--cob);font-style:normal;font-size:16px}
+
+/* 내 사주 화면(V.mine) — "읽는 영역" 그룹 카드 / "관리 영역" 박스. 단순 가로선 목록 대신
+   카드 하나로 4개 메뉴를 묶어 위계를 준다. .e-sec.plain은 장식용 파란 tick과 상단 구분선을
+   없애 카드 자체가 구분 역할을 하게 한다(다른 화면의 .e-sec는 무수정). */
+.e-sec.plain{border-top:0}
+.e-sec.plain::before{display:none}
+.mine-group{background:#fff;border:1px solid var(--ln);border-radius:10px;overflow:hidden;margin-top:10px}
+.mine-group .e-q{padding:15px 14px;border-bottom:1px solid var(--ln)}
+.mine-group .e-q:last-child{border-bottom:0}
+.mine-manage{background:var(--ivory2,#F7F4EC);border:1px solid var(--ln);border-radius:10px;overflow:hidden;margin-top:10px}
+.mine-manage .e-q{padding:15px 14px;border-bottom:1px solid var(--ln);background:transparent}
+.mine-manage .e-q:last-child{border-bottom:0}
+.mine-manage .e-q.warn span{color:var(--coral);display:inline-flex;align-items:center;gap:6px}
+.mine-manage .e-q.warn svg{width:15px;height:15px;flex:none}
 .e-me{display:grid;grid-template-columns:1fr 118px;gap:12px;align-items:center;margin-top:12px}
 .e-frame{position:relative;padding:5px;border:1px solid var(--ln);background:#fff}
 .e-frame i{display:block;width:100%;height:148px;background-size:cover;background-position:center}
@@ -1113,12 +1127,17 @@ body{overflow-x:hidden}
 .e-arow.flow .on{background:var(--flow)}
 
 /* 사주/타로 카드 이미지(design-mock 전용, has-img) — 기존 .e-svc는 실제 홈에서도 쓰이므로
-   무수정. 왼쪽 텍스트 열 폭만 좁히고 이미지는 카드 오른쪽 아래에 절대배치한다. */
+   무수정. 텍스트(제목/설명/CTA)는 원래 폭 그대로 두고, 이미지는 카드 오른쪽 아래에
+   실제 텍스트 줄(설명 1줄·CTA 라벨)의 진짜 렌더 폭을 피해 크게 배치한다. object-fit:cover로
+   확대·크롭해 카드 오른쪽 바깥으로 일부가 자연스럽게 걸치는 editorial 톤을 낸다. 화살표(go)
+   버튼은 원래 위치(오른쪽 정렬) 그대로 두고 z-index로 이미지 위에 뜨게 해 항상 눌리게 한다. */
 .e-svc.has-img{overflow:hidden}
 .e-svc.has-img .svc-txt{display:flex;flex-direction:column;gap:3px;flex:1}
 .e-svc.has-img .cta{word-break:keep-all}
-.e-svc.has-img .go{align-self:flex-end;margin-top:auto;margin-right:80px}
-.e-svc.has-img .svc-img{position:absolute;right:6px;bottom:6px;width:80px;height:auto;pointer-events:none}
+.e-svc.has-img .go{align-self:flex-end;margin-top:auto;position:relative;z-index:2}
+.e-svc.has-img .svc-img{position:absolute;z-index:1;left:88px;bottom:4px;width:115px;height:80px;object-fit:cover;border-radius:2px;pointer-events:none}
+.e-svc.saju.has-img .svc-img{object-position:58% 42%}
+.e-svc.tarot.has-img .svc-img{object-position:48% 45%}
 .e-tdy-title{margin-top:4px}
 
 /* Hero 브랜드 타이틀 강조(design-mock 전용, mock-kicker) — 실제 홈의 .e-kicker는 무수정 */
@@ -6950,12 +6969,14 @@ const SERVER = (function () {
       (f.area ? '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">지금 볼 수 있는 것</h2><p class="e-cap">같은 주제를 내 사주에 질문하는 방식으로 먼저 볼 수 있어요.</p><div style="margin-top:10px">' + btn(AREAS[f.area].label + ' 질문 보기 ›', 'ask/' + f.area, 'ghost sm') + '</div></section>' : '') +
       '<div class="row" style="margin-top:16px">' + btn('운세 전체보기', 'fortune', 'ghost sm') + '</div>' + eFoot() + bottomNav('fortune') + '</div>';
   }
+  const TRASH_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex:none"><path d="M5 7h14"/><path d="M9.5 7V5.2c0-.6.5-1.2 1.2-1.2h2.6c.7 0 1.2.6 1.2 1.2V7"/><path d="M7 7l.8 12c.05.9.8 1.6 1.7 1.6h5c.9 0 1.65-.7 1.7-1.6L17 7"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/></svg>';
   V.mine = () => {
     const rows = [['일주 · 타고난 성향', 'me'], ['명식 · 오행', 'chart'], ['요즘 나의 흐름 (이달)', 'now'], ['대운 · 인생의 큰 흐름', owns('flow') ? 'read/flow' : 'intro/flow']];
-    return '<div class="ed2">' + eTop(true) + strip() + '<section class="e-sec" style="border-top:0;margin-top:14px"><div class="e-kicker">사주 · 내 사주 보기</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">내 명식과 타고난 특징</h1><p class="e-cap">입력한 사주로 볼 수 있는 것들이에요. 질문과 운세는 하단 메뉴에서 이어져요.</p></section>' +
-      '<div class="e-qs" style="margin-top:8px">' + rows.map(r => '<button class="e-q" data-go="' + r[1] + '"><span>' + r[0] + '</span><i>›</i></button>').join('') + '</div>' +
-      (isBuyer() ? '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">내 리포트</h2><div class="e-qs" style="margin-top:6px">' + OWN_REPORTS().map(id => '<button class="e-q" data-go="read/' + id + '"><span>' + RMETA[id].title + '</span><i>›</i></button>').join('') + '</div></section>' : '') +
-      '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">내 사주 관리</h2><div class="e-qs" style="margin-top:6px"><button class="e-q" data-go="input"><span>사주 정보 다시 입력</span><i>›</i></button><button class="e-q" data-act="reset-all"><span>이 기기에서 내 사주 지우기</span><i>›</i></button></div></section>' +
+    return '<div class="ed2">' + eTop(true) + strip() + '<section class="e-sec plain" style="margin-top:20px"><div class="e-kicker">사주 · 내 사주 보기</div><h1 class="e-h2" style="font-size:22px;margin-top:6px">내 명식과 타고난 특징</h1><p class="e-cap">내 사주를 이루는 기본적인 성향과 흐름이에요.</p>' +
+      '<div class="mine-group">' + rows.map(r => '<button class="e-q" data-go="' + r[1] + '"><span>' + r[0] + '</span><i>›</i></button>').join('') + '</div></section>' +
+      (isBuyer() ? '<section class="e-sec plain" style="margin-top:18px"><h2 class="e-h2" style="font-size:16px">내 리포트</h2><div class="mine-group">' + OWN_REPORTS().map(id => '<button class="e-q" data-go="read/' + id + '"><span>' + RMETA[id].title + '</span><i>›</i></button>').join('') + '</div></section>' : '') +
+      '<section class="e-sec plain" style="margin-top:28px"><h2 class="e-h2" style="font-size:16px">사주 정보 관리</h2><p class="e-cap">입력한 생년월일과 저장된 사주를 관리해요.</p>' +
+      '<div class="mine-manage"><button class="e-q" data-go="input"><span>사주 정보 다시 입력</span><i>›</i></button><button class="e-q warn" data-act="reset-all"><span>' + TRASH_IC + '이 기기에서 내 사주 지우기</span><i>›</i></button></div></section>' +
       eFoot() + bottomNav('me') + '</div>';
   };
   // ---------- 타로 ----------
