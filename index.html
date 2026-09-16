@@ -1112,6 +1112,14 @@ body{overflow-x:hidden}
 .e-arow.people .on{background:var(--people)}
 .e-arow.flow .on{background:var(--flow)}
 
+/* 사주/타로 카드 이미지(design-mock 전용, has-img) — 기존 .e-svc는 실제 홈에서도 쓰이므로
+   무수정. 왼쪽 텍스트 열 폭만 좁히고 이미지는 카드 오른쪽 아래에 절대배치한다. */
+.e-svc.has-img{overflow:hidden}
+.e-svc.has-img .svc-txt{display:flex;flex-direction:column;gap:3px;flex:1}
+.e-svc.has-img .cta{word-break:keep-all}
+.e-svc.has-img .go{margin-right:108px}
+.e-svc.has-img .svc-img{position:absolute;right:6px;bottom:6px;width:100px;height:auto;pointer-events:none}
+
 </style>
 </head>
 <body>
@@ -7570,8 +7578,8 @@ const SERVER = (function () {
 
       '<div style="margin-top:18px">' + todaySection + '</div>' +
 
-      '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
-      '<button class="e-svc tarot" data-go="tarot"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></button></div>' +
+      '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju has-img" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="svc-txt"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></span><img class="svc-img" src="img/service-saju.png" alt=""></button>' +
+      '<button class="e-svc tarot has-img" data-go="tarot"><span class="svc-txt"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></span><img class="svc-img" src="img/service-tarot.png" alt=""></button></div>' +
       '<p class="e-tiny">' + (state.facts ? esc(nickname()) + '님, 지난번 이어서 볼까요? 아래에서 바로 질문할 수 있어요.' : '가입 없이 30초. 생년월일만 넣으면 돼요.') + '</p>' +
 
       '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">사주를 기준으로 답을 보는 질문이에요. 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
