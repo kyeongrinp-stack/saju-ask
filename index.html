@@ -7498,7 +7498,8 @@ const SERVER = (function () {
 
 /* ==========================================================================
  * 홈 디자인 목업 (#/design-mock) — UX/비주얼 확인용. 실제 홈(V.home)은 건드리지 않는다.
- * 순서: Hero -> 오늘의 운세 -> 사주/타로 -> 다섯 가지 결 -> 이런 질문을 많이 해요 -> 리포트 -> Footer.
+ * 순서: Hero -> 오늘의 운세(즉시 표시) -> 사주/타로 -> 이런 질문을 많이 해요 -> 다섯 가지 결 -> 리포트 -> Footer.
+ * 오늘의 운세는 실제 홈에서 쓰는 todayBlock()을 그대로 재사용한다(새 점수 로직 없음, 잔잔함/보통/강함 세 단계 그대로).
  * build.mjs가 이 파일을 app.js와 같은 클로저 안에 주입한다(app.js의 목업 마커 자리, mock-tarot.js 다음).
  * ========================================================================== */
 (function () {
@@ -7511,20 +7512,26 @@ const SERVER = (function () {
 
   V['design-mock'] = () => {
     const qs = HOME_Q_MIN.map(qById);
+    // 사주 정보가 있으면 실제 오늘의 결과(todayBlock, 잔잔함/보통/강함)를 홈에서 바로 보여준다.
+    // 없으면 같은 자리에서 생년월일 입력으로 자연스럽게 연결한다. 둘 다 새 점수·새 판정 로직을 만들지 않는다.
+    const todaySection = state.facts
+      ? todayBlock() + '<div style="margin-top:10px"><button class="e-link" data-go="now">오늘의 운세 자세히 보기 →</button></div>'
+      : '<section class="e-sec" id="sec-today" style="border-top:0;padding-top:0;margin-top:0"><h2 class="e-h2">오늘의 운세</h2><p class="e-cap" style="margin-top:8px">생년월일을 넣으면 오늘 하루의 흐름을 바로 볼 수 있어요.</p><button class="e-btn block" data-go="input" style="margin-top:14px">생년월일 입력하고 오늘 운세 보기 →</button></section>';
+
     return '<div class="ed2">' + eTop(false).replace('class="e-top"', 'class="e-top over"') +
       '<div class="e-mockbar">목업 · design-mock · 디자인 확인용, 실제 데이터·결제 없음</div>' +
       '<section class="e-hero"><img src="img/mock-hero.png" alt=""><div class="txt"><div class="e-kicker">' + esc(CFG.tagline || '') + '</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로.</p></div></section>' +
 
-      '<div class="e-band blue" style="margin-top:18px"><section id="sec-fortune" class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><div class="e-sech"><h2 class="e-h2">운세</h2><button class="e-link" data-go="fortune">운세 전체보기 →</button></div><div class="f-grid one">' + fTile(fortuneById('today')) + '</div></section></div>' +
+      '<div class="e-band blue" style="margin-top:18px">' + todaySection + '</div>' +
 
       '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
       '<button class="e-svc tarot" data-go="tarot"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></button></div>' +
       '<p class="e-tiny">' + (state.facts ? esc(nickname()) + '님, 지난번 이어서 볼까요? 아래에서 바로 질문할 수 있어요.' : '가입 없이 30초. 생년월일만 넣으면 돼요.') + '</p>' +
 
+      '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">사주를 기준으로 답을 보는 질문이에요. 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
+
       '<div class="e-band white" style="margin-top:18px"><section class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><h2 class="e-h2">다섯 가지 결로 물어보세요</h2><p class="e-cap">사랑과 인연, 돈과 재물, 일과 진로, 나의 성향까지.</p>' +
       '<div class="e-catgrid">' + CAT.map(c => '<button class="e-cat" data-go="' + c.go + '"><img src="img/' + c.img + '" alt=""><span class="ct"><b>' + c.label + '</b><span>' + esc(c.desc) + '</span></span></button>').join('') + '</div></section></div>' +
-
-      '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">사주를 기준으로 답을 보는 질문이에요. 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
 
       '<div class="e-band ivory"><section id="sec-reports" class="e-sec"><h2 class="e-h2">더 깊이 알고 싶다면</h2><p class="e-cap">흐름 · 재물 · 일 · 사랑과 인연</p><div class="e-strip">' + REPORT_LIST.map(id => '<button data-go="' + (owns(id) ? 'read/' + id : 'intro/' + id) + '">' + cover(id, 110) + '<span>' + COV[id].main + (owns(id) ? ' · 보유' : '') + '</span></button>').join('') + '</div><div style="margin-top:10px"><button class="e-link" data-go="' + (isBuyer() ? 'read/' + OWN_REPORTS()[0] : 'intro/flow') + '">리포트 보기 →</button></div></section></div>' +
 
