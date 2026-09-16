@@ -3625,8 +3625,8 @@ function timingSummary(facts, rows, mode) {
 function natalEvidence(facts, group) {
   const s = facts.stars[group];
   if (!s || s.n === 0) return `당신 원국에는 ${iga(group)} 없어요. 그래서 세운으로 들어올 때 더 크게 느껴져요.`;
-  const pairs = s.pos.map((p, i) => `${p}에 ${s.names[i]}`).slice(0, 3);
-  return `당신 사주는 ${iga(pairs.join(', '))} 있어요. ${iga(group)} 강하게 자리 잡은 구조예요.`;
+  const pairs = s.pos.map((p, i) => `${p} ${s.names[i]}`).slice(0, 3);
+  return `당신 사주 ${joinKo(pairs)}이 ${group}이에요.`;
 }
 function seunEvidence(facts, year) {
   const e = facts.seun[year];
