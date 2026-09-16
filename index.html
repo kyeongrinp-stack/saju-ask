@@ -1043,8 +1043,7 @@ body{overflow-x:hidden}
 /* 타로 화면 */
 .tk-wrap{max-width:680px;margin:0 auto}
 .tk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
-.tk-card{position:relative;display:block;width:100%;aspect-ratio:540/926;box-sizing:border-box;border:1.5px solid #E3C4CF;border-radius:8px;padding:0;background:var(--pinkl2)}
-.tk-card::before{content:"";position:absolute;inset:6px;border:1px solid #E3C4CF;border-radius:2px;pointer-events:none}
+.tk-card{position:relative;display:block;width:100%;aspect-ratio:540/926;box-sizing:border-box;border:1px solid var(--ln);border-radius:8px;padding:0;background-color:var(--pinkl2);background-image:url(img/tarot/back.png);background-repeat:no-repeat;background-position:0 0;background-size:114.7% 103%}
 .tk-card.picked{border-color:#C2506B}
 .tk-label{position:absolute;left:3px;right:3px;top:3px;background:#C2506B;color:#fff;font-size:9px;font-weight:700;line-height:1.25;border-radius:5px;padding:2px 3px;text-align:center;word-break:keep-all}
 .tk-row{display:flex;gap:14px;justify-content:center;margin-top:16px;flex-wrap:wrap}
@@ -1054,8 +1053,7 @@ body{overflow-x:hidden}
 .tk-inner{position:relative;width:100%;height:216px;transition:transform .5s;transform-style:preserve-3d}
 .tk-inner.up{transform:rotateY(180deg)}
 .tk-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden}
-.tk-face.back{background:var(--pinkl2);border:1px solid #E3C4CF}
-.tk-face.back::before{content:"";position:absolute;inset:6px;border:1px solid #E3C4CF}
+.tk-face.back{background-color:var(--pinkl2);background-image:url(img/tarot/back.png);background-repeat:no-repeat;background-position:0 0;background-size:144.5% 103%;border:1px solid var(--ln)}
 .tk-face.front{transform:rotateY(180deg);background:#fff;border:1px solid var(--ln);display:flex;flex-direction:column}
 .tk-face.front img{width:100%;aspect-ratio:540/926;object-fit:cover;display:block}
 .tk-face.front .tk-name{font-size:12px;font-weight:700;color:var(--navy);margin:4px 4px 0;line-height:1.25;word-break:keep-all}
@@ -1075,6 +1073,7 @@ body{overflow-x:hidden}
 .tk-mock .e-link{font-size:11.5px}
 .tk-row.n7 .tk-slot,.tk-row.n7 .tk-flip{width:76px}
 .tk-row.n7 .tk-inner{height:170px}
+.tk-row.n7 .tk-face.back{background-size:149.5% 103%}
 .tk-row+.tk-row{margin-top:10px}
 .tk-read-cards.n5{gap:8px}.tk-read-cards.n5 .c,.tk-read-cards.n5 img{width:60px}
 .tk-read-cards.center{justify-content:center}
@@ -1092,6 +1091,24 @@ body{overflow-x:hidden}
 .e-cat .ct{padding:9px 10px 11px;display:flex;flex-direction:column;gap:2px}
 .e-cat b{font-family:var(--hd);font-weight:700;font-size:14.5px;color:var(--navy)}
 .e-cat .ct span{font-size:11px;color:var(--ink2);word-break:keep-all;line-height:1.35}
+
+/* 오늘의 운세 즉시표시(design-mock 전용, todayHero) — 오늘 상태를 크게, 5일 흐름은 아래 보조 스트립으로 */
+.e-tdy-date{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.e-tdy-lv{display:flex;align-items:center;gap:9px;font-family:var(--hd);font-weight:700;font-size:30px;line-height:1.2;color:var(--navy);letter-spacing:-.02em;margin-top:8px}
+.e-tdy-lv i{width:14px;height:14px;border-radius:50%;flex:none;background:#DCE4F2}
+.e-tdy-lv.l1 i{background:#4DA3FF}
+.e-tdy-lv.l2 i{background:#1F4FD8}
+.e-tdy-line{font-size:16px;line-height:1.55;color:var(--ink);margin-top:10px;word-break:keep-all}
+.e-tdy .e-link{display:inline-block;margin-top:12px}
+.e-tdy-strip{display:flex;gap:6px;margin-top:22px;padding-top:14px;border-top:1px solid var(--ln)}
+.e-tdy-strip .c{flex:1;text-align:center;padding:7px 2px;border-radius:8px;background:#fff;border:1px solid var(--ln)}
+.e-tdy-strip .c i{display:block;width:7px;height:7px;border-radius:50%;margin:0 auto 4px;background:#DCE4F2}
+.e-tdy-strip .c.l1 i{background:#4DA3FF}
+.e-tdy-strip .c.l2 i{background:#1F4FD8}
+.e-tdy-strip .c b{display:block;font-size:10.5px;font-weight:600;color:var(--navy)}
+.e-tdy-strip .c.now{border-color:var(--cob);box-shadow:0 0 0 2px rgba(31,79,216,.12)}
+.e-tdy-strip .c.now b{color:var(--cob);font-weight:700}
+.e-tdy-cap{font-size:11px;color:var(--mute);margin-top:8px}
 
 </style>
 </head>
@@ -7498,8 +7515,9 @@ const SERVER = (function () {
 
 /* ==========================================================================
  * 홈 디자인 목업 (#/design-mock) — UX/비주얼 확인용. 실제 홈(V.home)은 건드리지 않는다.
- * 순서: Hero -> 오늘의 운세(즉시 표시) -> 사주/타로 -> 이런 질문을 많이 해요 -> 다섯 가지 결 -> 리포트 -> Footer.
- * 오늘의 운세는 실제 홈에서 쓰는 todayBlock()을 그대로 재사용한다(새 점수 로직 없음, 잔잔함/보통/강함 세 단계 그대로).
+ * 순서: Hero -> 오늘의 운세(즉시 표시) -> 사주/타로 -> 이런 질문을 많이 해요 -> 네 가지 결 -> 리포트 -> Footer.
+ * 오늘의 운세는 실제 홈과 같은 데이터(dayInfo, LV 세 단계)만 쓰되, 오늘 상태를 크게/5일 흐름을
+ * 작은 보조 정보로 배치하는 목업 전용 레이아웃(todayHero)을 쓴다. 새 점수·새 판정 로직 없음.
  * build.mjs가 이 파일을 app.js와 같은 클로저 안에 주입한다(app.js의 목업 마커 자리, mock-tarot.js 다음).
  * ========================================================================== */
 (function () {
@@ -7509,13 +7527,30 @@ const SERVER = (function () {
     { id: 'work', img: 'mock-cat-work.png', label: '일과 진로', desc: '지금 방향이 맞는지 궁금할 때', go: 'ask/work' },
     { id: 'people', img: 'mock-cat-personality.png', label: '나의 성향', desc: '타고난 결부터 다시 보기', go: 'me' },
   ];
+  const TDY_LBL = ['그제', '어제', '오늘', '내일', '모레'];
+
+  // 오늘 상태를 크게, 5일 흐름은 아래쪽 보조 스트립으로 — 실제 홈의 todayBlock()과 같은
+  // dayInfo()/LV 데이터를 그대로 쓰되 정보 위계만 다시 짠 목업 전용 레이아웃. todayBlock()은 무수정.
+  function todayHero() {
+    const f = state.facts; const base = new Date(f.today.year, f.today.month - 1, f.today.day);
+    const days = [-2, -1, 0, 1, 2].map(k => { const dt = new Date(base); dt.setDate(base.getDate() + k); const d = { year: dt.getFullYear(), month: dt.getMonth() + 1, day: dt.getDate() }; return Object.assign({ k, d }, dayInfo(f, d)); });
+    const t = days[2];
+    return '<section class="e-sec e-tdy" id="sec-today" style="border-top:0;padding-top:0;margin-top:0">' +
+      '<div class="e-tdy-date">' + f.today.month + '월 ' + f.today.day + '일 · ' + t.gz.hanja + ' ' + t.stemName + '·' + t.branchName + '</div>' +
+      '<div class="e-tdy-lv l' + t.level + '"><i></i>' + esc(LV[t.level]) + '</div>' +
+      '<p class="e-tdy-line">' + esc(t.line) + '</p>' +
+      '<button class="e-link" data-go="now">오늘의 운세 자세히 보기 →</button>' +
+      '<div class="e-tdy-strip">' + days.map((x, i) => '<span class="c l' + x.level + (x.k === 0 ? ' now' : '') + '"><i></i><b>' + TDY_LBL[i] + '</b></span>').join('') + '</div>' +
+      '<p class="e-tdy-cap">점수가 아니라 움직임의 크기예요. 잔잔함·보통·강함 세 단계.</p>' +
+      '</section>';
+  }
 
   V['design-mock'] = () => {
     const qs = HOME_Q_MIN.map(qById);
-    // 사주 정보가 있으면 실제 오늘의 결과(todayBlock, 잔잔함/보통/강함)를 홈에서 바로 보여준다.
-    // 없으면 같은 자리에서 생년월일 입력으로 자연스럽게 연결한다. 둘 다 새 점수·새 판정 로직을 만들지 않는다.
+    // 사주 정보가 있으면 오늘 상태를 홈에서 바로 보여준다(todayHero). 없으면 같은 자리에서
+    // 결과를 지어내지 않고 생년월일 입력으로 자연스럽게 연결한다. 새 점수·새 판정 로직 없음.
     const todaySection = state.facts
-      ? todayBlock() + '<div style="margin-top:10px"><button class="e-link" data-go="now">오늘의 운세 자세히 보기 →</button></div>'
+      ? todayHero()
       : '<section class="e-sec" id="sec-today" style="border-top:0;padding-top:0;margin-top:0"><h2 class="e-h2">오늘의 운세</h2><p class="e-cap" style="margin-top:8px">생년월일을 넣으면 오늘 하루의 흐름을 바로 볼 수 있어요.</p><button class="e-btn block" data-go="input" style="margin-top:14px">생년월일 입력하고 오늘 운세 보기 →</button></section>';
 
     return '<div class="ed2">' + eTop(false).replace('class="e-top"', 'class="e-top over"') +
