@@ -1117,8 +1117,9 @@ body{overflow-x:hidden}
 .e-svc.has-img{overflow:hidden}
 .e-svc.has-img .svc-txt{display:flex;flex-direction:column;gap:3px;flex:1}
 .e-svc.has-img .cta{word-break:keep-all}
-.e-svc.has-img .go{margin-right:108px}
-.e-svc.has-img .svc-img{position:absolute;right:6px;bottom:6px;width:100px;height:auto;pointer-events:none}
+.e-svc.has-img .go{align-self:flex-end;margin-top:auto;margin-right:80px}
+.e-svc.has-img .svc-img{position:absolute;right:6px;bottom:6px;width:80px;height:auto;pointer-events:none}
+.e-tdy-title{margin-top:4px}
 
 /* Hero 브랜드 타이틀 강조(design-mock 전용, mock-kicker) — 실제 홈의 .e-kicker는 무수정 */
 .mock-kicker{font-size:13.5px}
@@ -7560,6 +7561,7 @@ const SERVER = (function () {
     const f = state.facts; const t = Object.assign({ k: 0, d: { year: f.today.year, month: f.today.month, day: f.today.day } }, dayInfo(f, { year: f.today.year, month: f.today.month, day: f.today.day }));
     return '<section class="e-sec e-tdy" id="sec-today" style="border-top:0;padding-top:0;margin-top:0">' +
       '<div class="e-tdy-date">' + f.today.month + '월 ' + f.today.day + '일 · ' + t.gz.hanja + ' ' + t.stemName + '·' + t.branchName + '</div>' +
+      '<h2 class="e-h2 e-tdy-title">오늘의 운세</h2>' +
       '<div class="e-tdy-lv l' + t.level + '"><i></i>' + esc(LV[t.level]) + '</div>' +
       '<p class="e-tdy-line">' + esc(t.line) + '</p>' +
       areaBars() +
