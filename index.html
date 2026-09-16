@@ -1003,6 +1003,16 @@ mark.hl{background:linear-gradient(transparent 58%,var(--butter) 58%);color:inhe
 .sheet .inp{display:flex;gap:8px;padding:8px 16px 16px;border-top:1px solid var(--line)}
 .sheet .inp input{flex:1;border:1px solid var(--line-2);border-radius:999px;padding:10px 13px;background:var(--bg);font-size:14.5px;min-width:0}
 .toast{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;max-width:330px;width:calc(100% - 40px);background:var(--ink);color:#fff;border-radius:14px;padding:10px 14px;font-size:13.5px}
+
+/* 명리 용어 배지(.term) — 브라우저 기본 버튼 모양을 지우고 본문 안에서 자연스럽게 읽히는
+   강조 텍스트로. 인라인에서는 "한자(한글)"만(한자만 색 강조), 쉬운 의미는 탭하면 뜨는
+   .pop에서 "한자(한글) · 쉬운 의미"로 전부 보여준다(showTerm 참고). */
+.term{all:unset;cursor:pointer;font:inherit;color:inherit;word-break:keep-all}
+.term:focus-visible{outline:2px solid var(--cob,#1F4FD8);outline-offset:1px;border-radius:2px}
+.term-hj{color:var(--cob,#1F4FD8);font-weight:700;border-bottom:1px dotted currentColor}
+.pop{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:70;max-width:calc(100% - 32px);width:300px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.pop b{display:block;color:#D9B24C;font-size:12.5px;margin-bottom:3px;font-weight:700}
+.pop[hidden]{display:none}
 .fixbar{position:sticky;top:0;z-index:3;background:var(--bg);border-bottom:1px solid var(--line);margin:0 calc(-1*var(--gut)) 8px;padding:8px var(--gut);display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
 .fixbar b{font-family:var(--serif)}
 .modal{position:absolute;inset:0;z-index:70;background:rgba(38,44,58,.5);display:flex;align-items:center;justify-content:center;padding:24px}
@@ -3194,19 +3204,19 @@ const SYMBOLS = {
   rain: '<svg viewBox="0 0 120 120"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M36 44c-14 0-16-20 0-20 2-14 26-14 30-2 14-6 26 8 18 22z"/><path d="M40 62l-6 14M58 62l-6 14M76 62l-6 14M48 84l-6 14M66 84l-6 14" class="accent"/></g></svg>',
 };
 
-// 5영역 신호 문구. {star}는 실제 십성 이름, {rel}은 합·충.
+// 5영역 신호 문구. {star}는 실제 십성 이름(현재는 그룹 배지 중복을 피하려고 미사용), {rel}은 합·충.
 const SIGNAL_TEXT = {
-  L_SPOUSE_IN: { year: '올해 인연의 별({star})이 들어와요', month: '이달에 인연의 별({star})이 들어와요' },
+  L_SPOUSE_IN: { year: '올해 인연의 별이 들어와요', month: '이달에 인연의 별이 들어와요' },
   L_PALACE: { year: '올해 배우자 자리(일지)에 {rel}이 걸려요', month: '이달 배우자 자리(일지)에 {rel}이 걸려요' },
   L_DOHWA: { year: '올해 지지가 내 도화 자리예요', month: '이달 지지가 내 도화 자리예요' },
-  M_WEALTH_IN: { year: '올해 재성({star})이 들어와요', month: '이달에 재성({star})이 들어와요' },
-  M_RIVAL_IN: { year: '올해 비겁({star})이 들어와요. 돈이 사람 쪽으로 움직여요', month: '이달에 비겁({star})이 들어와요. 돈이 사람 쪽으로 움직여요' },
+  M_WEALTH_IN: { year: '올해 재성이 들어와요', month: '이달에 재성이 들어와요' },
+  M_RIVAL_IN: { year: '올해 비겁이 들어와요. 돈이 사람 쪽으로 움직여요', month: '이달에 비겁이 들어와요. 돈이 사람 쪽으로 움직여요' },
   M_WEALTH_CLASH: { year: '올해 원국의 재성 자리에 충이 걸려요', month: '이달 원국의 재성 자리에 충이 걸려요' },
-  M_OUTPUT_IN: { year: '올해 식상({star})이 들어와요. 버는 활동이 늘어요', month: '이달에 식상({star})이 들어와요. 버는 활동이 늘어요' },
-  W_OFFICER_IN: { year: '올해 관성({star})이 들어와요. 일과 책임이 커져요', month: '이달에 관성({star})이 들어와요. 일과 책임이 커져요' },
-  W_RESOURCE_IN: { year: '올해 인성({star})이 들어와요. 문서·공부·자격이 움직여요', month: '이달에 인성({star})이 들어와요. 문서·공부·자격이 움직여요' },
+  M_OUTPUT_IN: { year: '올해 식상이 들어와요. 버는 활동이 늘어요', month: '이달에 식상이 들어와요. 버는 활동이 늘어요' },
+  W_OFFICER_IN: { year: '올해 관성이 들어와요. 일과 책임이 커져요', month: '이달에 관성이 들어와요. 일과 책임이 커져요' },
+  W_RESOURCE_IN: { year: '올해 인성이 들어와요. 문서·공부·자격이 움직여요', month: '이달에 인성이 들어와요. 문서·공부·자격이 움직여요' },
   W_PALACE: { year: '올해 직업 자리(월지)에 {rel}이 걸려요', month: '이달 직업 자리(월지)에 {rel}이 걸려요' },
-  P_RIVAL_IN: { year: '올해 비겁({star})이 들어와요. 사람이 늘고 부딪혀요', month: '이달에 비겁({star})이 들어와요. 사람이 늘고 부딪혀요' },
+  P_RIVAL_IN: { year: '올해 비겁이 들어와요. 사람이 늘고 부딪혀요', month: '이달에 비겁이 들어와요. 사람이 늘고 부딪혀요' },
   P_PALACE: { year: '올해 부모·형제 자리에 {rel}이 걸려요', month: '이달 부모·형제 자리에 {rel}이 걸려요' },
   P_WONJIN: { year: '올해 지지가 일지와 원진이에요. 미묘하게 어긋나요', month: '이달 지지가 일지와 원진이에요. 미묘하게 어긋나요' },
   F_DAEUN_CHANGE: { daeun: '대운이 바뀌는 시점이에요. 10년 단위의 큰 흐름이 갈려요' },
@@ -3243,6 +3253,29 @@ const GLOSSARY = {
   재다신약: '돈이 나보다 힘이 센 구조를 부르는 말이에요. 능력 문제가 아니라 순서 문제예요.',
   관인상생: '관성이 인성을 키우고 인성이 나를 받쳐주는 구조예요. 조직 안에서 자라기 좋은 흐름이에요.',
   식상생재: '식상이 재성을 만드는 구조예요. 내가 움직여서 돈을 만드는 흐름이에요.',
+};
+
+// 핵심 용어 배지(한자·쉬운 의미) — 십성 10개 + 그룹 5개 + 신강·신약 + 일간, 2026-09-17 확정.
+// group: 개별 십성이 속한 그룹(문장을 조립할 때만 참고, 배지 표시 자체는 각자 독립).
+const TERM_BADGE = {
+  비겁: { hanja: '比劫', short: '나와 같은 힘, 경쟁과 나눔' },
+  비견: { hanja: '比肩', short: '나와 비슷한 힘', group: '비겁' },
+  겁재: { hanja: '劫財', short: '경쟁하고 나누는 힘', group: '비겁' },
+  식상: { hanja: '食傷', short: '내가 밖으로 내는 힘, 표현과 활동' },
+  식신: { hanja: '食神', short: '꾸준히 만드는 힘', group: '식상' },
+  상관: { hanja: '傷官', short: '말재주·벌이는 힘', group: '식상' },
+  재성: { hanja: '財星', short: '돈과 현실, 내가 다루는 것' },
+  편재: { hanja: '偏財', short: '기회로 오는 큰돈', group: '재성' },
+  정재: { hanja: '正財', short: '정해진 돈', group: '재성' },
+  관성: { hanja: '官星', short: '일과 책임, 나를 다루는 힘' },
+  편관: { hanja: '偏官', short: '책임과 압박', group: '관성' },
+  정관: { hanja: '正官', short: '자리와 규칙', group: '관성' },
+  인성: { hanja: '印星', short: '문서·공부·자격, 나를 받쳐주는 힘' },
+  편인: { hanja: '偏印', short: '남다른 배움·직감', group: '인성' },
+  정인: { hanja: '正印', short: '안정적으로 채워주는 힘', group: '인성' },
+  신강: { hanja: '身强', short: '내 기운이 강한 상태' },
+  신약: { hanja: '身弱', short: '주변 영향을 더 받기 쉬운 상태' },
+  일간: { hanja: '日干', short: '나를 나타내는 글자' },
 };
 
 // 안내자 대사 — 이름·외형은 미정. 역할은 설명과 연결.
@@ -3473,7 +3506,8 @@ function lintText(text) {
   return BANNED.filter(r => r.test(text)).map(r => r.source);
 }
 function termsIn(text) {
-  return Object.keys(GLOSSARY).filter(k => text.includes(k)).sort((a, b) => b.length - a.length);
+  const keys = Object.keys(GLOSSARY).concat(Object.keys(TERM_BADGE).filter(k => !(k in GLOSSARY)));
+  return keys.filter(k => text.includes(k)).sort((a, b) => b.length - a.length);
 }
 
 // ---- 신호 문구 ---------------------------------------------------------------
@@ -3585,8 +3619,8 @@ function timingSummary(facts, rows, mode) {
 function natalEvidence(facts, group) {
   const s = facts.stars[group];
   if (!s || s.n === 0) return `당신 원국에는 ${iga(group)} 없어요. 그래서 세운으로 들어올 때 더 크게 느껴져요.`;
-  const pairs = s.pos.map((p, i) => `${p} ${s.names[i]}`).slice(0, 3);
-  return `당신 사주 ${iga(joinKo(pairs))} ${group}이에요.`;
+  const pairs = s.pos.map((p, i) => `${p}에 ${s.names[i]}`).slice(0, 3);
+  return `당신 사주는 ${iga(pairs.join(', '))} 있어요. ${iga(group)} 강하게 자리 잡은 구조예요.`;
 }
 function seunEvidence(facts, year) {
   const e = facts.seun[year];
@@ -6677,8 +6711,16 @@ const SERVER = (function () {
       return '<button class="' + (active === x[0] ? 'on' : '') + '" ' + attr + '>' + x[2] + (active === x[0] ? SPS('') : '') + x[1] + '</button>'; }).join('') + '</nav>';
   }
   function termify(text) {
+    // 본문에서 찾은 명리 용어를 "한자(한글)"만 짧게 표시해 조사가 항상 안전하게 붙게 한다(무엇을
+    // 뜻하는지는 탭하면 뜨는 pop에서 "한자(한글) · 쉬운 의미"로 전부 보여준다 — showTerm 참고).
     let html = esc(text); const done = new Set();
-    for (const k of termsIn(text)) { if (done.has(k) || [...done].some(d => d.includes(k))) continue; html = html.replace(k, '<button class="term" data-term="' + k + '">' + k + '</button>'); done.add(k); }
+    for (const k of termsIn(text)) {
+      if (done.has(k) || [...done].some(d => d.includes(k))) continue;
+      const t = TERM_BADGE[k];
+      const label = t ? '<b class="term-hj">' + esc(t.hanja) + '</b>(' + esc(k) + ')' : '<b class="term-hj">' + esc(k) + '</b>';
+      html = html.replace(k, '<button class="term" data-term="' + esc(k) + '">' + label + '</button>');
+      done.add(k);
+    }
     return html;
   }
   const paras = (arr, cls) => arr.map(t => '<p class="' + (cls || 'body') + '">' + termify(t) + '</p>').join('');
@@ -6892,7 +6934,7 @@ const SERVER = (function () {
     const nextYear = un && a.timing && a.timing.monthsNext ? '<div class="eyebrow" style="margin-top:14px">' + f.nextYear + '년 월별</div>' + monthsGridReal(a.timing.monthsNext, { unlocked: true }) : '';
     const daeun = un && a.daeun ? '<div class="eyebrow" style="margin-top:14px">10년 흐름</div>' + daeunList(a.daeun) : '';
     const personal = typeBPersonal(q.id, f);
-    const personalHtml = personal ? '<div class="eyebrow">' + esc(personal.title) + '</div><p class="body">' + esc(personal.body) + '</p>' : '';
+    const personalHtml = personal ? '<div class="eyebrow">' + esc(personal.title) + '</div><p class="body">' + termify(personal.body) + '</p>' : '';
     return topbar(true) + strip() + '<p class="small" style="margin-top:4px">' + AREAS[q.area].label + ' › ' + esc(q.t) + '</p>' +
       '<div class="card">' + personalHtml + '<p class="concl">' + termify(a.conclusion) + '</p>' + (a.body[0] ? '<p class="body">' + termify(a.body[0]) + '</p>' : '') + scenesHtml + (rows.length ? monthsGridReal(rows, { unlocked: un, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) : '') +
       '<p class="small">' + (un ? '노란 점이 가장 강한 달이에요.' : '달 숫자는 보여요. 잠긴 구간의 세기와 가장 강한 달은 열면 보여요.') + '</p>' + openHtml + restHtml +
@@ -6911,7 +6953,7 @@ const SERVER = (function () {
       if (!p) return '<div class="pillar empty"><div class="lab">' + lab + '</div><div class="hz">?<br>?</div><div class="ss">시간 모름</div></div>';
       const s = sk ? f.cellStars[sk] : null, b = f.cellStars[bk];
       const on = isDay || (s && hi.has(s.group)) || (b && hi.has(b.group));
-      return '<div class="pillar' + (on ? ' hi' : '') + '"><div class="lab">' + lab + '</div><div class="hz">' + STEMS[p.stem].h + '<br>' + BRANCHES[p.branch].h + '</div><div class="ss">' + (s ? '<button class="term" data-term="' + s.group + '">' + s.name + '</button>' : '나') + '<br>' + (b ? '<button class="term" data-term="' + b.group + '">' + b.name + '</button>' : '') + '</div></div>';
+      return '<div class="pillar' + (on ? ' hi' : '') + '"><div class="lab">' + lab + '</div><div class="hz">' + STEMS[p.stem].h + '<br>' + BRANCHES[p.branch].h + '</div><div class="ss">' + (s ? termify(s.name) : '나') + '<br>' + (b ? termify(b.name) : '') + '</div></div>';
     };
     return '<div class="pillars">' + cell('시', P.hour, '시간', '시지') + cell('일 · 일주', P.day, null, '일지', true) + cell('월', P.month, '월간', '월지') + cell('년', P.year, '년간', '년지') + '</div>';
   }
@@ -7315,7 +7357,14 @@ const SERVER = (function () {
   // ---------- 토스트·용어 ----------
   function toast(t) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 1800); }
   let popTimer = null;
-  function showTerm(k) { let pop = $('#pop'); if (!pop) { pop = document.createElement('div'); pop.id = 'pop'; pop.className = 'pop'; pop.addEventListener('click', () => { pop.hidden = true; }); document.body.appendChild(pop); } pop.innerHTML = '<b>' + esc(k) + '</b>' + esc(GLOSSARY[k] || ''); pop.hidden = false; clearTimeout(popTimer); popTimer = setTimeout(() => { pop.hidden = true; }, 7000); }
+  function showTerm(k) {
+    let pop = $('#pop'); if (!pop) { pop = document.createElement('div'); pop.id = 'pop'; pop.className = 'pop'; pop.addEventListener('click', () => { pop.hidden = true; }); document.body.appendChild(pop); }
+    const t = TERM_BADGE[k];
+    const label = t ? t.hanja + '(' + k + ')' : k;
+    const desc = t ? t.short : (GLOSSARY[k] || '');
+    pop.innerHTML = '<b>' + esc(label) + '</b>' + esc(desc);
+    pop.hidden = false; clearTimeout(popTimer); popTimer = setTimeout(() => { pop.hidden = true; }, 7000);
+  }
 
   /* ==========================================================================
  * 타로 스프레드 3/5/7장 목업 — UX 확인용. 숨은 라우트 #/tarot-mock/...
