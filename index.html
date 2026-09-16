@@ -1043,7 +1043,7 @@ body{overflow-x:hidden}
 /* 타로 화면 */
 .tk-wrap{max-width:680px;margin:0 auto}
 .tk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
-.tk-card{position:relative;display:block;width:100%;aspect-ratio:540/926;box-sizing:border-box;border:1px solid var(--ln);border-radius:8px;padding:0;background-color:var(--pinkl2);background-image:url(img/tarot/back.png);background-repeat:no-repeat;background-position:0 0;background-size:114.7% 103%}
+.tk-card{position:relative;display:block;width:100%;aspect-ratio:540/926;box-sizing:border-box;border:2px solid transparent;border-radius:8px;padding:0;background-color:#1B2F6E;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='72' fill='none' stroke='%23D9B24C' stroke-width='1'/%3E%3Cpath d='M131.5 102.8a31.5 31.5 0 1 1-34.3-34.3 24.5 24.5 0 0 0 34.3 34.3z' fill='%23D9B24C'/%3E%3Cpath d='M40 44l3 8 8 3-8 3-3 8-3-8-8-3 8-3z' fill='%23D9B24C'/%3E%3Cpath d='M160 154l2.2 6 6 2.2-6 2.2-2.2 6-2.2-6-6-2.2 6-2.2z' fill='%23D9B24C'/%3E%3Cpath d='M154 42l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z' fill='%23D9B24C'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:54%}
 .tk-card.picked{border-color:#C2506B}
 .tk-label{position:absolute;left:3px;right:3px;top:3px;background:#C2506B;color:#fff;font-size:9px;font-weight:700;line-height:1.25;border-radius:5px;padding:2px 3px;text-align:center;word-break:keep-all}
 .tk-row{display:flex;gap:14px;justify-content:center;margin-top:16px;flex-wrap:wrap}
@@ -1053,7 +1053,7 @@ body{overflow-x:hidden}
 .tk-inner{position:relative;width:100%;height:216px;transition:transform .5s;transform-style:preserve-3d}
 .tk-inner.up{transform:rotateY(180deg)}
 .tk-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden}
-.tk-face.back{background-color:var(--pinkl2);background-image:url(img/tarot/back.png);background-repeat:no-repeat;background-position:0 0;background-size:144.5% 103%;border:1px solid var(--ln)}
+.tk-face.back{background-color:#1B2F6E;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='72' fill='none' stroke='%23D9B24C' stroke-width='1'/%3E%3Cpath d='M131.5 102.8a31.5 31.5 0 1 1-34.3-34.3 24.5 24.5 0 0 0 34.3 34.3z' fill='%23D9B24C'/%3E%3Cpath d='M40 44l3 8 8 3-8 3-3 8-3-8-8-3 8-3z' fill='%23D9B24C'/%3E%3Cpath d='M160 154l2.2 6 6 2.2-6 2.2-2.2 6-2.2-6-6-2.2 6-2.2z' fill='%23D9B24C'/%3E%3Cpath d='M154 42l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z' fill='%23D9B24C'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:54%}
 .tk-face.front{transform:rotateY(180deg);background:#fff;border:1px solid var(--ln);display:flex;flex-direction:column}
 .tk-face.front img{width:100%;aspect-ratio:540/926;object-fit:cover;display:block}
 .tk-face.front .tk-name{font-size:12px;font-weight:700;color:var(--navy);margin:4px 4px 0;line-height:1.25;word-break:keep-all}
@@ -1073,7 +1073,6 @@ body{overflow-x:hidden}
 .tk-mock .e-link{font-size:11.5px}
 .tk-row.n7 .tk-slot,.tk-row.n7 .tk-flip{width:76px}
 .tk-row.n7 .tk-inner{height:170px}
-.tk-row.n7 .tk-face.back{background-size:149.5% 103%}
 .tk-row+.tk-row{margin-top:10px}
 .tk-read-cards.n5{gap:8px}.tk-read-cards.n5 .c,.tk-read-cards.n5 img{width:60px}
 .tk-read-cards.center{justify-content:center}
@@ -1099,16 +1098,16 @@ body{overflow-x:hidden}
 .e-tdy-lv.l1 i{background:#4DA3FF}
 .e-tdy-lv.l2 i{background:#1F4FD8}
 .e-tdy-line{font-size:16px;line-height:1.55;color:var(--ink);margin-top:10px;word-break:keep-all}
-.e-tdy .e-link{display:inline-block;margin-top:12px}
-.e-tdy-strip{display:flex;gap:6px;margin-top:22px;padding-top:14px;border-top:1px solid var(--ln)}
-.e-tdy-strip .c{flex:1;text-align:center;padding:7px 2px;border-radius:8px;background:#fff;border:1px solid var(--ln)}
-.e-tdy-strip .c i{display:block;width:7px;height:7px;border-radius:50%;margin:0 auto 4px;background:#DCE4F2}
+.e-tdy-cat{display:block;width:104px;height:auto;margin:14px auto 0}
+.e-tdy .e-link{display:inline-block;margin-top:14px}
+.e-tdy-strip{display:flex;margin-top:20px;padding-top:12px;border-top:1px solid var(--ln)}
+.e-tdy-strip .c{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:2px 0;font-size:11px;color:var(--mute)}
+.e-tdy-strip .c+.c{border-left:1px solid var(--ln)}
+.e-tdy-strip .c i{width:5px;height:5px;border-radius:50%;background:#DCE4F2;flex:none}
 .e-tdy-strip .c.l1 i{background:#4DA3FF}
 .e-tdy-strip .c.l2 i{background:#1F4FD8}
-.e-tdy-strip .c b{display:block;font-size:10.5px;font-weight:600;color:var(--navy)}
-.e-tdy-strip .c.now{border-color:var(--cob);box-shadow:0 0 0 2px rgba(31,79,216,.12)}
-.e-tdy-strip .c.now b{color:var(--cob);font-weight:700}
-.e-tdy-cap{font-size:11px;color:var(--mute);margin-top:8px}
+.e-tdy-strip .c.now{color:var(--cob);font-weight:700}
+.e-tdy-cap{font-size:11px;color:var(--mute);margin-top:10px}
 
 </style>
 </head>
@@ -7518,6 +7517,7 @@ const SERVER = (function () {
  * 순서: Hero -> 오늘의 운세(즉시 표시) -> 사주/타로 -> 이런 질문을 많이 해요 -> 네 가지 결 -> 리포트 -> Footer.
  * 오늘의 운세는 실제 홈과 같은 데이터(dayInfo, LV 세 단계)만 쓰되, 오늘 상태를 크게/5일 흐름을
  * 작은 보조 정보로 배치하는 목업 전용 레이아웃(todayHero)을 쓴다. 새 점수·새 판정 로직 없음.
+ * 배경은 홈과 같은 아이보리(밴드 없음), 고양이 삽화는 상태 표현이 아닌 브랜드 캐릭터 장식용.
  * build.mjs가 이 파일을 app.js와 같은 클로저 안에 주입한다(app.js의 목업 마커 자리, mock-tarot.js 다음).
  * ========================================================================== */
 (function () {
@@ -7539,6 +7539,7 @@ const SERVER = (function () {
       '<div class="e-tdy-date">' + f.today.month + '월 ' + f.today.day + '일 · ' + t.gz.hanja + ' ' + t.stemName + '·' + t.branchName + '</div>' +
       '<div class="e-tdy-lv l' + t.level + '"><i></i>' + esc(LV[t.level]) + '</div>' +
       '<p class="e-tdy-line">' + esc(t.line) + '</p>' +
+      '<img class="e-tdy-cat" src="img/mascot-cat.png" alt="">' +
       '<button class="e-link" data-go="now">오늘의 운세 자세히 보기 →</button>' +
       '<div class="e-tdy-strip">' + days.map((x, i) => '<span class="c l' + x.level + (x.k === 0 ? ' now' : '') + '"><i></i><b>' + TDY_LBL[i] + '</b></span>').join('') + '</div>' +
       '<p class="e-tdy-cap">점수가 아니라 움직임의 크기예요. 잔잔함·보통·강함 세 단계.</p>' +
@@ -7557,7 +7558,7 @@ const SERVER = (function () {
       '<div class="e-mockbar">목업 · design-mock · 디자인 확인용, 실제 데이터·결제 없음</div>' +
       '<section class="e-hero"><img src="img/mock-hero.png" alt=""><div class="txt"><div class="e-kicker">' + esc(CFG.tagline || '') + '</div><h1 class="e-h1">오늘,<br>무엇을<br>물어볼까요?</h1><p class="sub">태어난 순간의 흐름 사주, 지금 마음을 비추는 타로.</p></div></section>' +
 
-      '<div class="e-band blue" style="margin-top:18px">' + todaySection + '</div>' +
+      '<div style="margin-top:18px">' + todaySection + '</div>' +
 
       '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기</span><span class="go">→</span></button>' +
       '<button class="e-svc tarot" data-go="tarot"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기</span><span class="go">→</span></button></div>' +
