@@ -1127,18 +1127,17 @@ body{overflow-x:hidden}
 .e-arow.flow .on{background:var(--flow)}
 
 /* 사주/타로 카드 이미지(design-mock 전용, has-img) — 기존 .e-svc는 실제 홈에서도 쓰이므로
-   무수정. 텍스트(제목/설명/CTA)는 원래 폭 그대로 두고, 이미지는 카드 오른쪽 아래에
-   실제 텍스트 줄(설명 1줄·cta-row 실제 폭)의 진짜 렌더 폭을 피해 크게 배치한다. object-fit:cover로
-   확대·크롭해 카드 오른쪽 바깥으로 일부가 걸치는 editorial 톤을 낸다. 화살표(go)는 더 이상
-   오른쪽 정렬이 아니라 CTA 라벨 바로 옆(왼쪽)에 붙여 이미지와 겹치지 않게 한다. */
-.e-svc.has-img{overflow:hidden}
-.e-svc.has-img .svc-txt{display:flex;flex-direction:column;gap:3px;flex:1}
-.e-svc.has-img .cta{word-break:keep-all}
-.e-svc.has-img .cta-row{display:flex;align-items:center;gap:8px;margin-top:auto;position:relative;z-index:2}
-.e-svc.has-img .go{margin-top:0}
-.e-svc.has-img .svc-img{position:absolute;z-index:1;left:92px;top:94px;width:130px;height:78px;object-fit:cover;border-radius:2px;pointer-events:none}
-.e-svc.saju.has-img .svc-img{object-position:64% 40%}
-.e-svc.tarot.has-img .svc-img{object-position:46% 44%}
+   무수정. 카드 내부를 좌(텍스트 58%)·우(이미지 42%) 두 영역으로 구조적으로 나눠서, 위치
+   계산으로 겹침을 피하던 이전 방식 대신 flex 컬럼 자체가 겹침을 원천 차단하게 한다.
+   화살표 버튼(원형)은 제거하고 CTA 한 줄 텍스트 링크로 통합("~하기 →"). */
+.e-svc.has-img{overflow:hidden;display:flex;flex-direction:row;align-items:stretch;gap:10px}
+.e-svc.has-img .svc-txt{flex:0 0 58%;max-width:58%;min-width:0;display:flex;flex-direction:column;gap:3px}
+.e-svc.has-img .cta{word-break:keep-all;margin-top:auto;font-size:12.5px;font-weight:700;color:var(--cob)}
+.e-svc.tarot.has-img .cta{color:#C2506B}
+.e-svc.has-img .svc-imgcol{flex:0 0 42%;max-width:42%;position:relative;border-radius:6px;overflow:hidden;margin:-16px -14px -14px 0}
+.e-svc.has-img .svc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.e-svc.saju.has-img .svc-img{object-position:66% 38%}
+.e-svc.tarot.has-img .svc-img{object-position:40% 42%}
 .e-tdy-title{margin-top:4px}
 
 /* Hero 브랜드 타이틀 강조(design-mock 전용, mock-kicker) — 실제 홈의 .e-kicker는 무수정 */
@@ -7746,8 +7745,8 @@ const SERVER = (function () {
 
       '<div style="margin-top:18px">' + todaySection + '</div>' +
 
-      '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju has-img" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="svc-txt"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta-row"><span class="cta">사주 시작하기</span><span class="go">→</span></span></span><img class="svc-img" src="img/service-saju.png" alt=""></button>' +
-      '<button class="e-svc tarot has-img" data-go="tarot"><span class="svc-txt"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta-row"><span class="cta">타로 시작하기</span><span class="go">→</span></span></span><img class="svc-img" src="img/service-tarot.png" alt=""></button></div>' +
+      '<div class="e-duo" style="margin-top:18px"><button class="e-svc saju has-img" data-go="' + (state.facts ? 'mine' : 'input') + '"><span class="svc-txt"><span class="k">사주</span><b>사주</b><p>내 사주를 보고, 궁금한 것을 물어보세요</p><span class="cta">사주 시작하기 →</span></span><span class="svc-imgcol"><img class="svc-img" src="img/service-saju.png" alt=""></span></button>' +
+      '<button class="e-svc tarot has-img" data-go="tarot"><span class="svc-txt"><span class="k">타로</span><b>타로</b><p>지금 궁금한 일을 카드에 물어보세요</p><span class="cta">타로 시작하기 →</span></span><span class="svc-imgcol"><img class="svc-img" src="img/service-tarot.png" alt=""></span></button></div>' +
       '<p class="e-tiny">' + (state.facts ? esc(nickname()) + '님, 지난번 이어서 볼까요? 아래에서 바로 질문할 수 있어요.' : '가입 없이 30초. 생년월일만 넣으면 돼요.') + '</p>' +
 
       '<div class="e-band white" style="margin-top:18px"><section id="sec-q" class="e-sec" style="border-top:0;padding-top:0;margin-top:0"><div class="e-sech"><h2 class="e-h2">이런 질문을 많이 해요</h2><button class="e-link" data-go="ask/' + (state.facts ? state.facts.movement.key : 'money') + '">질문 전체보기 →</button></div><p class="e-cap">사주를 기준으로 답을 보는 질문이에요. 기본 답은 무료로 볼 수 있어요.</p><div class="e-qs">' + qs.map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div></section></div>' +
