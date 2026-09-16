@@ -6953,13 +6953,13 @@ const SERVER = (function () {
       '<div class="e-band pink" style="margin-top:6px"><section class="e-sec"><div class="e-kicker" style="color:#C2506B">타로</div><h1 class="e-h2" style="font-size:24px;margin-top:6px">지금 궁금한 일을 카드에 물어보세요</h1><p class="e-cap">한 가지 일을 한 문장으로 적어 주세요. 예: 이 연락, 기다려도 될까요?</p>' +
       '<form id="f-tarot" style="margin-top:12px"><input type="text" id="tarot-q" value="' + esc(q) + '" placeholder="궁금한 일을 적어 주세요" maxlength="80" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--ln);border-radius:10px;font:inherit;background:#fff">' +
       '<div class="chips" id="tarot-area-chips" style="margin-top:10px">' + tarotChips(area) + '</div>' +
-      '<button class="e-btn" type="submit" style="margin-top:10px;width:100%">카드 섞기</button></form></section></div>' +
+      '<button class="e-btn" type="submit" id="f-tarot-btn" style="margin-top:10px;width:100%"' + (q.trim() ? '' : ' disabled') + '>카드 섞기</button></form></section></div>' +
       '<section class="e-sec"><h2 class="e-h2" style="font-size:16px">타로는 이렇게 진행돼요</h2><div class="e-qs">' + ['질문', '셔플', '카드 오픈', '해석', '새 질문'].map((s, i) => '<div class="e-q"><span>' + (i + 1) + ' ' + s + '</span></div>').join('') + '</div></section>' +
       eFoot() + bottomNav('tarot') + '</div>';
   }
   function tarotPickView() {
     const t = getTarot();
-    if (!t || !Array.isArray(t.deck) || t.deck.length < 20) { navigate('#/tarot'); return tarotEntryView(); }
+    if (!t || !Array.isArray(t.deck) || t.deck.length < 20 || !t.question || !t.question.trim()) { navigate('#/tarot'); return tarotEntryView(); }
     const picked = t.picked || [];
     const grid = t.deck.slice(0, 20).map((id, i) => { const pos = picked.indexOf(i); return '<button type="button" class="tk-card' + (pos !== -1 ? ' picked' : '') + '" data-act="tarot-pick" data-idx="' + i + '"><b class="tk-label"' + (pos !== -1 ? '' : ' hidden') + '>' + (pos !== -1 ? (pos + 1) + ' ' + TAROT_POS[pos] : '') + '</b></button>'; }).join('');
     return '<div class="ed2">' + eTop(true) +
@@ -7769,16 +7769,17 @@ const SERVER = (function () {
     if (e.target.id === 'f-input') { e.preventDefault(); submitInput(e.target); }
     if (e.target.id === 'chat-form') { e.preventDefault(); const i = $('#chat-in'); const v = i.value; i.value = ''; sendChat(v); }
     if (e.target.id === 'f-email') { e.preventDefault(); const em = $('#i-email').value.trim(); if (!em) return; SERVER.signInEmail(em).then(() => { const m = $('#login-msg'); if (m) m.textContent = '메일을 보냈어요. 메일의 링크를 누르면 이 화면으로 돌아와요.'; }).catch(err => { console.warn(err); const m = $('#login-msg'); if (m) m.textContent = '메일을 보내지 못했어요. 주소를 확인해 주세요.'; }); }
-    if (e.target.id === 'f-tarot') { e.preventDefault(); const q = $('#tarot-q').value.trim(); const area = tarotAreaLock || tarotDetectArea(q); setTarot({ question: q, area, deck: tarotDraw(78), picked: [], cards: [], flipped: [false, false, false] }); navigate('#/tarot/pick'); }
+    if (e.target.id === 'f-tarot') { e.preventDefault(); const q = $('#tarot-q').value.trim(); if (!q) { toast('먼저 궁금한 일을 적어 주세요'); const inp = $('#tarot-q'); if (inp) inp.focus(); return; } const area = tarotAreaLock || tarotDetectArea(q); setTarot({ question: q, area, deck: tarotDraw(78), picked: [], cards: [], flipped: [false, false, false] }); navigate('#/tarot/pick'); }
   });
   document.addEventListener('input', e => {
     if (e.target.id !== 'tarot-q') return;
+    const btn = $('#f-tarot-btn'); if (btn) btn.disabled = !e.target.value.trim();
     if (tarotAreaLock) return;
     const area = tarotDetectArea(e.target.value);
     document.querySelectorAll('#tarot-area-chips .chip').forEach(b => b.classList.toggle('on', b.dataset.area === area));
   });
   document.addEventListener('change', e => { if (e.target.id === 'ack-chk') { const b = $('[data-act="pay-ack"]'); if (b) b.disabled = !e.target.checked; } });
-  document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ask-in') { e.preventDefault(); const b = $('[data-act="ask-send"]'); if (b) askFromInput(b.dataset.q); } if (e.key === 'Enter' && e.target.id === 'tarot-q' && !e.target.value.trim()) { e.preventDefault(); toast('먼저 궁금한 일을 적어 주세요'); } });
   // 인쇄(PDF)할 때는 근거 보기를 펼치고, 끝나면 원래대로
   function setDetails(open) { document.querySelectorAll('.rd-body details').forEach(d => { if (open) { d.dataset.po = d.open ? '1' : ''; d.open = true; } else if (d.dataset.po !== undefined) { d.open = d.dataset.po === '1'; delete d.dataset.po; } }); }
   window.addEventListener('beforeprint', () => setDetails(true)); window.addEventListener('afterprint', () => setDetails(false));
