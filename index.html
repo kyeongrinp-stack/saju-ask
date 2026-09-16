@@ -7855,6 +7855,7 @@ const SERVER = (function () {
   const NEED_PROFILE = ['me', 'chart', 'now', 'ask', 'q', 'intro', 'buy', 'read', 'mine', 'calc'];
   function navigate(hash) { if (location.hash === hash) route(); else location.hash = hash; }
   function route() {
+    state.modal = null; // route 변경 시 열려 있던 모달(결제 준비 중 등)이 새 화면 위에 남아 있지 않도록 정리
     const h = location.hash.replace(/^#\/?/, '').split('?')[0];
     const [path, arg, arg2] = h.split('/');
     state.screen = path || 'home'; state.params = { id: arg, area: arg, report: arg, from: arg2, pick: arg2 };
