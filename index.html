@@ -1093,21 +1093,24 @@ body{overflow-x:hidden}
 
 /* 오늘의 운세 즉시표시(design-mock 전용, todayHero) — 오늘 상태를 크게, 5일 흐름은 아래 보조 스트립으로 */
 .e-tdy-date{font-size:12.5px;font-weight:700;color:var(--ink2)}
-.e-tdy-lv{display:flex;align-items:center;gap:9px;font-family:var(--hd);font-weight:700;font-size:30px;line-height:1.2;color:var(--navy);letter-spacing:-.02em;margin-top:8px}
+.e-tdy-lv{display:flex;align-items:center;gap:9px;font-family:var(--hd);font-weight:700;font-size:30px;line-height:1.2;color:var(--navy);letter-spacing:-.02em;margin-top:6px}
 .e-tdy-lv i{width:14px;height:14px;border-radius:50%;flex:none;background:#DCE4F2}
 .e-tdy-lv.l1 i{background:#4DA3FF}
 .e-tdy-lv.l2 i{background:#1F4FD8}
-.e-tdy-line{font-size:16px;line-height:1.55;color:var(--ink);margin-top:10px;word-break:keep-all}
-.e-tdy-cat{display:block;width:104px;height:auto;margin:14px auto 0}
-.e-tdy .e-link{display:inline-block;margin-top:14px}
-.e-tdy-strip{display:flex;margin-top:20px;padding-top:12px;border-top:1px solid var(--ln)}
-.e-tdy-strip .c{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:2px 0;font-size:11px;color:var(--mute)}
-.e-tdy-strip .c+.c{border-left:1px solid var(--ln)}
-.e-tdy-strip .c i{width:5px;height:5px;border-radius:50%;background:#DCE4F2;flex:none}
-.e-tdy-strip .c.l1 i{background:#4DA3FF}
-.e-tdy-strip .c.l2 i{background:#1F4FD8}
-.e-tdy-strip .c.now{color:var(--cob);font-weight:700}
-.e-tdy-cap{font-size:11px;color:var(--mute);margin-top:10px}
+.e-tdy-line{font-size:15px;line-height:1.5;color:var(--ink);margin-top:8px;word-break:keep-all}
+.e-tdy .e-link{display:inline-block;margin-top:12px}
+.e-area{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--ln)}
+.e-arow-top{display:flex;align-items:center;gap:8px}
+.e-arow-name{display:flex;align-items:center;width:48px;flex:none;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+.e-arow-name .dot{margin-right:5px}
+.e-arow-bar{flex:1;display:flex;gap:3px}
+.e-arow-bar i{flex:1;height:6px;border-radius:3px;background:var(--ln)}
+.e-arow-txt{font-size:10.5px;line-height:1.35;color:var(--ink2);margin:1px 0 0 56px;word-break:keep-all}
+.e-arow.love .on{background:var(--love)}
+.e-arow.money .on{background:var(--money)}
+.e-arow.work .on{background:var(--work)}
+.e-arow.people .on{background:var(--people)}
+.e-arow.flow .on{background:var(--flow)}
 
 </style>
 </head>
@@ -7515,9 +7518,10 @@ const SERVER = (function () {
 /* ==========================================================================
  * 홈 디자인 목업 (#/design-mock) — UX/비주얼 확인용. 실제 홈(V.home)은 건드리지 않는다.
  * 순서: Hero -> 오늘의 운세(즉시 표시) -> 사주/타로 -> 이런 질문을 많이 해요 -> 네 가지 결 -> 리포트 -> Footer.
- * 오늘의 운세는 실제 홈과 같은 데이터(dayInfo, LV 세 단계)만 쓰되, 오늘 상태를 크게/5일 흐름을
- * 작은 보조 정보로 배치하는 목업 전용 레이아웃(todayHero)을 쓴다. 새 점수·새 판정 로직 없음.
- * 배경은 홈과 같은 아이보리(밴드 없음), 고양이 삽화는 상태 표현이 아닌 브랜드 캐릭터 장식용.
+ * 오늘의 운세: 날짜/오늘 기운/한 줄은 실제 홈과 같은 데이터(dayInfo, LV 세 단계).
+ * 5개 분야 그래프는 실제 운세 엔진의 computeMovement() 결과(f.movement.areas[k].level,
+ * 0~2 세 단계)를 그대로 시각화한다 — 새 점수·새 판정 로직 없음, 고양이/5일 스트립 없음.
+ * 배경은 홈과 같은 아이보리(밴드 없음).
  * build.mjs가 이 파일을 app.js와 같은 클로저 안에 주입한다(app.js의 목업 마커 자리, mock-tarot.js 다음).
  * ========================================================================== */
 (function () {
@@ -7527,22 +7531,28 @@ const SERVER = (function () {
     { id: 'work', img: 'mock-cat-work.png', label: '일과 진로', desc: '지금 방향이 맞는지 궁금할 때', go: 'ask/work' },
     { id: 'people', img: 'mock-cat-personality.png', label: '나의 성향', desc: '타고난 결부터 다시 보기', go: 'me' },
   ];
-  const TDY_LBL = ['그제', '어제', '오늘', '내일', '모레'];
 
-  // 오늘 상태를 크게, 5일 흐름은 아래쪽 보조 스트립으로 — 실제 홈의 todayBlock()과 같은
-  // dayInfo()/LV 데이터를 그대로 쓰되 정보 위계만 다시 짠 목업 전용 레이아웃. todayBlock()은 무수정.
+  // 실제 엔진이 이미 계산한 5개 분야 흐름 단계(0~2)를 3칸 막대로 시각화.
+  // areaReason()도 실제 홈(V.now)의 "다섯 영역" 목록이 쓰는 것과 같은 실데이터 문구.
+  function areaBars() {
+    const f = state.facts;
+    return '<div class="e-area">' + f.movement.order.map(k => {
+      const lv = f.movement.areas[k].level;
+      const segs = [0, 1, 2].map(i => '<i class="' + (i <= lv ? 'on' : '') + '"></i>').join('');
+      return '<div class="e-arow ' + k + '"><div class="e-arow-top"><span class="e-arow-name"><i class="dot ' + k + '"></i>' + esc(AREAS[k].label) + '</span><span class="e-arow-bar">' + segs + '</span></div><p class="e-arow-txt">' + esc(areaReason(f, k)) + '</p></div>';
+    }).join('') + '</div>';
+  }
+
+  // 오늘 기운을 크게, 5개 분야 그래프는 그 아래 압축된 보조 정보로 — 실제 홈의 todayBlock()과
+  // 같은 dayInfo()/LV 데이터를 그대로 쓰되 정보 위계만 다시 짠 목업 전용 레이아웃. todayBlock()은 무수정.
   function todayHero() {
-    const f = state.facts; const base = new Date(f.today.year, f.today.month - 1, f.today.day);
-    const days = [-2, -1, 0, 1, 2].map(k => { const dt = new Date(base); dt.setDate(base.getDate() + k); const d = { year: dt.getFullYear(), month: dt.getMonth() + 1, day: dt.getDate() }; return Object.assign({ k, d }, dayInfo(f, d)); });
-    const t = days[2];
+    const f = state.facts; const t = Object.assign({ k: 0, d: { year: f.today.year, month: f.today.month, day: f.today.day } }, dayInfo(f, { year: f.today.year, month: f.today.month, day: f.today.day }));
     return '<section class="e-sec e-tdy" id="sec-today" style="border-top:0;padding-top:0;margin-top:0">' +
       '<div class="e-tdy-date">' + f.today.month + '월 ' + f.today.day + '일 · ' + t.gz.hanja + ' ' + t.stemName + '·' + t.branchName + '</div>' +
       '<div class="e-tdy-lv l' + t.level + '"><i></i>' + esc(LV[t.level]) + '</div>' +
       '<p class="e-tdy-line">' + esc(t.line) + '</p>' +
-      '<img class="e-tdy-cat" src="img/mascot-cat.png" alt="">' +
+      areaBars() +
       '<button class="e-link" data-go="now">오늘의 운세 자세히 보기 →</button>' +
-      '<div class="e-tdy-strip">' + days.map((x, i) => '<span class="c l' + x.level + (x.k === 0 ? ' now' : '') + '"><i></i><b>' + TDY_LBL[i] + '</b></span>').join('') + '</div>' +
-      '<p class="e-tdy-cap">점수가 아니라 움직임의 크기예요. 잔잔함·보통·강함 세 단계.</p>' +
       '</section>';
   }
 
