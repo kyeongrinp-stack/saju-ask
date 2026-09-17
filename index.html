@@ -7286,10 +7286,63 @@ const SERVER = (function () {
   // 옮겼고, 이 화면은 사주(내 사주)가 아니라 운세 영역 소속으로 봐서 bottomNav도 fortune과
   // 맞췄다(활성 탭 없음, V.fortune과 동일).
   V.now = () => '<div class="ed2">' + eTop(true) + strip() + nowContent() + eFoot() + bottomNav('fortune') + '</div>';
+  // 2026-09-17 분야 진입 UX 개편(사랑과 인연 우선 샘플): 분야 선택 = "이 분야 기본 풀이를
+  // 보고 싶다"는 요청으로 본다. 아래 4개 소제목은 reports/pool-engine.js의 buildGeneric()이
+  // isLove일 때 이미 쓰는 분기 키(k1/k2/k3, 240~246행)와 daeun/seun 계산을 그대로 재사용해서
+  // 다시 계산한 것 — 새 명리 판단 없음. 단, 리포트가 실제로 뿌리는 문장(pool 텍스트)은 유료
+  // 콘텐츠라 가져오지 않고, 이 무료 소개용으로 문장을 새로 짧게 썼다. 기존 love 질문 6개의
+  // 문구·답변도 그대로 두고 복사하지 않았다(같은 화면 안에서 나란히 보이면 중복이라 판단).
+  const LOVE_K1 = {
+    distance: '가까워질수록 오히려 마음이 복잡해지는 편이에요. 좋아하는 마음과 별개로, 가까이 갈수록 사소한 것에 자꾸 걸리는 쪽에 가까워요.',
+    swept: '사랑에 빠지면 그 사람 쪽으로 마음이 많이 기우는 편이에요. 관계의 중심이 나보다 상대에게 가 있기 쉬워요.',
+    steady: '관계 안에서 흔들리지 않고 중심을 지키는 편이에요. 좋아해도 나를 잃지 않는 쪽에 가까워요.',
+    expressive: '마음을 숨기기보다 바로 표현하는 편이에요. 좋아하는 티가 잘 나고, 관계를 이끄는 쪽에 가까워요.',
+    independent: '혼자 있는 시간도 편하게 느끼는 편이에요. 관계에 매이기보다 각자의 영역을 지키는 쪽이 편해요.',
+    quiet: '인연에 대한 신호가 원국에 뚜렷하게 크지 않은 편이에요. 시기(대운·세운)에 따라 마음의 방향이 많이 좌우돼요.',
+  };
+  const LOVE_K3 = {
+    left: '정해진 관계, 안정적으로 자리를 잡아가는 인연이 당신과 더 잘 맞아요. 오래 두고 신뢰를 쌓는 관계에서 편안함을 느껴요.',
+    right: '예측하기 어려운, 끌림이 강한 인연 쪽에 더 끌리는 편이에요. 안정보다 설렘이 있는 관계에서 생기가 나요.',
+    both: '안정과 끌림이 함께 있는 관계에서 편안함을 느껴요. 한쪽으로 완전히 치우친 관계보다 둘이 섞여 있을 때 잘 맞아요.',
+    neither: '원국에 인연의 별 자체가 뚜렷하지 않은 편이에요. 관계의 결보다는 시기가 맞을 때 인연이 자연스럽게 이어져요.',
+  };
+  const LOVE_K2 = {
+    spouse_palace_clash: '가까워지고 나면 사소한 일로 부딪히는 게 반복되기 쉬워요. 배우자 자리가 충·원진을 이루는 구조라, 좋아하는 마음과 별개로 자꾸 걸리는 지점이 생겨요.',
+    female_output_strong: '표현하고 주도하는 힘이 강해서, 관계에서도 이끄는 쪽이 되기 쉬워요. 상대가 그 속도를 따라오지 못하면 관계가 삐걱거리기 쉬워요.',
+    rival_strong: '사람이 얽히는 구조라, 삼각관계나 경쟁 상황이 반복되기 쉬워요. 나 말고 다른 사람이 관계에 끼어드는 장면이 생기기 쉬워요.',
+    weak_self: '관계에 마음을 많이 쏟는 편이라, 나를 챙기는 걸 뒤로 미루기 쉬워요. 관계가 끝난 뒤에 지치는 쪽에 가까워요.',
+    default: '특별히 반복되는 위험 패턴이 원국에 뚜렷하게 보이진 않아요. 그때그때의 시기와 상대에 따라 다르게 흘러가는 편이에요.',
+  };
+  // buildGeneric()의 isLove 분기(k1/k2/k3)를 그대로 재현 — sp=인연의 별, condTest/lv는 기존 함수.
+  function loveIntroKeys(f) {
+    const sp = f.spouseGroup, s = f.level(sp), o = f.level('식상'), r = f.level('비겁');
+    const k1 = condTest('spouse_palace_clash', f) ? 'distance' : (s >= 2 && f.strength === 'weak') ? 'swept' : s >= 2 ? 'steady' : o >= 2 ? 'expressive' : r >= 2 ? 'independent' : 'quiet';
+    const k2 = ['spouse_palace_clash', 'female_output_strong', 'rival_strong', 'weak_self'].find(c => condTest(c, f)) || 'default';
+    const names = f.stars[sp].names; const jeong = names.filter(n => n === '정관' || n === '정재').length, pyeon = names.length - jeong;
+    const k3 = !names.length ? 'neither' : jeong === pyeon ? 'both' : jeong > pyeon ? 'left' : 'right';
+    return { k1, k2, k3 };
+  }
+  // "지금 인연의 흐름" — buildGeneric()의 k5/k6(현재 대운·올해 세운이 인연의 별과 겹치는지)과
+  // 같은 조건, daeunEvidence/seunEvidence는 기존 근거 문장 생성 함수 그대로.
+  function loveNowLine(f) {
+    const sp = f.spouseGroup; const cur = f.daeun.current; const Y = f.seun[f.thisYear];
+    const active = (cur && (cur.stemGroup === sp || cur.branchGroup === sp)) || Y.stemGroup === sp;
+    return { daeunSentence: daeunEvidence(f), yearSentence: seunEvidence(f, f.thisYear),
+      gloss: active ? '지금은 인연의 별이 대운이나 올해 흐름과 겹치는 시기예요. 평소보다 인연 쪽 변화가 눈에 띄기 쉬워요.' : '지금은 인연의 별이 대운·올해 흐름과 특별히 겹치진 않아요. 평소 성향대로 흘러가는 시기에 가까워요.' };
+  }
+  function loveIntroCard(f) {
+    const k = loveIntroKeys(f); const now = loveNowLine(f);
+    return '<div class="card"><span class="en" style="font-size:13px">Love Reading</span><div class="eyebrow">사랑과 인연 · 기본 풀이</div>' +
+      '<p class="concl">' + termify(LOVE_K1[k.k1]) + '</p>' +
+      '<div class="eyebrow" style="margin-top:14px">어떤 인연에 끌리고, 어떤 관계가 맞는지</div><p class="body">' + termify(LOVE_K3[k.k3]) + '</p>' +
+      '<div class="eyebrow" style="margin-top:10px">연애·관계에서 반복되기 쉬운 패턴</div><p class="body">' + termify(LOVE_K2[k.k2]) + '</p>' +
+      '<div class="eyebrow" style="margin-top:10px">지금, 인연의 흐름</div><p class="body">' + termify(now.daeunSentence) + ' ' + termify(now.yearSentence) + '</p><p class="small">' + esc(now.gloss) + '</p></div>';
+  }
   V.ask = p => {
     const f = state.facts; const a = AREA_LIST.includes(p.area) ? p.area : f.movement.key;
-    return topbar(true) + strip() + '<section class="hero" style="padding-top:8px"><span class="en" style="font-size:13px">Pick a question</span><div class="eyebrow">질문 고르기</div><h1>' + AREAS[a].label + ', 무엇이 궁금하세요?</h1><p class="sub">' + esc(areaReason(f, a)) + '. 기본 답은 무료예요. 시기와 방법은 리포트로 이어져요.</p></section>' +
-      '<div class="chips">' + AREA_LIST.map(k => areaChip(k, k === a)).join('') + '</div><div class="qlist">' + areaQuestions(a).map(q => qItem(q, q.type === 'B' ? '첫 구간 무료' : '바로 풀어드려요')).join('') + '</div>' + footer();
+    return topbar(true) + strip() + '<section class="hero" style="padding-top:8px"><span class="en" style="font-size:13px">Pick a question</span><div class="eyebrow">질문 고르기</div><h1>' + AREAS[a].label + ', 무엇이 궁금하세요?</h1><p class="sub">' + esc(areaReason(f, a)) + '. 기본 풀이와 질문 답은 전부 무료예요.</p></section>' +
+      (a === 'love' ? loveIntroCard(f) : '') +
+      '<div class="chips">' + AREA_LIST.map(k => areaChip(k, k === a)).join('') + (a === 'love' ? '<div class="eyebrow" style="margin:14px 18px 0">더 궁금한 걸 물어보세요</div>' : '') + '<div class="qlist">' + areaQuestions(a).map(q => qItem(q, '바로 풀어드려요')).join('') + '</div>' + footer();
   };
   V.q = p => {
     const q = qById(p.id); if (!q) return V.home(); markSeen('questions', q.id);
