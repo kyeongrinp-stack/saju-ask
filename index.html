@@ -7507,11 +7507,16 @@ const SERVER = (function () {
   // ---------- 화면 ----------
   const V = {};
   // 홈 "네 가지 결로 물어보세요" 카테고리 — #/design-mock에서 확정, 실제 홈에 이식.
+  // 2026-09-18: 나의 성향 카드를 빼고 2027 신년운세를 첫 자리에 넣었다(판매 예정 핵심
+  // 진입점). "나의 성향"의 실제 풀이(go:'me')는 그대로 남아 있고, 하단 내비 "내 사주"
+  // 탭으로 계속 들어갈 수 있다 — 이 목록에서 카드만 뺀 것. 신년운세는 FORTUNE_GROUPS에
+  // 이미 있는 항목(status:'soon', 전용 화면 없음)을 그대로 가리키게 fortuneGo로 목적지를
+  // 구해서 썼다 — 임의의 새 라우트나 기존 질문을 만들어 연결하지 않았다.
   const HOME_CAT = [
-    { id: 'love', img: 'mock-cat-love.png', label: '사랑과 인연', desc: '지금 이 관계, 어떻게 흘러갈까요', go: 'ask/love' },
+    { id: 'newyear', img: 'mock-cat-newyear.png', label: '2027 신년운세', desc: '다가오는 2027년, 나의 흐름은?', go: fortuneGo(fortuneById('newyear')) },
     { id: 'money', img: 'mock-cat-money.png', label: '돈과 재물', desc: '들어오고 나가는 돈의 흐름', go: 'ask/money' },
     { id: 'work', img: 'mock-cat-work.png', label: '일과 진로', desc: '지금 방향이 맞는지 궁금할 때', go: 'ask/work' },
-    { id: 'people', img: 'mock-cat-personality.png', label: '나의 성향', desc: '타고난 결부터 다시 보기', go: 'me' },
+    { id: 'love', img: 'mock-cat-love.png', label: '사랑과 인연', desc: '지금 이 관계, 어떻게 흘러갈까요', go: 'ask/love' },
   ];
   // 홈 "오늘의 운세" — #/design-mock에서 확정한 위계(날짜→오늘 기운→한 줄→5영역 그래프).
   // dayInfo()/LV/state.facts.movement(computeMovement 결과)는 기존 실제 데이터 그대로, 새 점수·판정 로직 없음.
