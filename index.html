@@ -6675,10 +6675,12 @@ const SERVER = (function () {
   // 구매 모델: reports[] · all · answers[] (잠긴 답을 연 질문) · credits{report: 누적 차감액}
   const owned = () => store.get('owned', { reports: [], all: false, answers: [], credits: {} });
   const saveOwned = o => store.set('owned', o);
-  const owns = r => { const o = owned(); return o.all || o.reports.includes(r); };
-  const isBuyer = () => { const o = owned(); return o.all || o.reports.length > 0; };
-  const OWN_REPORTS = () => { const o = owned(); return o.all ? REPORT_LIST.slice() : REPORT_LIST.filter(r => o.reports.includes(r)); };
-  const unlocked = id => { const q = qById(id); return owns(q.r) || owned().answers.includes(id); };
+  // dev 검수 모드(DEV): 실제 owned() 저장값은 절대 건드리지 않고, 열람 가능 여부를 묻는
+  // 이 네 개 게이트 함수만 화면 표시용으로 "전부 보유"로 답한다. 결제/크레딧/주문 로직 무관.
+  const owns = r => { if (DEV) return true; const o = owned(); return o.all || o.reports.includes(r); };
+  const isBuyer = () => { if (DEV) return true; const o = owned(); return o.all || o.reports.length > 0; };
+  const OWN_REPORTS = () => { if (DEV) return REPORT_LIST.slice(); const o = owned(); return o.all ? REPORT_LIST.slice() : REPORT_LIST.filter(r => o.reports.includes(r)); };
+  const unlocked = id => { if (DEV) return true; const q = qById(id); return owns(q.r) || owned().answers.includes(id); };
   const quota = () => store.get('quota', { used: 0, extra: 0 });
   const quotaLeft = () => { const o = owned(); const q = quota(); const base = o.all ? 30 : 10 * o.reports.length; return Math.max(0, base + q.extra - q.used); };
   const seen = () => store.get('seen', { questions: [], reports: [] });
