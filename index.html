@@ -6850,7 +6850,13 @@ const SERVER = (function () {
   function freeAnswer(q) {
     const a = answerQuestion(state.facts, q.id); const key = branchKey(a, q);
     const pool = (SCENES[q.id] && (SCENES[q.id].branches[key] || SCENES[q.id].branches.default)) || null;
-    const ev = [a.body[0]].concat(a.evidence.slice(0, 2)).filter(Boolean);
+    // 2026-09-17(4차): a.evidence(natalEvidence/strengthEvidence)는 "월간 정관·월지 편관이
+    // 관성이에요" 같은 원시값 문장이라, body[0](이미 뜻+연결까지 설명된 문장) 뒤에 별도
+    // 문단으로 뚝 떨어뜨려 놓으면 설명 없는 값 나열처럼 보인다. 한 문단으로 이어 붙여서
+    // "설명 → 그 근거가 되는 실제 값" 순서로 자연스럽게 읽히게 한다. 계산값·평가 로직은
+    // composer.js의 natalEvidence/strengthEvidence/answerQuestion 그대로, 문장 개수만 병합.
+    const evParts = [a.body[0]].concat(a.evidence.slice(0, 2)).filter(Boolean);
+    const ev = evParts.length ? [evParts.join(' ')] : [];
     const scenes = pool && pool.scenes && pool.scenes.length ? pool.scenes : a.body.slice(1, 3);
     const core = [a.condition].concat(a.guard ? [a.guard] : []);
     return { a, con: (pool && pool.lede) || a.conclusion, ev, scenes: scenes.length ? scenes : [a.condition], core, next: (pool && pool.see) || '이 흐름이 언제 세지고 어떤 달에 조심해야 하는지는 시기를 묻는 질문에서 이어져요.' };
@@ -7316,6 +7322,88 @@ const SERVER = (function () {
     const yearTouch = groups.some(g => Y.stemGroup === g); // buildGeneric의 k6 관례대로 천간만 확인
     return daeunTouch || yearTouch;
   }
+  // 2026-09-17(3차): 기본풀이의 "지금 시기" 문단을 "대운·세운 값 나열"에서 "근거→의미→분야
+  // 연결→종합→조언"으로 확장. 대운·세운 자체(daeunEvidence/seunEvidence)와 그 뜻(DAEUN_GROUP_TEXT/
+  // YEAR_GROUP_TEXT, composer.js 기존 자산)은 그대로 재사용하고, 여기서는 "이 힘이 이 분야에서
+  // 어떻게 나타나는지"(AREA_NOW_TRANSLATE)와 "여러 신호를 어떻게 같이 보는지"(comboSentence,
+  // 기존 GLOSSARY의 식상생재·관인상생 재사용)만 새로 썼다. 새 명리 판정 없음 — 그룹은 이미 계산된
+  // f.daeun.current.stemGroup/f.seun[year].stemGroup을 그대로 읽는다.
+  const AREA_NOW_TRANSLATE = {
+    love: {
+      비겁: '인연 쪽으로 옮겨 보면, 주변에 사람이 늘면서 삼각관계나 경쟁하듯 마음을 얻어야 하는 상황이 생기기 쉬워요.',
+      식상: '인연 쪽으로 옮겨 보면, 먼저 다가가고 마음을 표현하는 힘이 붙어요. 새 만남이 생기기 좋은 시기예요.',
+      재성: '인연 쪽으로 옮겨 보면, 관계를 현실적인 조건으로 따지게 되거나 배우자 자리 자체가 크게 움직이는 시기예요.',
+      관성: '인연 쪽으로 옮겨 보면, 관계를 정식으로 매듭짓고 싶은 마음이 커지는 시기예요.',
+      인성: '인연 쪽으로 옮겨 보면, 새 만남보다는 있는 관계가 안정되고 깊어지는 쪽에 가까워요.',
+    },
+    money: {
+      비겁: '재물 쪽으로 옮겨 보면, 벌이는 그대로인데 나눠 쓰는 곳이 늘어요. 동업이나 돈 거래는 특히 조심해야 하는 시기예요.',
+      식상: '재물 쪽으로 옮겨 보면, 벌이는 힘 자체가 커져요. 새로 벌이는 일이 돈으로 이어지기 좋은 시기예요.',
+      재성: '재물 쪽으로 옮겨 보면, 돈이 직접 들어오고 나가는 움직임이 커지는, 이 시기의 핵심 힘이에요.',
+      관성: '재물 쪽으로 옮겨 보면, 돈보다 자리와 책임 쪽에 에너지가 먼저 쓰여서 재물은 오히려 잔잔하게 흘러가는 시기예요.',
+      인성: '재물 쪽으로 옮겨 보면, 새로 벌이기보다 있는 돈을 정리하고 지키는 쪽이 이 시기와 맞아요.',
+    },
+    work: {
+      비겁: '일 쪽으로 옮겨 보면, 동료나 경쟁자와 자리를 두고 부딪히는 상황이 생기기 쉬워요. 역할을 분명히 해두는 게 좋아요.',
+      식상: '일 쪽으로 옮겨 보면, 새로 벌이고 만드는 힘이 커져요. 판을 넓히거나 새 일을 시작하기 좋은 시기예요.',
+      재성: '일 쪽으로 옮겨 보면, 결과와 성과로 평가받는 쪽에 무게가 실려서 숫자로 보여줘야 하는 시기예요.',
+      관성: '일 쪽으로 옮겨 보면, 자리와 책임이 커지는, 이 시기의 핵심 힘이에요. 맡는 역할이 늘고 이동이 따라오기 쉬워요.',
+      인성: '일 쪽으로 옮겨 보면, 자격이나 문서, 배움 쪽이 움직여서 당장 성과보다 준비가 맞는 시기예요.',
+    },
+    people: {
+      비겁: '사람 쪽으로 옮겨 보면, 이 힘이 바로 관계의 중심이에요. 사람이 늘고 비교하거나 경쟁하는 상황이 잦아지기 쉬워요.',
+      식상: '사람 쪽으로 옮겨 보면, 표현하고 나서는 힘이 커져서 관계를 먼저 이끌고 분위기를 만드는 쪽에 서게 돼요.',
+      재성: '사람 쪽으로 옮겨 보면, 돈이나 이해관계가 얽힌 자리에서 사람 문제가 생기기 쉬운 시기예요.',
+      관성: '사람 쪽으로 옮겨 보면, 위아래와 역할이 분명한 관계가 움직여요. 새로운 책임자나 어려운 사람과 얽히기 쉬워요.',
+      인성: '사람 쪽으로 옮겨 보면, 나를 도와주는 사람이 가까이 오는 흐름이에요. 새 관계보다 기존 관계가 힘이 되어줘요.',
+    },
+    flow: {
+      비겁: '전체 흐름으로 보면, 사람을 통해 변화가 오는 시기예요. 누군가와 얽히면서 다음 장면으로 넘어가요.',
+      식상: '전체 흐름으로 보면, 스스로 벌인 일에서 변화가 시작돼요. 가만히 있기보다 움직여야 다음이 보이는 시기예요.',
+      재성: '전체 흐름으로 보면, 돈이나 눈에 보이는 결과를 따라 변화가 움직이는, 현실적인 계기로 다음이 정해지는 시기예요.',
+      관성: '전체 흐름으로 보면, 자리나 역할이 바뀌면서 변화가 오는 시기예요. 맡는 것이 달라지는 순간이 전환점이에요.',
+      인성: '전체 흐름으로 보면, 준비하고 배우는 과정을 거친 뒤에 변화가 와요. 지금은 서두르기보다 다지는 시기예요.',
+    },
+  };
+  const AREA_COMBO_MULTI = {
+    love: '마음이 여러 방향에서 동시에 움직이기 쉬운 시기예요. 가장 오래 이어진 마음을 기준으로 삼으면 흔들리지 않아요.',
+    money: '버는 방식과 쓰는 방식을 같이 점검해야 하는 시기예요. 한쪽 신호만 보고 판단하면 놓치는 부분이 생겨요.',
+    work: '역할과 방향이 한 번에 여러 곳에서 움직이는 시기예요. 다 붙잡으려 하지 말고 우선순위부터 정하세요.',
+    people: '사람 문제가 여러 갈래에서 동시에 생기기 쉬운 시기예요. 한 번에 다 풀려 하지 말고 급한 것부터 정리하세요.',
+    flow: '변화가 한쪽에서만 오지 않고 여러 결이 겹치는 시기예요. 서두르지 말고 순서를 나눠서 받아들이세요.',
+  };
+  const AREA_NOW_CLOSE = {
+    love: ['그래서 지금은 인연의 별이 대운·세운 흐름과 같이 움직이는 시기예요. 새 만남이든 기존 관계의 변화든, 평소보다 인연 쪽 움직임이 크게 느껴질 수 있어요.',
+      '그래서 지금은 인연의 별이 대운·세운 흐름과 직접 겹치진 않는 시기예요. 급하게 움직이기보다 지금 관계를 편안하게 지켜가기에 알맞은 시기예요.'],
+    money: ['그래서 지금은 재물의 별이 대운·세운 흐름과 같이 움직이는 시기예요. 벌이든 지출이든 평소보다 크게 흔들릴 수 있으니, 큰 결정 하나에 다 걸지 말고 나눠서 판단하세요.',
+      '그래서 지금은 재물의 별이 대운·세운 흐름과 직접 겹치진 않는 시기예요. 크게 벌이기보다 지금까지 만든 걸 다지고 정리하기에 알맞은 시기예요.'],
+    work: ['그래서 지금은 일의 별이 대운·세운 흐름과 같이 움직이는 시기예요. 자리나 역할의 변화가 평소보다 크게 다가올 수 있으니, 제안이 오면 조건을 꼼꼼히 따져 보세요.',
+      '그래서 지금은 일의 별이 대운·세운 흐름과 직접 겹치진 않는 시기예요. 크게 움직이기보다 지금 자리에서 실력을 다지기에 알맞은 시기예요.'],
+    people: ['그래서 지금은 사람과 관련된 별이 대운·세운 흐름과 같이 움직이는 시기예요. 관계의 폭이 넓어지거나 부딪히는 일이 늘 수 있으니, 역할과 몫을 먼저 정해 두세요.',
+      '그래서 지금은 사람과 관련된 별이 대운·세운 흐름과 직접 겹치진 않는 시기예요. 새 관계를 넓히기보다 가까운 사람들과의 관계를 다지기에 알맞은 시기예요.'],
+    flow: ['그래서 지금은 이 흐름과 관련된 별이 대운·세운과 같이 움직이는 시기예요. 평소보다 전환이나 변화가 크게 느껴질 수 있으니, 방향은 서두르지 말고 순서를 나눠 정하세요.',
+      '그래서 지금은 이 흐름과 관련된 별이 대운·세운과 직접 겹치진 않는 시기예요. 큰 전환보다 지금 흐름을 그대로 이어가기에 알맞은 시기예요.'],
+  };
+  function comboSentence(area, dGroup, yGroup) {
+    if (dGroup === yGroup) return '대운과 세운이 같은 힘으로 겹쳐서, 올 한 해는 이 흐름이 유독 뚜렷하게 느껴지는 시기예요.';
+    let s = AREA_COMBO_MULTI[area];
+    const pair = new Set([dGroup, yGroup]);
+    const isPair = (a, b) => pair.has(a) && pair.has(b);
+    if ((area === 'money' || area === 'work') && isPair('식상', '재성')) s += ' 명리에서는 이 흐름을 식상생재라고 불러요. ' + (area === 'money' ? '움직인 만큼 벌이가 돈으로 이어지는, 좋은 흐름으로 보는 결이에요.' : '벌이는 일이 그대로 성과로 이어지는 흐름이에요.');
+    else if (area === 'work' && isPair('관성', '인성')) s += ' 명리에서는 이 구조를 관인상생이라고 불러요. 책임을 맡을수록 오히려 조직 안에서 크는, 순한 흐름이에요.';
+    return s;
+  }
+  function nowFlowParas(f, area, groups) {
+    const dInfo = f.daeun.current || f.daeun.list[0];
+    const Y = f.seun[f.thisYear];
+    const dGroup = dInfo.stemGroup, yGroup = Y.stemGroup;
+    const active = natalTouchGloss(f, groups);
+    const p1 = '실제 흐름을 짚어보면, ' + daeunEvidence(f) + ' ' + DAEUN_GROUP_TEXT[dGroup] + ' ' + AREA_NOW_TRANSLATE[area][dGroup];
+    const p2 = '여기에 올해 세운을 더해 보면, ' + seunEvidence(f, f.thisYear) + ' ' + YEAR_GROUP_TEXT[yGroup] + ' ' + AREA_NOW_TRANSLATE[area][yGroup];
+    const p3 = comboSentence(area, dGroup, yGroup);
+    const p4 = AREA_NOW_CLOSE[area][active ? 0 : 1];
+    return [p1, p2, p3, p4];
+  }
   function areaIntroCard(enLabel, koLabel, paragraphs) {
     return '<div class="card"><span class="en" style="font-size:13px">' + enLabel + '</span><div class="eyebrow">' + esc(koLabel) + ' · 기본 풀이</div>' +
       '<p class="concl">' + termify(paragraphs[0]) + '</p>' +
@@ -7350,9 +7438,7 @@ const SERVER = (function () {
     const k2 = ['spouse_palace_clash', 'female_output_strong', 'rival_strong', 'weak_self'].find(c => condTest(c, f)) || 'default';
     const names = f.stars[sp].names; const jeong = names.filter(n => n === '정관' || n === '정재').length, pyeon = names.length - jeong;
     const k3 = !names.length ? 'neither' : jeong === pyeon ? 'both' : jeong > pyeon ? 'left' : 'right';
-    const active = natalTouchGloss(f, [sp]);
-    const now = '지금 시기로 보면, ' + daeunEvidence(f) + ' ' + seunEvidence(f, f.thisYear) + ' ' + (active ? '지금은 인연의 별이 대운이나 올해 흐름과 겹치는 시기예요. 평소보다 인연 쪽 변화가 눈에 띄기 쉬워요.' : '지금은 인연의 별이 대운·올해 흐름과 특별히 겹치진 않아요. 평소 성향대로 흘러가는 시기에 가까워요.');
-    return [LOVE_K1[k1], LOVE_K3[k3], LOVE_K2[k2], now];
+    return [LOVE_K1[k1], LOVE_K3[k3], LOVE_K2[k2], ...nowFlowParas(f, 'love', [sp])];
   }
 
   // ---- 돈과 재물 (wealthTypeKey/leakKey/incomeKey — 재물 상세풀이가 쓰는 함수 재사용) ----
@@ -7378,9 +7464,7 @@ const SERVER = (function () {
   };
   function moneyIntroParas(f) {
     const k1 = wealthTypeKey(f), k2 = incomeKey(f), k3 = leakKey(f);
-    const active = natalTouchGloss(f, ['재성', '식상']);
-    const now = '지금 시기로 보면, ' + daeunEvidence(f) + ' ' + seunEvidence(f, f.thisYear) + ' ' + (active ? '지금은 재물의 별이 대운이나 올해 흐름과 겹치는 시기예요. 평소보다 돈의 움직임이 커지기 쉬워요.' : '지금은 재물의 별이 대운·올해 흐름과 특별히 겹치진 않아요. 평소 하던 대로 흘러가는 시기에 가까워요.');
-    return [MONEY_K1[k1], MONEY_K2[k2], MONEY_K3[k3], now];
+    return [MONEY_K1[k1], MONEY_K2[k2], MONEY_K3[k3], ...nowFlowParas(f, 'money', ['재성', '식상'])];
   }
 
   // ---- 일과 진로 (buildGeneric()의 isWork 분기 재현) ----
@@ -7412,9 +7496,7 @@ const SERVER = (function () {
     const org = f.level('관성') + f.level('인성'), ind = f.level('식상') + f.level('재성');
     let k3 = (org >= 2 && ind >= 2 && Math.abs(org - ind) <= 1) ? 'both' : (org <= 1 && ind <= 1) ? 'neither' : org > ind ? 'org' : 'indie';
     if (k3 === 'org' && g === 0) k3 = ind >= 2 ? 'indie' : 'neither';
-    const active = natalTouchGloss(f, ['관성', '인성']);
-    const now = '지금 시기로 보면, ' + daeunEvidence(f) + ' ' + seunEvidence(f, f.thisYear) + ' ' + (active ? '지금은 일의 별이 대운이나 올해 흐름과 겹치는 시기예요. 평소보다 자리나 역할의 변화가 눈에 띄기 쉬워요.' : '지금은 일의 별이 대운·올해 흐름과 특별히 겹치진 않아요. 평소 하던 대로 흘러가는 시기에 가까워요.');
-    return [WORK_K1[k1], WORK_K3[k3], WORK_K2[k2], now];
+    return [WORK_K1[k1], WORK_K3[k3], WORK_K2[k2], ...nowFlowParas(f, 'work', ['관성', '인성'])];
   }
 
   // ---- 관계(people) — 대응하는 리포트가 없어 who_avoid/boundary/people_luck/partner_ok가
@@ -7442,9 +7524,7 @@ const SERVER = (function () {
     const l = f.level('비겁') + (f.strength === 'strong' ? 1 : 0), r = f.level('관성') + (f.strength === 'weak' ? 1 : 0);
     const k2 = (l >= 2 && r >= 2 && Math.abs(l - r) <= 1) ? 'both' : (l <= 1 && r <= 1) ? 'neither' : l > r ? 'left' : 'right';
     const k3 = hasRel(f, '일지', ['chung', 'wonjin']) ? 'friction' : f.stars['인성'].pos.includes('일지') ? 'helper' : (f.level('재성') >= 1 && f.level('비겁') >= 1) ? 'shared' : 'default';
-    const active = natalTouchGloss(f, ['비겁']);
-    const now = '지금 시기로 보면, ' + daeunEvidence(f) + ' ' + seunEvidence(f, f.thisYear) + ' ' + (active ? '지금은 사람과 관련된 별이 대운이나 올해 흐름과 겹치는 시기예요. 평소보다 인간관계 쪽 변화가 눈에 띄기 쉬워요.' : '지금은 사람과 관련된 별이 대운·올해 흐름과 특별히 겹치진 않아요. 평소 관계 그대로 흘러가는 시기에 가까워요.');
-    return [PEOPLE_K1[k1], PEOPLE_K2[k2], PEOPLE_K3[k3], now];
+    return [PEOPLE_K1[k1], PEOPLE_K2[k2], PEOPLE_K3[k3], ...nowFlowParas(f, 'people', ['비겁'])];
   }
 
   // ---- 흐름 (buildGeneric()의 else 분기 = isFlow 재현) ----
@@ -7477,9 +7557,7 @@ const SERVER = (function () {
     const rel = R[0] || null; const k2 = rel ? rel.type : 'quiet';
     const l = f.level('비겁') + (f.strength === 'strong' ? 1 : 0), r = f.level('관성') + (f.strength === 'weak' ? 1 : 0);
     const k3 = (l >= 2 && r >= 2 && Math.abs(l - r) <= 1) ? 'both' : (l <= 1 && r <= 1) ? 'neither' : l > r ? 'left' : 'right';
-    const active = natalTouchGloss(f, ['재성', '관성']);
-    const now = '지금 시기로 보면, ' + daeunEvidence(f) + ' ' + seunEvidence(f, f.thisYear) + ' ' + (active ? '지금은 이 흐름과 관련된 별이 대운이나 올해와 겹치는 시기예요. 평소보다 전환이나 변화가 눈에 띄기 쉬워요.' : '지금은 이 흐름과 관련된 별이 대운·올해와 특별히 겹치진 않아요. 평소 흐름 그대로 이어지는 시기에 가까워요.');
-    return [FLOW_K1[k1], FLOW_K2[k2], FLOW_K3[k3], now];
+    return [FLOW_K1[k1], FLOW_K2[k2], FLOW_K3[k3], ...nowFlowParas(f, 'flow', ['재성', '관성'])];
   }
 
   const AREA_INTRO = {
