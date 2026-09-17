@@ -7068,11 +7068,29 @@ const SERVER = (function () {
       '<div class="row" style="margin-top:16px">' + btn('운세 전체보기', 'fortune', 'ghost sm') + '</div>' + eFoot() + bottomNav('fortune') + '</div>';
   }
   const TRASH_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex:none"><path d="M5 7h14"/><path d="M9.5 7V5.2c0-.6.5-1.2 1.2-1.2h2.6c.7 0 1.2.6 1.2 1.2V7"/><path d="M7 7l.8 12c.05.9.8 1.6 1.7 1.6h5c.9 0 1.65-.7 1.7-1.6L17 7"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/></svg>';
+  // 대운 미리보기 — 대운만의 별도 상세 화면이 없어서, 기존 무료 질문 daeun_change의 실제 계산
+  // 결과(현재/다음 대운 설명)를 그대로 재사용한다. 10년 전체 표·심화 해설은 나의 흐름 리포트(9,900원)
+  // 영역이라 여기서는 만들지 않고, 기존과 동일하게 그 리포트로 연결만 한다.
+  function daeunPreviewCard() {
+    const f = state.facts; const a = answerQuestion(f, 'daeun_change');
+    return '<div class="card"><span class="en" style="font-size:13px">My Daeun</span><div class="eyebrow">대운 · 인생의 큰 흐름</div>' +
+      '<p style="margin-top:6px">' + termify(a.conclusion) + '</p>' + a.body.map(t => '<p>' + termify(t) + '</p>').join('') +
+      '<p class="small" style="margin-top:8px">' + esc(a.condition) + '</p></div>' +
+      '<div class="stack">' + btn(owns('flow') ? '나의 흐름 리포트 읽기 →' : '나의 흐름 리포트에서 10년 전체 흐름 보기 →', owns('flow') ? 'read/flow' : 'intro/flow', 'ghost sm') + '</div>';
+  }
   V.mine = () => {
-    const rows = [['일주 · 타고난 성향', 'me'], ['명식 · 오행', 'chart'], ['요즘 나의 흐름 (이달)', 'now'], ['대운 · 인생의 큰 흐름', owns('flow') ? 'read/flow' : 'intro/flow']];
-    return '<div class="ed2">' + eTop(true) + strip() + '<section class="e-sec plain" style="margin-top:20px"><div class="e-kicker">사주 · 내 사주 보기</div><h1 class="e-h2" style="font-size:22px;margin-top:6px">내 명식과 타고난 특징</h1><p class="e-cap">내 사주를 이루는 기본적인 성향과 흐름이에요.</p>' +
-      '<div class="mine-group">' + rows.map(r => '<button class="e-q" data-go="' + r[1] + '"><span>' + r[0] + '</span><i>›</i></button>').join('') + '</div></section>' +
+    const pend = store.get('pending', null);
+    const anchors = [['sec-ilju', '타고난 성향'], ['sec-chart', '명식·오행'], ['sec-now', '요즘 흐름'], ['sec-daeun', '대운']];
+    return '<div class="ed2 rd">' + eTop(true) + strip() +
+      '<section class="e-sec plain" style="margin-top:20px"><div class="e-kicker">사주 · 내 사주 보기</div><h1 class="e-h2" style="font-size:22px;margin-top:6px">내 명식과 타고난 특징</h1><p class="e-cap">내 사주를 이루는 기본적인 성향과 흐름을 아래로 스크롤하면서 전부 볼 수 있어요.</p></section>' +
+      (pend ? '<div style="margin-top:10px"><button class="btn primary block" data-act="pending">내 질문 답 보기</button></div>' : '') +
+      '<div class="chips" style="margin-top:12px">' + anchors.map(a => '<button type="button" class="chip" data-act="scrollto" data-target="#' + a[0] + '">' + a[1] + '</button>').join('') + '</div>' +
+      '<section id="sec-ilju" class="rd-ch"><div class="rd-no">No. 01</div><h2>일주 · 타고난 성향</h2>' + iljuCard() + '</section>' +
+      '<section id="sec-chart" class="rd-ch"><div class="rd-no">No. 02</div><h2>명식 · 오행</h2>' + myChartCard() + '</section>' +
+      '<section id="sec-now" class="rd-ch"><div class="rd-no">No. 03</div><h2>요즘 나의 흐름</h2>' + nowContent() + '</section>' +
+      '<section id="sec-daeun" class="rd-ch"><div class="rd-no">No. 04</div><h2>대운 · 인생의 큰 흐름</h2>' + daeunPreviewCard() + '</section>' +
       (isBuyer() ? '<section class="e-sec plain" style="margin-top:18px"><h2 class="e-h2" style="font-size:16px">내 리포트</h2><div class="mine-group">' + OWN_REPORTS().map(id => '<button class="e-q" data-go="read/' + id + '"><span>' + RMETA[id].title + '</span><i>›</i></button>').join('') + '</div></section>' : '') +
+      ordersCard() +
       '<section class="e-sec plain" style="margin-top:28px"><h2 class="e-h2" style="font-size:16px">사주 정보 관리</h2><p class="e-cap">입력한 생년월일과 저장된 사주를 관리해요.</p>' +
       '<div class="mine-manage"><button class="e-q" data-go="input"><span>사주 정보 다시 입력</span><i>›</i></button><button class="e-q warn" data-act="reset-all"><span>' + TRASH_IC + '이 기기에서 내 사주 지우기</span><i>›</i></button></div></section>' +
       eFoot() + bottomNav('me') + '</div>';
@@ -7204,11 +7222,16 @@ const SERVER = (function () {
     loadProfile(); navigate('#/calc');
   }
   V.calc = () => '<div class="calc" style="background-image:url(' + IMG('bg-moon-portrait') + ')"><div class="cap">만세력을 계산하고 있어요</div><div class="ringwrap"><div class="ring" aria-hidden="true"></div></div><div class="lines" id="calc-lines"><span>절기를 확인하고 있어요</span><span>일주를 찾고 있어요</span><span>대운을 계산하고 있어요</span></div></div>';
-  V.me = () => {
-    const f = state.facts; const il = ILGAN[f.ilgan.idx]; const pend = store.get('pending', null);
-    return topbar(false) + '<p class="small" style="text-align:center;margin-top:4px">' + SP('') + '절기까지 맞춰 계산했어요</p>' +
+  // 일주 카드 내용 — V.me(단독 화면)와 V.mine(내 사주 통합 화면)이 같이 쓴다.
+  function iljuCard() {
+    const f = state.facts; const il = ILGAN[f.ilgan.idx];
+    return '<p class="small" style="text-align:center;margin-top:4px">' + SP('') + '절기까지 맞춰 계산했어요</p>' +
       '<div class="tcard opal"><div class="art">' + ilganImg() + '<span class="hz">' + iljuHanja() + '</span><span class="en">My Day Pillar</span></div><div class="eyebrow" style="margin-top:12px">' + SP('pink') + ' 나의 일주 ' + SP('pink') + '</div><h2>나는 ' + iljuName() + '</h2><div class="nick">' + esc(il.nick) + '</div>' +
-      '<ul>' + il.traits.map(t => '<li>' + SP('') + esc(t) + '</li>').join('') + '</ul><div class="kws">' + il.keyword.split('·').map(k => '<span>' + esc(k) + '</span>').join('') + '</div><p class="small" style="margin-top:12px;padding:0 18px">일주는 태어난 날의 기운이에요. 사주에서 나를 가장 먼저 보여주는 자리예요.</p></div>' +
+      '<ul>' + il.traits.map(t => '<li>' + SP('') + esc(t) + '</li>').join('') + '</ul><div class="kws">' + il.keyword.split('·').map(k => '<span>' + esc(k) + '</span>').join('') + '</div><p class="small" style="margin-top:12px;padding:0 18px">일주는 태어난 날의 기운이에요. 사주에서 나를 가장 먼저 보여주는 자리예요.</p></div>';
+  }
+  V.me = () => {
+    const pend = store.get('pending', null);
+    return topbar(false) + iljuCard() +
       '<div class="stack">' + (pend ? '<button class="btn primary block" data-act="pending">내 질문 답 보기</button>' + btn('내 명식 먼저 보기', 'chart', 'ghost sm') : btn('내 명식 보기', 'chart', 'primary block') + btn('요즘 내 흐름 보기', 'now', 'ghost sm')) + '</div>' +
       ordersCard() + '<div class="card"><div class="eyebrow">공유 카드</div><div class="share"><div class="mini" style="background-image:url(' + IMG('bg-blue-portrait') + ')">' + ilganImg() + '<div class="t">나는 ' + iljuName() + '</div><div class="s">' + APP_NAME + '</div></div><div><p class="body">일간 그림과 일주 이름만 들어가요.</p><div class="row"><button class="btn sm line" data-act="share">친구에게 보내기</button></div></div></div></div>' + footer();
   };
@@ -7223,25 +7246,28 @@ const SERVER = (function () {
       el.innerHTML = '<div class="eyebrow">구매 내역</div>' + (list.length ? list.map(o => '<div class="orow"><div><b>' + esc(orderLabel(o)) + '</b><span class="small">' + esc(fmtTs(o.paidAt)) + ' · ' + (o.amount || 0).toLocaleString() + '원' + (o.refundRequestedAt ? ' · 환불 요청됨' : '') + '</span></div>' + (o.refundRequestedAt ? '' : '<button class="btn sm line" data-act="refund" data-order="' + esc(o.orderId) + '">환불 문의</button>') + '</div>').join('') : '<p class="small">아직 구매한 것이 없어요.</p>') + '<button class="e-link" data-act="doc" data-doc="refund" style="margin-top:8px">환불 규정 보기</button>';
     } catch (e) { console.warn(e); const el = $('#orders-card'); if (el) el.innerHTML = '<div class="eyebrow">구매 내역</div><p class="small">불러오지 못했어요.</p>'; }
   }
-  V.chart = () => {
+  // 명식 카드 내용 — V.chart(단독 화면)와 V.mine(내 사주 통합 화면)이 같이 쓴다.
+  function myChartCard() {
     const f = state.facts; const c = f.counts; const max = Math.max(...c); const top = ELEMENTS[c.indexOf(max)]; const zero = ELEMENTS.filter((e, i) => c[i] === 0).map(e => e.k + '(' + e.h + ')');
-    return topbar(true) + strip() + '<div class="card"><span class="en" style="font-size:13px">My Chart</span><div class="eyebrow">내 명식 한눈에</div>' + pillarsGrid([]) +
+    return '<div class="card"><span class="en" style="font-size:13px">My Chart</span><div class="eyebrow">내 명식 한눈에</div>' + pillarsGrid([]) +
       '<p class="small">테두리가 빛나는 칸이 일주예요. 나 자신과 배우자 자리를 봐요. 칸의 작은 글씨를 누르면 뜻을 풀어드려요.</p>' + CURVE +
-      '<div class="eyebrow" style="margin-top:10px">다섯 기운</div>' + ohengBars() + '<p class="small">' + top.k + '(' + top.h + ') 기운이 가장 많아요. ' + (zero.length ? zero.join('·') + ' 기운은 원국에 없어요. ' : '') + termify(strengthEvidence(f)) + '</p></div>' +
-      guide('표는 다 몰라도 돼요. 요즘 나에게 어떤 변화가 생기기 쉬운지 볼게요.', 'explain') + '<div class="stack">' + btn('요즘 내 사주 흐름 보기', 'now', 'primary block') + btn('일주 카드 보기', 'me', 'ghost sm') + '</div>' + footer();
-  };
-  V.now = () => {
+      '<div class="eyebrow" style="margin-top:10px">다섯 기운</div>' + ohengBars() + '<p class="small">' + top.k + '(' + top.h + ') 기운이 가장 많아요. ' + (zero.length ? zero.join('·') + ' 기운은 원국에 없어요. ' : '') + termify(strengthEvidence(f)) + '</p></div>';
+  }
+  V.chart = () => topbar(true) + strip() + myChartCard() +
+    guide('표는 다 몰라도 돼요. 요즘 나에게 어떤 변화가 생기기 쉬운지 볼게요.', 'explain') + '<div class="stack">' + btn('요즘 내 사주 흐름 보기', 'now', 'primary block') + btn('일주 카드 보기', 'me', 'ghost sm') + '</div>' + footer();
+  // 요즘 흐름 내용 — V.now(단독 화면)와 V.mine(내 사주 통합 화면)이 같이 쓴다.
+  function nowContent() {
     const f = state.facts; const now = nowCard(f); const key = f.movement.key; const rmap = { work: 'work', money: 'wealth', love: 'love', people: 'flow', flow: 'flow' };
     const sig = f.movement.areas[key].signals.map(s => signalText(f, s)); const Y = f.seun[f.thisYear]; const M = f.thisMonth;
     const lines = now.lines.filter(l => !/\d{4}년|년부터/.test(l));
-    return '<div class="ed2">' + eTop(true) + '<section class="e-mast"><img src="' + IMG('cover-flow') + '" alt=""><div class="txt"><div class="e-kicker">요즘 나의 흐름</div><div class="e-issue"><span class="mon">' + f.today.month + '월</span><span class="yr">' + f.thisYear + '</span></div></div></section>' + strip() +
+    return '<section class="e-mast"><img src="' + IMG('cover-flow') + '" alt=""><div class="txt"><div class="e-kicker">요즘 나의 흐름</div><div class="e-issue"><span class="mon">' + f.today.month + '월</span><span class="yr">' + f.thisYear + '</span></div></div></section>' +
       todayBlock() +
       '<h1 class="e-lede" style="margin-top:16px">' + esc(now.headline) + '</h1><div class="e-prose" style="margin-top:10px">' + lines.map(l => '<p>' + termify(l) + '</p>').join('') + '</div>' +
       '<details class="ev"><summary>명리로는 왜 그렇게 읽혀요?</summary><div class="in"><p>' + termify(f.thisYear + '년 세운 ' + Y.gz.hanja + '(' + Y.gz.hangul + ')는 당신에게 ' + Y.stemName + '·' + Y.branchName + '이에요. 이달 ' + M.gz.hanja + '(' + M.gz.hangul + ')은 ' + M.stemName + '·' + M.branchName + '이에요.') + '</p>' + (sig.length ? '<ul>' + sig.map(t => '<li>' + termify(t) + '</li>').join('') + '</ul>' : '<p>올해와 이달의 십성이 원국의 큰 자리와 부딪히지 않아요.</p>') + '<p class="small">규칙: 올해와 이달의 십성이 어느 영역에 영향을 주는지, 합·충이 걸린 자리가 어디인지를 세요. 0개 잔잔한 편, 1개 변동이 있는 편, 2개 이상 변화가 큰 편이에요.</p>' + pillarsGrid([]) + '</div></details>' +
       '<section class="e-sec"><h2 class="e-h2">다섯 영역, 요즘 생기기 쉬운 일</h2><p class="e-cap">좋고 나쁨이 아니라 변화가 얼마나 생기기 쉬운지예요. 언제인지는 여기서 말하지 않아요.</p><ul class="e-list">' + f.movement.order.map((k, i) => { const lv = f.movement.areas[k].level; return '<li' + (k === key ? ' class="key"' : '') + '><button data-go="ask/' + k + '"><span class="n">0' + (i + 1) + '</span><span><span class="name"><i class="dot ' + k + '"></i>' + AREAS[k].label + '</span><span class="why">' + esc(areaReason(f, k)) + (owns(rmap[k]) ? '<br><span style="color:var(--cob);font-weight:700">언제 보기 ›</span>' : '') + '</span></span><span class="e-lv l' + lv + '">' + LV[lv] + '</span></button></li>'; }).join('') + '</ul></section>' +
-      '<section id="sec-q" class="e-sec"><h2 class="e-h2">요즘 뭐가 제일 궁금하세요?</h2><div class="chips">' + f.movement.order.map((k, i) => areaChip(k, i === 0)).join('') + '</div><div class="e-qs">' + areaQuestions(key).slice(0, 4).map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div><div class="row" style="justify-content:flex-end;margin-top:10px">' + btn('다른 질문 보기', 'ask/' + key, 'ghost sm') + '</div></section>' +
-      eFoot() + bottomNav('me') + '</div>';
-  };
+      '<section id="sec-q" class="e-sec"><h2 class="e-h2">요즘 뭐가 제일 궁금하세요?</h2><div class="chips">' + f.movement.order.map((k, i) => areaChip(k, i === 0)).join('') + '</div><div class="e-qs">' + areaQuestions(key).slice(0, 4).map(q => '<button class="e-q" data-go="q/' + q.id + '"><span>' + esc(q.t) + '</span><i>›</i></button>').join('') + '</div><div class="row" style="justify-content:flex-end;margin-top:10px">' + btn('다른 질문 보기', 'ask/' + key, 'ghost sm') + '</div></section>';
+  }
+  V.now = () => '<div class="ed2">' + eTop(true) + strip() + nowContent() + eFoot() + bottomNav('me') + '</div>';
   V.ask = p => {
     const f = state.facts; const a = AREA_LIST.includes(p.area) ? p.area : f.movement.key;
     return topbar(true) + strip() + '<section class="hero" style="padding-top:8px"><span class="en" style="font-size:13px">Pick a question</span><div class="eyebrow">질문 고르기</div><h1>' + AREAS[a].label + ', 무엇이 궁금하세요?</h1><p class="sub">' + esc(areaReason(f, a)) + '. 기본 답은 무료예요. 시기와 방법은 리포트로 이어져요.</p></section>' +
@@ -7970,9 +7996,9 @@ const SERVER = (function () {
     $('#app').innerHTML = '<div class="page">' + html + '</div>';
     window.scrollTo(0, 0); renderSheet(); renderModal();
     if (state.screen === 'me') loadOrders();
-    if (state.screen === 'calc') { const lines = $('#calc-lines').children; [0, 1, 2].forEach(i => setTimeout(() => { lines[i].classList.add('on'); }, 300 + i * 450)); setTimeout(() => { if (state.screen === 'calc') { navigate('#/me'); } }, 1900); }
+    if (state.screen === 'calc') { const lines = $('#calc-lines').children; [0, 1, 2].forEach(i => setTimeout(() => { lines[i].classList.add('on'); }, 300 + i * 450)); setTimeout(() => { if (state.screen === 'calc') { goPending('#/ask/' + (state.facts ? state.facts.movement.key : 'money')); } }, 1900); }
   }
-  function goPending() { const p = store.get('pending', null); store.del('pending'); navigate(p && !/calc|input/.test(p) ? p : '#/now'); }
+  function goPending(fallback) { const p = store.get('pending', null); store.del('pending'); navigate(p && !/calc|input/.test(p) ? p : (fallback || '#/now')); }
 
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-go],[data-act],[data-chat],[data-send],[data-term],.seg button');
