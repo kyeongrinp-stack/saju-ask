@@ -3647,7 +3647,7 @@ function natalEvidence(facts, group) {
 }
 function seunEvidence(facts, year) {
   const e = facts.seun[year];
-  return `${year}년 세운 ${e.gz.hanja}(${e.gz.hangul})는 당신에게 ${e.stemName}·${e.branchName}이에요.`;
+  return `${year}년 세운 ${e.gz.hanja}(${e.gz.hangul})는 당신에게 ${e.stemName}·${e.branchName}${pt(e.branchName, '이에요', '예요')}.`;
 }
 function daeunEvidence(facts) {
   const c = facts.daeun.current;
@@ -7895,20 +7895,65 @@ const SERVER = (function () {
     both: '그런 만큼 안정과 끌림이 함께 있는 관계에서 편안함을 느껴요. 한쪽으로 완전히 치우친 관계보다 둘이 섞여 있을 때 잘 맞아요.',
     neither: '다만 원국에 인연의 별 자체가 뚜렷하지 않은 편이라, 관계의 결보다는 시기가 맞을 때 인연이 자연스럽게 이어져요.',
   };
-  const LOVE_K2 = {
-    spouse_palace_clash: '그러다 보니 가까워지고 나면 사소한 일로 부딪히는 게 반복되기 쉬워요. 배우자 자리가 충·원진을 이루는 구조라, 좋아하는 마음과 별개로 자꾸 걸리는 지점이 생겨요.',
-    female_output_strong: '다만 표현하고 주도하는 힘이 강한 만큼, 상대가 그 속도를 따라오지 못하면 관계가 삐걱거리기 쉬워요.',
-    rival_strong: '한편 사람이 얽히는 구조라, 삼각관계나 경쟁 상황이 반복되기 쉬워요. 나 말고 다른 사람이 관계에 끼어드는 장면이 생기기 쉬워요.',
-    weak_self: '다만 관계에 마음을 많이 쏟는 편이라, 나를 챙기는 걸 뒤로 미루기 쉽고 관계가 끝난 뒤에 지치는 쪽에 가까워요.',
-    default: '특별히 반복되는 위험 패턴이 원국에 뚜렷하게 보이진 않아요. 그때그때의 시기와 상대에 따라 다르게 흘러가는 편이에요.',
+  // 2026-09-17(4차, 사랑과 인연만 우선 적용): "반복되기 쉬운 패턴"은 그 자체로 강하게 들릴 수
+  // 있는 판정이라, 고정 문구 대신 실제 근거(natalEvidence/신약 판정/일지 충·원진 상대)를 먼저
+  // 보여주고 그 뜻을 풀어준 뒤에야 패턴을 말한다. 근거가 상대적으로 간접적인 조건(rival_strong,
+  // female_output_strong)은 "반복되기 쉬워요" 대신 "생기기 쉬운 편이에요"처럼 표현 강도를 낮췄다.
+  function lovePatternPara(f, k2) {
+    if (k2 === 'rival_strong') {
+      return '한편 ' + natalEvidence(f, '비겁') + ' 즉, ' + GROUP_MEANING['비겁'] + ' 이 힘이 강하면 인연 앞에서도 다른 사람과 자꾸 비교되거나 겹치는 자리에 서기 쉬워요. 그래서 삼각관계나 경쟁 상황이 생기기 쉬운 편이고, 나 말고 다른 사람이 관계에 끼어드는 장면도 낯설지 않을 수 있어요.';
+    }
+    if (k2 === 'female_output_strong') {
+      return '다만 ' + natalEvidence(f, '식상') + ' 즉, ' + GROUP_MEANING['식상'] + ' 마음을 감추지 않고 바로 드러내는 힘이라 관계를 이끄는 쪽에 서기 쉽지만, 상대가 그 속도를 따라오지 못하면 관계가 삐걱거리기 쉬운 편이에요.';
+    }
+    if (k2 === 'spouse_palace_clash') {
+      const r = f.natal.relations.find(x => (x.a === '일지' || x.b === '일지') && (x.type === 'chung' || x.type === 'wonjin'));
+      const other = r.a === '일지' ? r.b : r.a;
+      return '그러다 보니 배우자를 뜻하는 일지가 ' + other + '와 ' + eulReul(r.ko) + ' 이룹니다. 즉, ' + RELLIFE_N[r.ko] + ' 좋아하는 마음과 별개로, 가까워질수록 사소한 것에 자꾸 걸리는 지점이 생기는 게 바로 이 구조 때문이에요.';
+    }
+    if (k2 === 'weak_self') {
+      return '다만 당신은 신약한 사주예요. 즉, 나를 도와주는 힘보다 바깥으로 흩어지는 힘이 더 많다는 뜻이에요. 그래서 관계에 마음을 많이 쏟는 편이라 나를 챙기는 걸 뒤로 미루기 쉽고, 관계가 끝난 뒤에 유독 지치는 쪽에 가까운 편이에요.';
+    }
+    return '특별히 반복되는 위험 패턴이 원국에 뚜렷하게 보이진 않아요. 그때그때의 시기와 상대에 따라 다르게 흘러가는 편이에요.';
+  }
+  const LOVE_K1_ADVICE = {
+    distance: '가까워질수록 예민해지는 편이니, 이 시기의 변화 앞에서도 사소한 걸림을 관계의 문제로 키우지 않는 게 중요해요.',
+    swept: '마음이 상대 쪽으로 쏠리는 편이니, 이 시기에는 나를 놓치지 않는 선을 스스로 정해 두는 게 좋아요.',
+    steady: '중심을 잘 지키는 편이라, 이 시기의 변화도 크게 흔들리지 않고 받아들일 수 있어요.',
+    expressive: '표현이 앞서는 편이니, 이 흐름을 관계를 이끄는 쪽으로 쓰면 좋은 결과로 이어지기 쉬워요.',
+    independent: '혼자도 편한 편이니, 이 시기의 변화를 서두르지 않고 내 속도대로 받아들이면 돼요.',
+    quiet: '원래 인연의 결이 뚜렷하지 않은 편이라, 지금 같은 시기의 흐름이 오히려 방향을 정하는 데 큰 역할을 해요.',
   };
+  // nowFlowParas/comboSentence/AREA_NOW_CLOSE는 돈·일·관계·흐름 4개 영역이 그대로 쓰고 있어서
+  // 손대지 않고, 사랑과 인연만 별도 함수로 뗐다. 계산값(daeunEvidence/seunEvidence)과 그룹 뜻풀이
+  // (DAEUN_GROUP_TEXT/YEAR_GROUP_TEXT), 분야 연결(AREA_NOW_TRANSLATE.love)은 그대로 재사용하되,
+  // 지지 그룹이 천간 그룹과 다를 때도 그 뜻을 빠뜨리지 않고, 마지막 문단은 대운·세운의 일치 여부
+  // +성향(k1)까지 끌어와 진짜 종합이 되게 했다.
+  function loveNowParas(f, k1) {
+    const dInfo = f.daeun.current || f.daeun.list[0];
+    const Y = f.seun[f.thisYear];
+    const dGroup = dInfo.stemGroup, yGroup = Y.stemGroup;
+    const active = natalTouchGloss(f, [f.spouseGroup]);
+    const daeunPara = '먼저 지금 대운을 보면, ' + daeunEvidence(f) + ' ' + DAEUN_GROUP_TEXT[dGroup] + ' ' + AREA_NOW_TRANSLATE.love[dGroup] +
+      (dInfo.branchGroup !== dGroup ? ' 지지로는 ' + dInfo.branchName + '도 같이 있어서, ' + AREA_NOW_TRANSLATE.love[dInfo.branchGroup].replace('인연 쪽으로 옮겨 보면, ', '') : '');
+    const seunPara = '여기에 올해 세운도 같이 볼게요. ' + seunEvidence(f, f.thisYear) + ' ' + YEAR_GROUP_TEXT[yGroup] + ' ' + AREA_NOW_TRANSLATE.love[yGroup] +
+      (Y.branchGroup !== yGroup ? ' 지지로는 ' + Y.branchName + '도 같이 들어와서, ' + AREA_NOW_TRANSLATE.love[Y.branchGroup].replace('인연 쪽으로 옮겨 보면, ', '') : '');
+    // "겹치다"는 active(=대운·세운이 인연의 별과 겹치는지) 쪽 문장에서만 쓴다. 대운·세운끼리
+    // 같은 그룹인지도 "겹쳐서"로 표현하면, 두 판정이 서로 다른 것을 가리키는데도 "겹친다/안
+    // 겹친다"가 한 문단에서 충돌하는 것처럼 읽혀서 다른 낱말로 뗐다.
+    const overlap = dGroup === yGroup
+      ? '지금 대운과 올해 세운이 같은 ' + dGroup + ' 힘이에요. 그만큼 이 흐름이 올 한 해 유독 뚜렷하게 느껴질 수 있어요.'
+      : '지금 대운은 ' + dGroup + ', 올해 세운은 ' + yGroup + pt(yGroup, '으로', '로') + ' 결이 달라요. 그만큼 한 가지 흐름으로 단정하기보다 두 힘이 같이 작용한다고 보는 편이 맞아요.';
+    const synth = overlap + ' ' + AREA_NOW_CLOSE.love[active ? 0 : 1] + ' ' + LOVE_K1_ADVICE[k1];
+    return [daeunPara, seunPara, synth];
+  }
   function loveIntroParas(f) {
     const sp = f.spouseGroup, s = f.level(sp), o = f.level('식상'), r = f.level('비겁');
     const k1 = condTest('spouse_palace_clash', f) ? 'distance' : (s >= 2 && f.strength === 'weak') ? 'swept' : s >= 2 ? 'steady' : o >= 2 ? 'expressive' : r >= 2 ? 'independent' : 'quiet';
     const k2 = ['spouse_palace_clash', 'female_output_strong', 'rival_strong', 'weak_self'].find(c => condTest(c, f)) || 'default';
     const names = f.stars[sp].names; const jeong = names.filter(n => n === '정관' || n === '정재').length, pyeon = names.length - jeong;
     const k3 = !names.length ? 'neither' : jeong === pyeon ? 'both' : jeong > pyeon ? 'left' : 'right';
-    return [LOVE_K1[k1], LOVE_K3[k3], LOVE_K2[k2], ...nowFlowParas(f, 'love', [sp])];
+    return [LOVE_K1[k1], LOVE_K3[k3], lovePatternPara(f, k2), ...loveNowParas(f, k1)];
   }
 
   // ---- 돈과 재물 (wealthTypeKey/leakKey/incomeKey — 재물 상세풀이가 쓰는 함수 재사용) ----
