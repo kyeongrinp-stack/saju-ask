@@ -6864,12 +6864,26 @@ const SERVER = (function () {
     const d = AREA_DETAIL[q.r]; if (!d) return '';
     return '<div class="card opal" style="margin-top:12px"><div class="eyebrow">' + esc(d.lead) + '</div><b style="font-size:16px">' + esc(d.title) + '</b><p class="small" style="margin-top:4px">' + esc(d.desc) + '</p><div style="margin-top:10px">' + btn('전체 상세풀이 · 2,900원', d.go, 'primary block') + '</div></div>';
   }
+  // 2026-09-17 질문 상세 화면 디자인 통일: Type A/B가 화면상 다른 상품처럼 보이지 않도록
+  // 헤더·타이포·여백·구분선·CTA를 questionHead()+answerBody() 공통 렌더러 하나로 합쳤다.
+  // 번호 소제목(1·2·3)은 없애고 결론 → 이어지는 풀이 → (Type B만) 시기·그래프 → 장면(있으면)
+  // → 핵심/마지막 조언 순서로 자연스럽게 흐르게 했다. 실제 해석 문장·계산값은 그대로 재사용.
+  function questionHead(q) {
+    return '<section class="e-qhead"><span class="orb">' + ORB + '</span><div class="e-kicker">무료 답 · ' + AREAS[q.area].label + '</div><h1 class="e-h1" style="margin-top:8px">' + esc(q.t) + '</h1></section>';
+  }
+  function answerBody(parts) {
+    const reasonAll = (parts.personal ? [parts.personal] : []).concat(parts.reason || []);
+    const blocks = [];
+    if (reasonAll.length) blocks.push('<div class="e-prose">' + reasonAll.map(x => '<p>' + termify(x) + '</p>').join('') + '</div>');
+    if (parts.timingHtml) blocks.push(parts.timingHtml);
+    if (parts.scenes && parts.scenes.length) blocks.push('<ul class="e-scenes">' + parts.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>');
+    if (parts.core && parts.core.length) blocks.push('<div class="e-pull">' + esc(parts.core[0]) + '</div>' + (parts.core.length > 1 ? '<div class="e-prose">' + parts.core.slice(1).map(x => '<p>' + esc(x) + '</p>').join('') + '</div>' : ''));
+    if (parts.next) blocks.push('<div class="e-next"><p class="body">' + esc(parts.next) + '</p></div>');
+    return '<p class="e-lede" style="margin-top:16px">' + esc(parts.con) + '</p>' +
+      blocks.map(b => '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ln)">' + b + '</div>').join('');
+  }
   function answerEd2(a, q) {
-    return '<p class="e-lede" style="margin-top:16px">' + esc(a.con) + '</p>' +
-      '<div class="e-lab">1 · 내 사주에서 그렇게 읽히는 이유</div><div class="e-prose">' + a.ev.map(x => '<p>' + termify(x) + '</p>').join('') + '</div>' +
-      '<div class="e-lab">2 · 이런 장면, 익숙하실 거예요</div><ul class="e-scenes">' + a.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' +
-      '<div class="e-lab">3 · 이 사주에서 중요한 것</div><div class="e-pull">' + esc(a.core[0]) + '</div>' + (a.core.length > 1 ? '<div class="e-prose">' + a.core.slice(1).map(x => '<p>' + esc(x) + '</p>').join('') + '</div>' : '') +
-      '<div class="e-next"><div class="lab">다음에 볼 것</div><p class="body">' + esc(a.next) + '</p><p class="body" style="color:var(--cob);font-weight:600;margin:0">언제인지는 아래 질문에서 이어져요.</p></div>' + areaDetailCta(q);
+    return answerBody({ con: a.con, reason: a.ev, scenes: a.scenes, core: a.core, next: a.next }) + areaDetailCta(q);
   }
 
   // ---------- 잠긴 답(시기형) ----------
@@ -6963,17 +6977,16 @@ const SERVER = (function () {
   function lockedScreen(q) {
     const f = state.facts; const a = answerQuestion(f, q.id); markContent('answer', q.id);
     const rows = a.timing ? a.timing.months : []; const upcoming = rows.filter(r => r.month >= f.today.month);
-    const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenesHtml = pool && pool.scenes ? '<ul class="e-scenes" style="margin:8px 0 4px">' + pool.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' : '';
+    const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenes = pool && pool.scenes ? pool.scenes : [];
     const bands = bandsOf(upcoming); const open = bands[0];
     const openHtml = open ? '<div class="band open"><span class="m">' + bandLabel(open) + '</span>' + bandLines(open, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') + '</div>' : '<div class="band open"><span class="m">올해 남은 달</span><p class="body">올해 남은 달은 이 주제가 잔잔해요.</p></div>';
     const personal = typeBPersonal(q.id, f);
-    const personalHtml = personal ? '<div class="eyebrow">' + esc(personal.title) + '</div><p class="body">' + termify(personal.body) + '</p>' : '';
-    return topbar(true) + strip() + '<p class="small" style="margin-top:4px">' + AREAS[q.area].label + ' › ' + esc(q.t) + '</p>' +
-      '<div class="card">' + personalHtml + '<p class="concl">' + termify(a.conclusion) + '</p>' + (a.body[0] ? '<p class="body">' + termify(a.body[0]) + '</p>' : '') + scenesHtml + (rows.length ? monthsGridReal(rows, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) : '') +
-      '<p class="small">노란 점이 가장 강한 달이에요.</p>' + openHtml +
-      '<p class="small" style="margin-top:8px">' + esc(a.guard || a.condition) + '</p></div>' +
-      areaDetailCta(q) +
-      moreAsk(q) + '<div class="row" style="margin-top:12px">' + btn('다른 질문 먼저 보기', 'ask/' + q.area, 'ghost sm') + '</div>' + footer();
+    const timingHtml = rows.length ? (monthsGridReal(rows, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) + '<p class="e-cap">노란 점이 가장 강한 달이에요.</p>' + openHtml) : '';
+    const ch = CHAPTER_OF[q.id] || 1;
+    return '<div class="ed2">' + eTop(true) + questionHead(q) + strip() +
+      answerBody({ personal: personal ? personal.body : null, con: a.conclusion, reason: a.body[0] ? [a.body[0]] : [], timingHtml, scenes, core: [a.guard || a.condition] }) +
+      areaDetailCta(q) + moreAsk(q) +
+      '<div class="row" style="margin-top:12px"><button class="btn sm ghost" data-go="' + (owns(q.r) ? 'read/' + q.r : 'intro/' + q.r + '/' + q.id) + '">이 질문은 ' + RMETA[q.r].title + ' ' + ch + '장에서 더 깊게 ›</button></div><div class="row">' + btn('다른 질문 먼저 보기', 'ask/' + q.area, 'ghost sm') + '</div>' + eFoot() + bottomNav('q') + '</div>';
   }
   const daeunList = rows => '<div class="daeun">' + rows.map(r => '<div class="drow' + (r.current ? ' cur' : '') + '"><span class="age">' + r.label + '<span class="yrs">' + r.sub + '</span></span><span>' + esc(r.name) + '</span><span class="lv lv-' + r.level + '">' + LEVEL_WORDS[r.level] + '</span></div>').join('') + '</div>';
 
@@ -7487,7 +7500,7 @@ const SERVER = (function () {
     const q = qById(p.id); if (!q) return V.home(); markSeen('questions', q.id);
     if (q.type === 'B') return lockedScreen(q);
     const a = freeAnswer(q); const ch = CHAPTER_OF[q.id] || 1;
-    return '<div class="ed2">' + eTop(true) + '<section class="e-qhead"><span class="orb">' + ORB + '</span><div class="e-kicker">무료 답 · ' + AREAS[q.area].label + '</div><h1 class="e-h1" style="margin-top:8px">' + esc(q.t) + '</h1></section>' + strip() + answerEd2(a, q) + moreAsk(q) +
+    return '<div class="ed2">' + eTop(true) + questionHead(q) + strip() + answerEd2(a, q) + moreAsk(q) +
       '<div class="row" style="margin-top:12px"><button class="btn sm ghost" data-go="' + (owns(q.r) ? 'read/' + q.r : 'intro/' + q.r + '/' + q.id) + '">이 질문은 ' + RMETA[q.r].title + ' ' + ch + '장에서 더 깊게 ›</button></div><div class="row">' + btn('다른 질문 보기', 'ask/' + q.area, 'ghost sm') + '</div>' + eFoot() + bottomNav('q') + '</div>';
   };
   V.intro = p => {
