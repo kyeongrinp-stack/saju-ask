@@ -7090,18 +7090,21 @@ const SERVER = (function () {
     { label: '신년운세', key: 'newyear' },
     { label: '궁합', key: 'match' },
   ];
+  // 2026-09-17(2차 수정): "타고난 성향 ›"/"내 명식과 오행 ›" 클릭 메뉴를 없애고, 그 실제
+  // 화면(V.me/V.chart) 내용을 이 페이지에 그대로 이어 붙인다(iljuCard()/myChartCard() 재사용,
+  // 축약·재작성 없음). 순서: 타고난 성향 → 명식·오행 → 뭐가 제일 궁금하세요. 최상단에는 기존
+  // strip()/이어서 보기 버튼 외에 새 메뉴·CTA를 추가하지 않는다.
   V.mine = () => {
     const pend = store.get('pending', null);
     const topicsHtml = SAJU_TOPICS.map(t => {
       const f = fortuneById(t.key); const go = t.go || fortuneGo(f); const soon = f.status === 'soon';
       return '<button class="e-cat" data-go="' + go + '"><span class="ct"><b>' + esc(t.label) + (soon ? ' <span class="st">준비 중</span>' : '') + '</b><span>' + esc(f.desc) + '</span></span></button>';
     }).join('');
-    return '<div class="ed2">' + eTop(true) + strip() +
-      '<section class="e-sec plain" style="margin-top:20px"><div class="e-kicker">사주</div><h1 class="e-h1" style="font-size:26px;margin-top:6px">뭐가 제일<br>궁금하세요?</h1></section>' +
+    return '<div class="ed2 rd">' + eTop(true) + strip() +
       (pend ? '<div style="margin-top:10px"><button class="btn primary block" data-act="pending">내 질문 답 보기</button></div>' : '') +
-      '<div class="e-catgrid" style="margin-top:14px">' + topicsHtml + '</div>' +
-      '<section class="e-sec plain" style="margin-top:26px"><h2 class="e-h2" style="font-size:16px">나에 대해 알고 싶다면</h2><div class="mine-group">' +
-      '<button class="e-q" data-go="me"><span>타고난 성향</span><i>›</i></button><button class="e-q" data-go="chart"><span>내 명식과 오행</span><i>›</i></button></div></section>' +
+      '<section class="rd-ch" style="padding-top:20px"><h2>타고난 성향</h2>' + iljuCard() + '</section>' +
+      '<section class="rd-ch"><h2>명식 · 오행</h2>' + myChartCard() + '</section>' +
+      '<section class="rd-ch"><div class="rd-no">사주</div><h2>뭐가 제일 궁금하세요?</h2><div class="e-catgrid" style="margin-top:14px">' + topicsHtml + '</div></section>' +
       (isBuyer() ? '<section class="e-sec plain" style="margin-top:18px"><h2 class="e-h2" style="font-size:16px">내 리포트</h2><div class="mine-group">' + OWN_REPORTS().map(id => '<button class="e-q" data-go="read/' + id + '"><span>' + RMETA[id].title + '</span><i>›</i></button>').join('') + '</div></section>' : '') +
       ordersCard() +
       '<section class="e-sec plain" style="margin-top:28px"><h2 class="e-h2" style="font-size:16px">사주 정보 관리</h2><p class="e-cap">입력한 생년월일과 저장된 사주를 관리해요.</p>' +
