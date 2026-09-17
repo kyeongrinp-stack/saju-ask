@@ -6693,7 +6693,6 @@ const SERVER = (function () {
   const owns = r => { if (DEV) return true; const o = owned(); return o.all || o.reports.includes(r); };
   const isBuyer = () => { if (DEV) return true; const o = owned(); return o.all || o.reports.length > 0; };
   const OWN_REPORTS = () => { if (DEV) return REPORT_LIST.slice(); const o = owned(); return o.all ? REPORT_LIST.slice() : REPORT_LIST.filter(r => o.reports.includes(r)); };
-  const unlocked = id => { if (DEV) return true; const q = qById(id); return owns(q.r) || owned().answers.includes(id); };
   const quota = () => store.get('quota', { used: 0, extra: 0 });
   const quotaLeft = () => { const o = owned(); const q = quota(); const base = o.all ? 30 : 10 * o.reports.length; return Math.max(0, base + q.extra - q.used); };
   const seen = () => store.get('seen', { questions: [], reports: [] });
@@ -6854,13 +6853,21 @@ const SERVER = (function () {
     const core = [a.condition].concat(a.guard ? [a.guard] : []);
     return { a, con: (pool && pool.lede) || a.conclusion, ev, scenes: scenes.length ? scenes : [a.condition], core, next: (pool && pool.see) || '이 흐름이 언제 세지고 어떤 달에 조심해야 하는지는 시기를 묻는 질문에서 이어져요.' };
   }
-  function paths(q) { const r = RMETA[q.r]; return '<div class="paths"><div class="eyebrow" style="margin:12px 0 4px">유료로 이어지는 길은 두 가지예요</div><div class="path"><span class="pchip">2,900원</span><div><b>잠긴 답 1개</b><span class="small">시기를 묻는 후속 질문의 잠긴 구간·가장 강한 달·할 것을 그 질문만 열어요</span></div></div><div class="path"><span class="pchip deep">9,900원</span><div><b>' + r.title + '</b><span class="small">이 주제 전체 여덟 장, 달력, 후속질문 10회' + (q.r === 'love' ? ', 내 사주에서 읽히는 인연 이미지 포함' : '') + '. 잠긴 답 값은 여기서 차감돼요</span></div></div></div>'; }
+  // 2026-09-17 상품 정책 개편: 질문 1개당 2,900원 SKU 폐지. 질문 답변 아래 CTA는 해당 분야의
+  // 상세풀이(있으면)로만 연결한다. 아직 만든 분야가 없으면 아무 것도 보여주지 않는다(임의 생성 금지).
+  const AREA_DETAIL = {
+    wealth: { lead: '이 질문과 관련된 재물 흐름을 더 자세히 보고 싶다면', title: '돈과 재물 상세풀이', desc: '재물 성향부터 돈이 들어오는 방식, 새는 패턴, 투자 판단, 올해의 중요한 재물 시기까지 한 번에 살펴봐요.', go: 'moneydtl' },
+  };
+  function areaDetailCta(q) {
+    const d = AREA_DETAIL[q.r]; if (!d) return '';
+    return '<div class="card opal" style="margin-top:12px"><div class="eyebrow">' + esc(d.lead) + '</div><b style="font-size:16px">' + esc(d.title) + '</b><p class="small" style="margin-top:4px">' + esc(d.desc) + '</p><div style="margin-top:10px">' + btn('전체 상세풀이 · 2,900원', d.go, 'primary block') + '</div></div>';
+  }
   function answerEd2(a, q) {
     return '<p class="e-lede" style="margin-top:16px">' + esc(a.con) + '</p>' +
       '<div class="e-lab">1 · 내 사주에서 그렇게 읽히는 이유</div><div class="e-prose">' + a.ev.map(x => '<p>' + termify(x) + '</p>').join('') + '</div>' +
       '<div class="e-lab">2 · 이런 장면, 익숙하실 거예요</div><ul class="e-scenes">' + a.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' +
       '<div class="e-lab">3 · 이 사주에서 중요한 것</div><div class="e-pull">' + esc(a.core[0]) + '</div>' + (a.core.length > 1 ? '<div class="e-prose">' + a.core.slice(1).map(x => '<p>' + esc(x) + '</p>').join('') + '</div>' : '') +
-      '<div class="e-next"><div class="lab">다음에 볼 것</div><p class="body">' + esc(a.next) + '</p><p class="body" style="color:var(--cob);font-weight:600;margin:0">언제인지는 아래 질문에서 이어져요.</p>' + paths(q) + '</div>';
+      '<div class="e-next"><div class="lab">다음에 볼 것</div><p class="body">' + esc(a.next) + '</p><p class="body" style="color:var(--cob);font-weight:600;margin:0">언제인지는 아래 질문에서 이어져요.</p></div>' + areaDetailCta(q);
   }
 
   // ---------- 잠긴 답(시기형) ----------
@@ -6945,27 +6952,27 @@ const SERVER = (function () {
     return { title: p.title, body: genericPersonal(p.topic) };
   }
 
+  // 2026-09-17 상품 정책 개편: 질문 1개당 2,900원 SKU 폐지. 시기형(Type B) 질문의 기본답도
+  // 다른 질문과 동일하게 전부 무료 — 개인화 근거/결론/핵심 시기(첫 구간)/중요한 달(달력의 별
+  // 표시)/행동 조언까지 그대로 보여준다. 10년 흐름(a.daeun, 항상 null)과 내년 달력은 화면에서
+  // 아예 뺐다 — 전자는 실제 데이터가 없는 미구현 항목이었고, 후자는 "현재+올해" 범위 밖이라
+  // 나의 흐름/재물/일/사랑 리포트(9,900원) 쪽 영역으로 남겨둔다. 새 사주 판단은 만들지 않았고
+  // answerQuestion()이 이미 계산해 둔 값만 그대로 노출 범위를 넓힌 것이다.
   function lockedScreen(q) {
-    const f = state.facts; const a = answerQuestion(f, q.id); const un = unlocked(q.id); if (un) markContent('answer', q.id);
+    const f = state.facts; const a = answerQuestion(f, q.id); markContent('answer', q.id);
     const rows = a.timing ? a.timing.months : []; const upcoming = rows.filter(r => r.month >= f.today.month);
     const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenesHtml = pool && pool.scenes ? '<ul class="e-scenes" style="margin:8px 0 4px">' + pool.scenes.map((x, i) => '<li><span class="n">' + (i + 1) + '</span><span>' + esc(x) + '</span></li>').join('') + '</ul>' : '';
-    const bands = bandsOf(upcoming); const open = bands[0]; const rest = bands.slice(1);
-    const openHtml = open ? '<div class="band open"><span class="m">' + bandLabel(open) + ' · 첫 구간 무료</span>' + bandLines(open, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') + '</div>' : '<div class="band open"><span class="m">올해 남은 달</span><p class="body">올해 남은 달은 이 주제가 잔잔해요. 큰 시기는 대운과 내년 달력에서 봐요.</p></div>';
-    const restHtml = rest.map(b => '<div class="band">' + (un ? '' : '<span class="lock">' + lk() + '</span>') + '<span class="m">' + bandLabel(b) + '</span>' + (un ? bandLines(b, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') : '<span class="skel"></span><span class="skel w70"></span><span class="skel w45"></span>') + '</div>').join('');
-    const items = [['그 달에 생기기 쉬운 일', open ? bandLines(open, q.area)[0] : '-'], ['그 달에 할 것', a.condition], ['내년 달력', '내년 1~12월 흐름'], ['10년 흐름', '이 주제가 앞자리로 오는 대운']];
-    const nextYear = un && a.timing && a.timing.monthsNext ? '<div class="eyebrow" style="margin-top:14px">' + f.nextYear + '년 월별</div>' + monthsGridReal(a.timing.monthsNext, { unlocked: true }) : '';
-    const daeun = un && a.daeun ? '<div class="eyebrow" style="margin-top:14px">10년 흐름</div>' + daeunList(a.daeun) : '';
+    const bands = bandsOf(upcoming); const open = bands[0];
+    const openHtml = open ? '<div class="band open"><span class="m">' + bandLabel(open) + '</span>' + bandLines(open, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') + '</div>' : '<div class="band open"><span class="m">올해 남은 달</span><p class="body">올해 남은 달은 이 주제가 잔잔해요.</p></div>';
     const personal = typeBPersonal(q.id, f);
     const personalHtml = personal ? '<div class="eyebrow">' + esc(personal.title) + '</div><p class="body">' + termify(personal.body) + '</p>' : '';
     return topbar(true) + strip() + '<p class="small" style="margin-top:4px">' + AREAS[q.area].label + ' › ' + esc(q.t) + '</p>' +
-      '<div class="card">' + personalHtml + '<p class="concl">' + termify(a.conclusion) + '</p>' + (a.body[0] ? '<p class="body">' + termify(a.body[0]) + '</p>' : '') + scenesHtml + (rows.length ? monthsGridReal(rows, { unlocked: un, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) : '') +
-      '<p class="small">' + (un ? '노란 점이 가장 강한 달이에요.' : '달 숫자는 보여요. 잠긴 구간의 세기와 가장 강한 달은 열면 보여요.') + '</p>' + openHtml + restHtml +
-      '<div style="margin-top:8px">' + items.map(it => '<div class="lockrow"><span>' + it[0] + (un ? '<br><span class="small" style="color:var(--ink-2)">' + esc(it[1]) + '</span>' : '') + '</span>' + (un ? '' : lk()) + '</div>').join('') + '</div>' + nextYear + daeun +
+      '<div class="card">' + personalHtml + '<p class="concl">' + termify(a.conclusion) + '</p>' + (a.body[0] ? '<p class="body">' + termify(a.body[0]) + '</p>' : '') + scenesHtml + (rows.length ? monthsGridReal(rows, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) : '') +
+      '<p class="small">노란 점이 가장 강한 달이에요.</p>' + openHtml +
       '<p class="small" style="margin-top:8px">' + esc(a.guard || a.condition) + '</p></div>' +
-      (un ? '' : '<div class="card pinkline"><div class="eyebrow">이 답만 더 보고 싶다면</div><div class="row between" style="align-items:flex-start;flex-wrap:nowrap"><div><b style="font-size:15px">잠긴 답 1개 열기</b><p class="small" style="margin-top:2px">이 질문의 잠긴 구간, 가장 강한 달, 그 달에 할 것</p></div><span class="pchip">2,900원</span></div><button class="btn line block" data-act="pay" data-item="answer" data-id="' + q.id + '" style="margin-top:10px">이 답만 열기 · 2,900원</button><p class="small" style="margin-top:6px;text-align:center">나중에 리포트를 살 때 2,900원은 그대로 차감돼요.</p></div>' + bridge(q, ['올해·내년 월별 달력과 가장 강한 달', '그 달에 생기기 쉬운 일과 할 것', '후속질문 10회'], btn(COV[q.r].main + ' 리포트 보기 · 9,900원', 'intro/' + q.r + '/' + q.id, 'primary block'))) +
+      areaDetailCta(q) +
       moreAsk(q) + '<div class="row" style="margin-top:12px">' + btn('다른 질문 먼저 보기', 'ask/' + q.area, 'ghost sm') + '</div>' + footer();
   }
-  function bridge(q, items, cta, eyebrow) { const r = RMETA[q.r]; return '<div class="bridge card opal"><span class="en" style="font-size:12.5px">Continue in the report</span><div class="eyebrow">' + (eyebrow || '이 주제 전체를 자세히 보고 싶다면') + '</div><div class="hd">' + cover(q.r, 64) + '<div><div class="bt">' + r.title + '</div><p class="small" style="margin-top:2px">주제 리포트 1개 · 9,900원 · 웹에서 읽고 PDF로 저장</p></div></div><ul>' + items.map(t => '<li>' + t + '</li>').join('') + '</ul>' + cta + '</div>'; }
   const daeunList = rows => '<div class="daeun">' + rows.map(r => '<div class="drow' + (r.current ? ' cur' : '') + '"><span class="age">' + r.label + '<span class="yrs">' + r.sub + '</span></span><span>' + esc(r.name) + '</span><span class="lv lv-' + r.level + '">' + LEVEL_WORDS[r.level] + '</span></div>').join('') + '</div>';
 
   // ---------- 명식 조각 ----------
