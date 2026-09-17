@@ -6974,6 +6974,87 @@ const SERVER = (function () {
     return { title: p.title, body: genericPersonal(p.topic) };
   }
 
+  // 2026-09-17(5차, 파일럿: spouse_shake) — QUESTIONS 개별 답변을 "계산 결과 조각"이 아니라
+  // "완성된 사주풀이"로 조립한다. 직접 답 → 명리 근거(원국+세운 실제값) → 쉬운 설명 → 생활
+  // 연결(typeBPersonal 재사용) → 시기 해석(그래프 전, 3년이 다 잔잔하면 대운까지 확인) →
+  // 그래프 → 시기 해석(그래프 후, ANSWER_SCENES 문장을 번호 없이 풀어씀) → 종합 조언 순으로,
+  // 전부 자연스러운 문단으로 흐르게 한다. 새 명리 판정 없음 — relOf()로 대운 기둥과 배우자궁
+  // (일지)의 관계를 보는 것도, 세운·월운에 이미 쓰는 decorate()와 완전히 같은 계산을 대운
+  // 기둥에 한 번 더 적용한 것뿐이다(기존엔 대운 리스트 항목에 이 필드가 없었다).
+  function daeunSpousePalaceRel(f) {
+    const natalBranch = f.pillars.day.branch;
+    return {
+      cur: f.daeun.current ? relOf(natalBranch, f.daeun.current.gz.branch) : null,
+      next: f.daeun.next ? relOf(natalBranch, f.daeun.next.gz.branch) : null,
+    };
+  }
+  const REL_KO2 = { chung: '충', wonjin: '원진', hap: '합', none: '' };
+  const eulReul = w => josa(w, '을', '를');
+  function spouseShakeBody(f, q, a) {
+    const key = branchKey(a, q);
+    const pool = SCENES[q.id] && (SCENES[q.id].branches[key] || null);
+    const rows = a.timing;
+    const upcoming = rows.months.filter(r => r.month >= f.today.month);
+    const open = bandsOf(upcoming)[0];
+
+    const natalRel = f.natal.relations.find(r => (r.a === '일지' || r.b === '일지') && (r.type === 'chung' || r.type === 'wonjin'));
+    const p1 = natalRel
+      ? '당신 원국에서는 ' + natalRel.a + '와 ' + natalRel.b + '가 ' + eulReul(natalRel.ko) + ' 이룹니다. 배우자궁(일지)은 배우자와 가장 가까운 관계를 보는 자리인데, 이 자리가 원국 안에서부터 다른 기둥과 부딪히거나 어긋난 구조라는 뜻이에요. 충은 두 글자가 정면으로 부딪히는 관계이고, 원진은 크게 부딪히진 않아도 마음이 미묘하게 안 맞는 관계로 봅니다.'
+      : '당신 원국에서는 배우자궁(일지)이 다른 기둥과 직접 충이나 원진을 이루지는 않아요. 그래서 이 자리가 흔들린다면 원국 자체의 문제가 아니라, 세운이나 대운이 지나가면서 일시적으로 건드리는 경우로 봅니다.';
+    const Y = f.seun[f.thisYear];
+    const p2 = (Y.relSpouse === 'chung' || Y.relSpouse === 'wonjin')
+      ? '올해 세운 ' + Y.gz.hanja + '(' + Y.gz.hangul + ')의 지지는 배우자궁과 ' + eulReul(REL_KO2[Y.relSpouse]) + ' 이루고 있어요. 그래서 올해는 이 흔들림이 실제로 작동하는 해로 봅니다.'
+      : Y.relSpouse === 'hap'
+        ? '올해 세운 ' + Y.gz.hanja + '(' + Y.gz.hangul + ')의 지지는 배우자궁과 합을 이룹니다. 합은 부딪히는 관계가 아니라 끌어당기고 묶이는 관계라, 흔들림보다는 오히려 가까워지는 쪽에 가까운 해예요.'
+        : '올해 세운 ' + Y.gz.hanja + '(' + Y.gz.hangul + ')의 지지는 배우자궁과 특별한 관계를 맺지 않습니다. 그래서 올해 자체는 이 흔들림이 강하게 작동하는 해는 아니에요.';
+
+    const personal = typeBPersonal(q.id, f);
+
+    const strongYears = rows.years.filter(y => y.level === 2), midYears = rows.years.filter(y => y.level === 1), quietYears = rows.years.filter(y => y.level === 0);
+    let p3;
+    if (strongYears.length) {
+      p3 = '해 단위로 보면 ' + strongYears.map(y => y.label).join('·') + '에 배우자궁이 세운과 충을 이루어서 흔들림이 뚜렷합니다.' +
+        (midYears.length ? ' ' + midYears.map(y => y.label).join('·') + '은 원진 정도라 그보다는 약하게 지나가요.' : '') +
+        (quietYears.length ? ' ' + quietYears.map(y => y.label).join('·') + '은 부딪히는 자리가 없어서 잔잔합니다.' : '');
+    } else if (midYears.length) {
+      p3 = '해 단위로 보면 ' + midYears.map(y => y.label).join('·') + '은 배우자궁과 원진이 걸려서 미묘하게 어긋나고, 나머지 해는 부딪히는 자리가 없어서 잔잔하게 지나갑니다.';
+    } else {
+      const dr = daeunSpousePalaceRel(f);
+      let daeunNote;
+      if (f.daeun.current && (dr.cur === 'chung' || dr.cur === 'wonjin')) {
+        daeunNote = '다만 지금 대운 ' + f.daeun.current.gz.hanja + '(' + f.daeun.current.gz.hangul + ')은 배우자궁과 ' + eulReul(REL_KO2[dr.cur]) + ' 이루고 있습니다. 해마다는 잔잔해도 이 10년 전체가 배우자궁이 눌려 있는 흐름이라, 큰 사건보다는 만성적인 거리감으로 나타나기 쉬워요.';
+      } else if (f.daeun.next && (dr.next === 'chung' || dr.next === 'wonjin')) {
+        daeunNote = '대운을 확인해 보면, 다음 대운 ' + f.daeun.next.gz.hanja + '(' + f.daeun.next.gz.hangul + ')부터는 배우자궁과 ' + iga(REL_KO2[dr.next]) + ' 걸립니다. ' + f.daeun.changeYear + '년, 대운이 바뀌는 시점을 기준으로 지금과는 다른 흐름이 시작될 수 있으니 그때를 분기점으로 기억해 두세요.';
+      } else {
+        daeunNote = '대운을 확인해 봐도 지금 대운과 다음 대운 모두 배우자궁과 직접 부딪히지 않습니다. 이 흔들림 문제만 놓고 보면 앞으로 한동안은 원국의 기본 성향 정도로만 움직이는, 비교적 순한 구간이에요.';
+      }
+      p3 = '앞으로 세 해(' + rows.years.map(y => y.label).join('·') + ')는 배우자궁과 부딪히는 세운이 없어서 잔잔합니다. ' + daeunNote;
+    }
+
+    const graphHtml = monthsGridReal(rows.months, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) + '<p class="e-cap">노란 점이 가장 강한 달이에요.</p>';
+
+    const sceneTxt = pool && pool.scenes ? pool.scenes.join(' ') : '';
+    let p4;
+    if (open) {
+      const noteWord = open.notes.includes('충') ? '충' : open.notes.includes('원진') ? '원진' : '흔들림';
+      const noteGloss = noteWord === '충' ? '정면으로 부딪히는 관계' : noteWord === '원진' ? '미묘하게 어긋나는 관계' : null;
+      const noteUnit = noteGloss ? noteWord + '(' + noteGloss + ')' : noteWord;
+      p4 = '그래프에서 ' + bandLabel(open) + '이 가장 진하게 표시되는 건, 그 달의 세운·월운 지지가 배우자궁과 ' + noteUnit + pt(noteWord, '을', '를') + ' 이루기 때문이에요. ' + sceneTxt + ' 반대로 옅게 표시된 달은 배우자궁을 건드리는 지지가 없다는 뜻이라, 관계를 다지기에 오히려 편한 시기로 써도 됩니다.';
+    } else {
+      p4 = '그래프가 전체적으로 옅게 표시되는 건 올해 남은 달 중 배우자궁을 직접 건드리는 지지가 없다는 뜻입니다. ' + sceneTxt + ' 이런 달에는 관계가 흔들릴 걱정보다, 미뤄 둔 대화를 먼저 꺼내 보는 쪽이 실속 있어요.';
+    }
+
+    const p5 = a.condition + (pool && pool.see ? ' ' + pool.see : '');
+
+    const proseA = [p1, p2].concat(personal ? [personal.body] : []).concat([p3]);
+    const proseB = [p4, p5];
+    return '<p class="e-lede" style="margin-top:16px">' + esc(a.conclusion) + '</p>' +
+      '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ln)" class="e-prose">' + proseA.map(x => '<p>' + termify(x) + '</p>').join('') + '</div>' +
+      '<div style="margin-top:18px">' + graphHtml + '</div>' +
+      '<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ln)" class="e-prose">' + proseB.map(x => '<p>' + termify(x) + '</p>').join('') + '</div>' +
+      (a.guard ? '<p class="e-cap" style="margin-top:10px">' + esc(a.guard) + '</p>' : '');
+  }
+
   // 2026-09-17 상품 정책 개편: 질문 1개당 2,900원 SKU 폐지. 시기형(Type B) 질문의 기본답도
   // 다른 질문과 동일하게 전부 무료 — 개인화 근거/결론/핵심 시기(첫 구간)/중요한 달(달력의 별
   // 표시)/행동 조언까지 그대로 보여준다. 10년 흐름(a.daeun, 항상 null)과 내년 달력은 화면에서
@@ -6982,15 +7063,20 @@ const SERVER = (function () {
   // answerQuestion()이 이미 계산해 둔 값만 그대로 노출 범위를 넓힌 것이다.
   function lockedScreen(q) {
     const f = state.facts; const a = answerQuestion(f, q.id); markContent('answer', q.id);
-    const rows = a.timing ? a.timing.months : []; const upcoming = rows.filter(r => r.month >= f.today.month);
-    const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenes = pool && pool.scenes ? pool.scenes : [];
-    const bands = bandsOf(upcoming); const open = bands[0];
-    const openHtml = open ? '<div class="band open"><span class="m">' + bandLabel(open) + '</span>' + bandLines(open, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') + '</div>' : '<div class="band open"><span class="m">올해 남은 달</span><p class="body">올해 남은 달은 이 주제가 잔잔해요.</p></div>';
-    const personal = typeBPersonal(q.id, f);
-    const timingHtml = rows.length ? (monthsGridReal(rows, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) + '<p class="e-cap">노란 점이 가장 강한 달이에요.</p>' + openHtml) : '';
     const ch = CHAPTER_OF[q.id] || 1;
-    return '<div class="ed2">' + eTop(true) + questionHead(q) + strip() +
-      answerBody({ personal: personal ? personal.body : null, con: a.conclusion, reason: a.body[0] ? [a.body[0]] : [], timingHtml, scenes, core: [a.guard || a.condition] }) +
+    let body;
+    if (q.id === 'spouse_shake') {
+      body = spouseShakeBody(f, q, a);
+    } else {
+      const rows = a.timing ? a.timing.months : []; const upcoming = rows.filter(r => r.month >= f.today.month);
+      const pool = SCENES[q.id] && (SCENES[q.id].branches[branchKey(a, q)] || null); const scenes = pool && pool.scenes ? pool.scenes : [];
+      const bands = bandsOf(upcoming); const open = bands[0];
+      const openHtml = open ? '<div class="band open"><span class="m">' + bandLabel(open) + '</span>' + bandLines(open, q.area).map(t => '<p class="body">' + esc(t) + '</p>').join('') + '</div>' : '<div class="band open"><span class="m">올해 남은 달</span><p class="body">올해 남은 달은 이 주제가 잔잔해요.</p></div>';
+      const personal = typeBPersonal(q.id, f);
+      const timingHtml = rows.length ? (monthsGridReal(rows, { unlocked: true, openMonths: open ? Array.from({ length: open.to - open.from + 1 }, (_, i) => open.from + i) : [] }) + '<p class="e-cap">노란 점이 가장 강한 달이에요.</p>' + openHtml) : '';
+      body = answerBody({ personal: personal ? personal.body : null, con: a.conclusion, reason: a.body[0] ? [a.body[0]] : [], timingHtml, scenes, core: [a.guard || a.condition] });
+    }
+    return '<div class="ed2">' + eTop(true) + questionHead(q) + strip() + body +
       areaDetailCta(q) + moreAsk(q) +
       '<div class="row" style="margin-top:12px"><button class="btn sm ghost" data-go="' + (owns(q.r) ? 'read/' + q.r : 'intro/' + q.r + '/' + q.id) + '">이 질문은 ' + RMETA[q.r].title + ' ' + ch + '장에서 더 깊게 ›</button></div><div class="row">' + btn('다른 질문 먼저 보기', 'ask/' + q.area, 'ghost sm') + '</div>' + eFoot() + bottomNav('q') + '</div>';
   }
