@@ -7795,9 +7795,11 @@ const SERVER = (function () {
   // 2026-09-17(3차): 기본풀이의 "지금 시기" 문단을 "대운·세운 값 나열"에서 "근거→의미→분야
   // 연결→종합→조언"으로 확장. 대운·세운 자체(daeunEvidence/seunEvidence)와 그 뜻(DAEUN_GROUP_TEXT/
   // YEAR_GROUP_TEXT, composer.js 기존 자산)은 그대로 재사용하고, 여기서는 "이 힘이 이 분야에서
-  // 어떻게 나타나는지"(AREA_NOW_TRANSLATE)와 "여러 신호를 어떻게 같이 보는지"(comboSentence,
-  // 기존 GLOSSARY의 식상생재·관인상생 재사용)만 새로 썼다. 새 명리 판정 없음 — 그룹은 이미 계산된
-  // f.daeun.current.stemGroup/f.seun[year].stemGroup을 그대로 읽는다.
+  // 어떻게 나타나는지"(AREA_NOW_TRANSLATE)와 "여러 신호를 어떻게 같이 보는지"(areaNowParas의
+  // overlap, 기존 GLOSSARY의 식상생재·관인상생 재사용)만 새로 썼다. 새 명리 판정 없음 — 그룹은
+  // 이미 계산된 f.daeun.current.stemGroup/f.seun[year].stemGroup을 그대로 읽는다.
+  // 2026-09-18(5차): 5개 분야 전체에 "반복되기 쉬운 패턴은 근거부터"·"겹치다는 한 의미로만" 원칙을
+  // 적용하면서, 영역별로 따로 있던 nowFlowParas/comboSentence를 areaNowParas 하나로 합쳤다.
   const AREA_NOW_TRANSLATE = {
     love: {
       비겁: '인연 쪽으로 옮겨 보면, 주변에 사람이 늘면서 삼각관계나 경쟁하듯 마음을 얻어야 하는 상황이 생기기 쉬워요.',
@@ -7835,12 +7837,9 @@ const SERVER = (function () {
       인성: '전체 흐름으로 보면, 준비하고 배우는 과정을 거친 뒤에 변화가 와요. 지금은 서두르기보다 다지는 시기예요.',
     },
   };
-  const AREA_COMBO_MULTI = {
-    love: '마음이 여러 방향에서 동시에 움직이기 쉬운 시기예요. 가장 오래 이어진 마음을 기준으로 삼으면 흔들리지 않아요.',
-    money: '버는 방식과 쓰는 방식을 같이 점검해야 하는 시기예요. 한쪽 신호만 보고 판단하면 놓치는 부분이 생겨요.',
-    work: '역할과 방향이 한 번에 여러 곳에서 움직이는 시기예요. 다 붙잡으려 하지 말고 우선순위부터 정하세요.',
-    people: '사람 문제가 여러 갈래에서 동시에 생기기 쉬운 시기예요. 한 번에 다 풀려 하지 말고 급한 것부터 정리하세요.',
-    flow: '변화가 한쪽에서만 오지 않고 여러 결이 겹치는 시기예요. 서두르지 말고 순서를 나눠서 받아들이세요.',
+  const AREA_NOW_PREFIX = {
+    love: '인연 쪽으로 옮겨 보면, ', money: '재물 쪽으로 옮겨 보면, ', work: '일 쪽으로 옮겨 보면, ',
+    people: '사람 쪽으로 옮겨 보면, ', flow: '전체 흐름으로 보면, ',
   };
   const AREA_NOW_CLOSE = {
     love: ['그래서 지금은 인연의 별이 대운·세운 흐름과 같이 움직이는 시기예요. 새 만남이든 기존 관계의 변화든, 평소보다 인연 쪽 움직임이 크게 느껴질 수 있어요.',
@@ -7854,25 +7853,46 @@ const SERVER = (function () {
     flow: ['그래서 지금은 이 흐름과 관련된 별이 대운·세운과 같이 움직이는 시기예요. 평소보다 전환이나 변화가 크게 느껴질 수 있으니, 방향은 서두르지 말고 순서를 나눠 정하세요.',
       '그래서 지금은 이 흐름과 관련된 별이 대운·세운과 직접 겹치진 않는 시기예요. 큰 전환보다 지금 흐름을 그대로 이어가기에 알맞은 시기예요.'],
   };
-  function comboSentence(area, dGroup, yGroup) {
-    if (dGroup === yGroup) return '대운과 세운이 같은 힘으로 겹쳐서, 올 한 해는 이 흐름이 유독 뚜렷하게 느껴지는 시기예요.';
-    let s = AREA_COMBO_MULTI[area];
-    const pair = new Set([dGroup, yGroup]);
-    const isPair = (a, b) => pair.has(a) && pair.has(b);
-    if ((area === 'money' || area === 'work') && isPair('식상', '재성')) s += ' 명리에서는 이 흐름을 식상생재라고 불러요. ' + (area === 'money' ? '움직인 만큼 벌이가 돈으로 이어지는, 좋은 흐름으로 보는 결이에요.' : '벌이는 일이 그대로 성과로 이어지는 흐름이에요.');
-    else if (area === 'work' && isPair('관성', '인성')) s += ' 명리에서는 이 구조를 관인상생이라고 불러요. 책임을 맡을수록 오히려 조직 안에서 크는, 순한 흐름이에요.';
-    return s;
-  }
-  function nowFlowParas(f, area, groups) {
+  // 대운 영향 → 세운 영향 → 종합 해석, 5개 영역 공용. "겹치다"는 active(=대운·세운이 이
+  // 분야의 별과 맞닿는지) 쪽 문장에서만 쓴다 — 대운·세운끼리 같은 그룹인지도 "겹치다"로 쓰면
+  // 한 문단 안에서 "겹친다"/"안 겹친다"가 서로 다른 것을 가리키는데도 부딪히는 것처럼 읽힌다.
+  // 지지 그룹이 천간 그룹과 다를 때도 그 뜻을 빠뜨리지 않고, k1Advice로 성향까지 끌어와야
+  // "종합"이 대운·세운 기계적 요약이 아니라 이 사람에게 맞춘 해석이 되게 한다.
+  function areaNowParas(f, area, groups, k1, k1Advice) {
     const dInfo = f.daeun.current || f.daeun.list[0];
     const Y = f.seun[f.thisYear];
     const dGroup = dInfo.stemGroup, yGroup = Y.stemGroup;
     const active = natalTouchGloss(f, groups);
-    const p1 = '실제 흐름을 짚어보면, ' + daeunEvidence(f) + ' ' + DAEUN_GROUP_TEXT[dGroup] + ' ' + AREA_NOW_TRANSLATE[area][dGroup];
-    const p2 = '여기에 올해 세운을 더해 보면, ' + seunEvidence(f, f.thisYear) + ' ' + YEAR_GROUP_TEXT[yGroup] + ' ' + AREA_NOW_TRANSLATE[area][yGroup];
-    const p3 = comboSentence(area, dGroup, yGroup);
-    const p4 = AREA_NOW_CLOSE[area][active ? 0 : 1];
-    return [p1, p2, p3, p4];
+    const prefix = AREA_NOW_PREFIX[area];
+    // 대운 천간·대운 지지·세운 천간·세운 지지 4자리가 그룹 5개 중에서 나오다 보니, 같은 그룹이
+    // 두 번 이상 걸리는 경우가 흔하다(특히 대운·세운 천간이 같은 그룹일 때). AREA_NOW_TRANSLATE
+    // 문장을 그때마다 다시 쓰면 "이 분야에서 어떻게 나타나는지" 설명이 통째로 반복된다 —
+    // shown Set으로 한 화면에 그룹당 한 번만 실제로 풀어주고, 두 번째부터는 짧게 참조한다.
+    const shown = new Set([dGroup]);
+    const noteFor = g => { if (shown.has(g)) return null; shown.add(g); return AREA_NOW_TRANSLATE[area][g]; };
+    let daeunPara = '먼저 지금 대운을 보면, ' + daeunEvidence(f) + ' ' + DAEUN_GROUP_TEXT[dGroup] + ' ' + AREA_NOW_TRANSLATE[area][dGroup];
+    if (dInfo.branchGroup !== dGroup) {
+      const note = noteFor(dInfo.branchGroup);
+      daeunPara += ' 지지로는 ' + dInfo.branchName + '도 같이 있어서, ' + (note ? note.replace(prefix, '') : '이 힘도 같은 결이라 위에서 말한 것과 같아요.');
+    }
+    let seunPara = '여기에 올해 세운도 같이 볼게요. ' + seunEvidence(f, f.thisYear) + ' ' + YEAR_GROUP_TEXT[yGroup];
+    const yNote = noteFor(yGroup);
+    seunPara += yNote ? ' ' + yNote : ' 이 힘이 이 분야에서 어떻게 나타나는지는 대운과 같아서 앞서 말한 것과 같아요.';
+    if (Y.branchGroup !== yGroup) {
+      const note = noteFor(Y.branchGroup);
+      seunPara += ' 지지로는 ' + Y.branchName + '도 같이 들어와서, ' + (note ? note.replace(prefix, '') : '이 힘도 같은 결이라 위에서 말한 것과 같아요.');
+    }
+    let overlap = dGroup === yGroup
+      ? '지금 대운과 올해 세운이 같은 ' + dGroup + ' 힘이에요. 그만큼 이 흐름이 올 한 해 유독 뚜렷하게 느껴질 수 있어요.'
+      : '지금 대운은 ' + dGroup + ', 올해 세운은 ' + yGroup + pt(yGroup, '으로', '로') + ' 결이 달라요. 그만큼 한 가지 흐름으로 단정하기보다 두 힘이 같이 작용한다고 보는 편이 맞아요.';
+    if (dGroup !== yGroup) {
+      const pair = new Set([dGroup, yGroup]);
+      const isPair = (a, b) => pair.has(a) && pair.has(b);
+      if ((area === 'money' || area === 'work') && isPair('식상', '재성')) overlap += ' 명리에서는 이 흐름을 식상생재라고 불러요. ' + (area === 'money' ? '움직인 만큼 벌이가 돈으로 이어지는, 좋은 흐름으로 보는 결이에요.' : '벌이는 일이 그대로 성과로 이어지는 흐름이에요.');
+      else if (area === 'work' && isPair('관성', '인성')) overlap += ' 명리에서는 이 구조를 관인상생이라고 불러요. 책임을 맡을수록 오히려 조직 안에서 크는, 순한 흐름이에요.';
+    }
+    const synth = overlap + ' ' + AREA_NOW_CLOSE[area][active ? 0 : 1] + ' ' + (k1Advice[k1] || '');
+    return [daeunPara, seunPara, synth];
   }
   function areaIntroCard(enLabel, koLabel, paragraphs) {
     return '<div class="card"><span class="en" style="font-size:13px">' + enLabel + '</span><div class="eyebrow">' + esc(koLabel) + ' · 기본 풀이</div>' +
@@ -7924,36 +7944,13 @@ const SERVER = (function () {
     independent: '혼자도 편한 편이니, 이 시기의 변화를 서두르지 않고 내 속도대로 받아들이면 돼요.',
     quiet: '원래 인연의 결이 뚜렷하지 않은 편이라, 지금 같은 시기의 흐름이 오히려 방향을 정하는 데 큰 역할을 해요.',
   };
-  // nowFlowParas/comboSentence/AREA_NOW_CLOSE는 돈·일·관계·흐름 4개 영역이 그대로 쓰고 있어서
-  // 손대지 않고, 사랑과 인연만 별도 함수로 뗐다. 계산값(daeunEvidence/seunEvidence)과 그룹 뜻풀이
-  // (DAEUN_GROUP_TEXT/YEAR_GROUP_TEXT), 분야 연결(AREA_NOW_TRANSLATE.love)은 그대로 재사용하되,
-  // 지지 그룹이 천간 그룹과 다를 때도 그 뜻을 빠뜨리지 않고, 마지막 문단은 대운·세운의 일치 여부
-  // +성향(k1)까지 끌어와 진짜 종합이 되게 했다.
-  function loveNowParas(f, k1) {
-    const dInfo = f.daeun.current || f.daeun.list[0];
-    const Y = f.seun[f.thisYear];
-    const dGroup = dInfo.stemGroup, yGroup = Y.stemGroup;
-    const active = natalTouchGloss(f, [f.spouseGroup]);
-    const daeunPara = '먼저 지금 대운을 보면, ' + daeunEvidence(f) + ' ' + DAEUN_GROUP_TEXT[dGroup] + ' ' + AREA_NOW_TRANSLATE.love[dGroup] +
-      (dInfo.branchGroup !== dGroup ? ' 지지로는 ' + dInfo.branchName + '도 같이 있어서, ' + AREA_NOW_TRANSLATE.love[dInfo.branchGroup].replace('인연 쪽으로 옮겨 보면, ', '') : '');
-    const seunPara = '여기에 올해 세운도 같이 볼게요. ' + seunEvidence(f, f.thisYear) + ' ' + YEAR_GROUP_TEXT[yGroup] + ' ' + AREA_NOW_TRANSLATE.love[yGroup] +
-      (Y.branchGroup !== yGroup ? ' 지지로는 ' + Y.branchName + '도 같이 들어와서, ' + AREA_NOW_TRANSLATE.love[Y.branchGroup].replace('인연 쪽으로 옮겨 보면, ', '') : '');
-    // "겹치다"는 active(=대운·세운이 인연의 별과 겹치는지) 쪽 문장에서만 쓴다. 대운·세운끼리
-    // 같은 그룹인지도 "겹쳐서"로 표현하면, 두 판정이 서로 다른 것을 가리키는데도 "겹친다/안
-    // 겹친다"가 한 문단에서 충돌하는 것처럼 읽혀서 다른 낱말로 뗐다.
-    const overlap = dGroup === yGroup
-      ? '지금 대운과 올해 세운이 같은 ' + dGroup + ' 힘이에요. 그만큼 이 흐름이 올 한 해 유독 뚜렷하게 느껴질 수 있어요.'
-      : '지금 대운은 ' + dGroup + ', 올해 세운은 ' + yGroup + pt(yGroup, '으로', '로') + ' 결이 달라요. 그만큼 한 가지 흐름으로 단정하기보다 두 힘이 같이 작용한다고 보는 편이 맞아요.';
-    const synth = overlap + ' ' + AREA_NOW_CLOSE.love[active ? 0 : 1] + ' ' + LOVE_K1_ADVICE[k1];
-    return [daeunPara, seunPara, synth];
-  }
   function loveIntroParas(f) {
     const sp = f.spouseGroup, s = f.level(sp), o = f.level('식상'), r = f.level('비겁');
     const k1 = condTest('spouse_palace_clash', f) ? 'distance' : (s >= 2 && f.strength === 'weak') ? 'swept' : s >= 2 ? 'steady' : o >= 2 ? 'expressive' : r >= 2 ? 'independent' : 'quiet';
     const k2 = ['spouse_palace_clash', 'female_output_strong', 'rival_strong', 'weak_self'].find(c => condTest(c, f)) || 'default';
     const names = f.stars[sp].names; const jeong = names.filter(n => n === '정관' || n === '정재').length, pyeon = names.length - jeong;
     const k3 = !names.length ? 'neither' : jeong === pyeon ? 'both' : jeong > pyeon ? 'left' : 'right';
-    return [LOVE_K1[k1], LOVE_K3[k3], lovePatternPara(f, k2), ...loveNowParas(f, k1)];
+    return [LOVE_K1[k1], LOVE_K3[k3], lovePatternPara(f, k2), ...areaNowParas(f, 'love', [sp], k1, LOVE_K1_ADVICE)];
   }
 
   // ---- 돈과 재물 (wealthTypeKey/leakKey/incomeKey — 재물 상세풀이가 쓰는 함수 재사용) ----
@@ -7972,14 +7969,33 @@ const SERVER = (function () {
     neither: '다만 돈의 형태 자체는 원국에서 한쪽으로 뚜렷하게 굳어 있지 않아요. 방식보다 시기가 더 크게 좌우하는 구조예요.',
   };
   const MONEY_K3 = {
-    rival: '그래서 사람과 얽히면서 돈이 나뉘는 게 가장 큰 위험 패턴이에요. 동업이나 보증, 나눠 쓰는 자리에서 특히 새기 쉬워요.',
-    small: '다만 돈을 담을 그릇 자체가 아직 크지 않아서, 목돈이 들어와도 오래 쥐고 있기 어려운 게 위험 패턴이에요.',
-    spend: '다만 버는 힘이 셀 때 씀씀이도 같이 커지는 게 위험 패턴이에요. 버는 대로 다음 일에 먼저 쓰이기 쉬워요.',
+    rival: '그래서 사람과 얽히면서 돈이 나뉘기 쉬운 편이에요. 동업이나 보증, 나눠 쓰는 자리에서 특히 새기 쉬워요.',
+    small: '다만 목돈이 들어와도 오래 쥐고 있기 어려운 편이에요.',
+    spend: '벌고 표현하는 힘이 강하면, 버는 만큼 그 힘을 다음 일에도 먼저 쓰게 돼요. 그래서 버는 힘이 셀 때 씀씀이도 같이 커지는 게 위험 패턴이에요. 버는 대로 다음 일에 먼저 쓰이기 쉬워요.',
     time: '평소엔 크게 새지 않는 구조지만, 특정 시기(비겁이 드는 해)에만 위험이 커지는 편이에요.',
+  };
+  // 위험 패턴(leakKey)에 근거 없이 강하게 들리는 판정("사람과 얽히면서 돈이 나뉘는 게 가장 큰
+  // 위험 패턴")이 있어서, 사랑과 인연과 같은 방식으로 실제 계산값을 먼저 보여주고 뜻을 푼 뒤에
+  // 말하게 했다. rival/spend는 natalEvidence로 근거를 보여줄 수 있어 표현을 그대로 뒀고,
+  // small(재성이 약하고 신약)은 원인이 두 조건의 조합이라 근거를 한 문장으로 압축하기 어려워
+  // 표현 강도를 낮췄다.
+  function moneyPatternPara(f, k3) {
+    if (k3 === 'rival') return '한편 ' + natalEvidence(f, '비겁') + ' 즉, ' + GROUP_MEANING['비겁'] + ' ' + MONEY_K3.rival;
+    if (k3 === 'small') return '다만 ' + natalEvidence(f, '재성') + ' 그리고 당신은 신약한 사주라, 무언가를 오래 쥐고 있는 힘 자체가 세지 않아요. ' + MONEY_K3.small;
+    if (k3 === 'spend') return '다만 ' + natalEvidence(f, '식상') + ' 즉, ' + GROUP_MEANING['식상'] + ' ' + MONEY_K3.spend;
+    return MONEY_K3.time;
+  }
+  const MONEY_K1_ADVICE = {
+    holder_p: '기회로 오는 큰돈에 강한 편이니, 이 흐름을 실제 기회로 이어지게 움직여 보면 좋아요.',
+    holder_j: '꾸준히 쌓는 힘이 있는 편이니, 이 흐름 안에서도 급하게 벌리기보다 하나씩 쌓아가면 맞아요.',
+    heavy: '아직 버는 힘이 자리 크기를 못 따라가는 편이니, 이 시기에는 벌이기보다 지키는 쪽에 먼저 무게를 두세요.',
+    steady: '꾸준한 흐름에 강한 편이니, 이 시기의 변화도 크게 흔들리지 않고 받아들일 수 있어요.',
+    maker: '스스로 만들어서 버는 힘이 센 편이니, 이 흐름을 새로 벌이는 데 쓰면 결과로 이어지기 쉬워요.',
+    carried: '원래 시기에 좌우되는 편이라, 지금 같은 흐름이 방향을 정하는 데 큰 역할을 해요.',
   };
   function moneyIntroParas(f) {
     const k1 = wealthTypeKey(f), k2 = incomeKey(f), k3 = leakKey(f);
-    return [MONEY_K1[k1], MONEY_K2[k2], MONEY_K3[k3], ...nowFlowParas(f, 'money', ['재성', '식상'])];
+    return [MONEY_K1[k1], MONEY_K2[k2], moneyPatternPara(f, k3), ...areaNowParas(f, 'money', ['재성', '식상'], k1, MONEY_K1_ADVICE)];
   }
 
   // ---- 일과 진로 (buildGeneric()의 isWork 분기 재현) ----
@@ -7998,11 +8014,28 @@ const SERVER = (function () {
     neither: '일하는 방식 자체는 원국에서 뚜렷하게 한쪽으로 기울지 않아요. 자리보다 시기가 방향을 더 크게 정해줘요.',
   };
   const WORK_K2 = {
-    pressed: '그래서 책임과 압박이 반복해서 몰리는 게 패턴이에요. 맡는 자리마다 무게가 크게 느껴지기 쉬워요.',
+    pressed: '이 힘이 강하면 자리와 책임이 늘 나를 향해 쏠리기 쉬워요. 그래서 책임과 압박이 반복해서 몰리는 게 패턴이에요. 맡는 자리마다 무게가 크게 느껴지기 쉬워요.',
     talk: '말과 아이디어로 앞서가는 만큼, 실행이 그 속도를 못 따라가면 지치기 쉬운 패턴이에요.',
-    load: '일을 맡으면 끝까지 붙드는 편이라, 부담이 나에게만 쌓이는 패턴이 반복되기 쉬워요.',
-    overlap: '동료나 경쟁자와 역할이 겹치는 상황이 반복되기 쉬운 패턴이에요.',
+    load: '그래서 일을 맡으면 끝까지 붙드는 편이라, 부담이 나에게만 쌓이는 패턴이 반복되기 쉬워요.',
+    overlap: '이 힘이 강하면 동료나 경쟁자와 자리를 두고 부딪히기 쉬워요. 그래서 역할이 겹치는 상황이 생기기 쉬운 편이에요.',
     time: '특별히 반복되는 어려움이 원국에 뚜렷하게 보이진 않아요. 시기에 따라 다르게 흘러가는 편이에요.',
+  };
+  // WORK_K2도 사랑과 인연과 같은 방식 — condTest 키(officer_strong/output_strong/weak_self/
+  // rival_strong)가 love의 k2와 같은 계산이라 natalEvidence를 그대로 재사용한다.
+  function workPatternPara(f, k2) {
+    if (k2 === 'pressed') return '한편 ' + natalEvidence(f, '관성') + ' 즉, ' + GROUP_MEANING['관성'] + ' ' + WORK_K2.pressed;
+    if (k2 === 'talk') return '다만 ' + natalEvidence(f, '식상') + ' 즉, ' + GROUP_MEANING['식상'] + ' ' + WORK_K2.talk;
+    if (k2 === 'load') return '다만 당신은 신약한 사주예요. 즉, 나를 도와주는 힘보다 바깥으로 흩어지는 힘이 더 많다는 뜻이에요. ' + WORK_K2.load;
+    if (k2 === 'overlap') return '한편 ' + natalEvidence(f, '비겁') + ' 즉, ' + GROUP_MEANING['비겁'] + ' ' + WORK_K2.overlap;
+    return WORK_K2.time;
+  }
+  const WORK_K1_ADVICE = {
+    heavy: '맡은 무게가 아직 버거운 편이니, 이 시기에는 한 번에 다 짊어지기보다 나눠서 맡는 게 좋아요.',
+    org: '조직 안에서 크는 힘이 있는 편이니, 이 흐름을 자리를 다지는 쪽으로 쓰면 좋아요.',
+    duty: '맡은 자리에서 몫을 해내는 편이니, 이 시기의 변화도 자기 자리에서 받아들이면 돼요.',
+    maker: '직접 벌이는 힘이 센 편이니, 이 흐름을 새 판을 짜는 데 쓰면 좋은 결과로 이어지기 쉬워요.',
+    free: '자리에 얽매이지 않는 편이니, 이 시기의 변화도 유연하게 받아들일 수 있어요.',
+    steady: '큰 굴곡 없이 꾸준한 편이니, 이 시기의 변화도 무리 없이 지나갈 수 있어요.',
   };
   function workIntroParas(f) {
     const g = f.level('관성'), i = f.level('인성'), o = f.level('식상');
@@ -8011,7 +8044,7 @@ const SERVER = (function () {
     const org = f.level('관성') + f.level('인성'), ind = f.level('식상') + f.level('재성');
     let k3 = (org >= 2 && ind >= 2 && Math.abs(org - ind) <= 1) ? 'both' : (org <= 1 && ind <= 1) ? 'neither' : org > ind ? 'org' : 'indie';
     if (k3 === 'org' && g === 0) k3 = ind >= 2 ? 'indie' : 'neither';
-    return [WORK_K1[k1], WORK_K3[k3], WORK_K2[k2], ...nowFlowParas(f, 'work', ['관성', '인성'])];
+    return [WORK_K1[k1], WORK_K3[k3], workPatternPara(f, k2), ...areaNowParas(f, 'work', ['관성', '인성'], k1, WORK_K1_ADVICE)];
   }
 
   // ---- 관계(people) — 대응하는 리포트가 없어 who_avoid/boundary/people_luck/partner_ok가
@@ -8029,39 +8062,75 @@ const SERVER = (function () {
     neither: '사람을 대하는 방식 자체는 원국에서 뚜렷하게 한쪽으로 기울지 않아요. 상대에 따라 매번 다르게 맞춰가는 편이에요.',
   };
   const PEOPLE_K3 = {
-    friction: '가까운 사람일수록 사소한 일로 부딪히는 게 반복되기 쉬워요. 일지에 충·원진이 있는 구조라, 편한 사이일수록 그 지점이 더 잘 드러나요.',
-    helper: '힘든 일이 있을 때 뜻밖에 도와주는 사람이 나타나는 쪽이에요. 일지에 정인이 있어서, 나를 받쳐주는 사람이 가까운 자리에 있는 구조예요.',
-    shared: '동업이나 나눠 하는 일에서 몫과 역할이 흐릿해지는 게 반복되기 쉬운 패턴이에요.',
+    friction: '그래서 가까운 사람일수록 사소한 일로 부딪히거나 이유 없이 서운함이 쌓이는 게 반복되기 쉬운 편이에요.',
+    helper: '그래서 힘든 일이 있을 때 뜻밖에 도와주는 사람이 나타나는 쪽이에요. 나를 받쳐주는 사람이 가까운 자리에 있는 구조예요.',
+    shared: '이 둘이 함께 있으면, 돈이나 몫이 걸린 자리에서 사람과 얽히기 쉬워요. 그래서 동업이나 나눠 하는 일에서 몫과 역할이 흐릿해지는 게 반복되기 쉬운 패턴이에요.',
     default: '특별히 반복되는 위험 패턴이 원국에 뚜렷하게 보이진 않아요. 그때그때 상대에 따라 다르게 흘러가는 편이에요.',
+  };
+  // friction/helper/shared 전부 근거 없이 "구조라"/"있어서"로만 뭉뚱그려져 있던 걸, 실제
+  // 계산값(일지-타 지지 관계, 일지에 앉은 인성, 재성·비겁 동반 여부)을 먼저 보여주게 했다.
+  function peoplePatternPara(f, k3) {
+    if (k3 === 'friction') {
+      const r = f.natal.relations.find(x => (x.a === '일지' || x.b === '일지') && (x.type === 'chung' || x.type === 'wonjin'));
+      const other = r.a === '일지' ? r.b : r.a;
+      return '그러다 보니 가까운 사람을 뜻하는 일지가 ' + other + '와 ' + eulReul(r.ko) + ' 이룹니다. 즉, ' + RELLIFE_N[r.ko] + ' ' + PEOPLE_K3.friction;
+    }
+    if (k3 === 'helper') {
+      const idx = f.stars['인성'].pos.indexOf('일지');
+      const starName = f.stars['인성'].names[idx];
+      return '한편 나를 뜻하는 일지에 ' + starName + pt(starName, '이', '가') + ' 있어요. 즉, ' + GROUP_MEANING['인성'] + ' ' + PEOPLE_K3.helper;
+    }
+    if (k3 === 'shared') return '다만 ' + natalEvidence(f, '재성') + ' ' + natalEvidence(f, '비겁') + ' ' + PEOPLE_K3.shared;
+    return PEOPLE_K3.default;
+  }
+  const PEOPLE_K1_ADVICE = {
+    rival: '비교하거나 비교당하기 쉬운 편이니, 이 시기에는 남과 견주기보다 내 속도를 지키는 게 좋아요.',
+    control: '역할과 선을 분명히 하는 편이니, 이 시기의 변화도 관계의 규칙을 먼저 정해 두면 편해져요.',
+    express: '관계를 먼저 이끄는 편이니, 이 흐름을 사람들과의 자리를 넓히는 쪽으로 쓰면 좋아요.',
+    quiet: '대인관계의 결이 원래 뚜렷하지 않은 편이라, 지금 같은 시기의 흐름이 오히려 방향을 정하는 데 큰 역할을 해요.',
   };
   function peopleIntroParas(f) {
     const k1 = condTest('rival_strong', f) ? 'rival' : condTest('officer_strong', f) ? 'control' : condTest('output_strong', f) ? 'express' : 'quiet';
     const l = f.level('비겁') + (f.strength === 'strong' ? 1 : 0), r = f.level('관성') + (f.strength === 'weak' ? 1 : 0);
     const k2 = (l >= 2 && r >= 2 && Math.abs(l - r) <= 1) ? 'both' : (l <= 1 && r <= 1) ? 'neither' : l > r ? 'left' : 'right';
     const k3 = hasRel(f, '일지', ['chung', 'wonjin']) ? 'friction' : f.stars['인성'].pos.includes('일지') ? 'helper' : (f.level('재성') >= 1 && f.level('비겁') >= 1) ? 'shared' : 'default';
-    return [PEOPLE_K1[k1], PEOPLE_K2[k2], PEOPLE_K3[k3], ...nowFlowParas(f, 'people', ['비겁'])];
+    return [PEOPLE_K1[k1], PEOPLE_K2[k2], peoplePatternPara(f, k3), ...areaNowParas(f, 'people', ['비겁'], k1, PEOPLE_K1_ADVICE)];
   }
 
   // ---- 흐름 (buildGeneric()의 else 분기 = isFlow 재현) ----
   const FLOW_K1 = {
-    비겁: '원국에서 사람과 경쟁의 힘(비겁)이 가장 큰 사주예요. 변화도 사람을 통해서, 관계 속에서 일어나는 편이에요.',
-    식상: '원국에서 표현하고 벌이는 힘(식상)이 가장 큰 사주예요. 변화가 스스로 벌이는 일에서부터 시작되는 편이에요.',
-    재성: '원국에서 현실과 결과의 힘(재성)이 가장 큰 사주예요. 변화가 돈이나 눈에 보이는 결과를 따라 움직이는 편이에요.',
-    관성: '원국에서 자리와 책임의 힘(관성)이 가장 큰 사주예요. 변화가 자리나 역할이 바뀔 때 크게 따라오는 편이에요.',
-    인성: '원국에서 문서와 배움의 힘(인성)이 가장 큰 사주예요. 변화가 준비하고 배우는 과정을 거친 뒤에 오는 편이에요.',
+    비겁: '원국에서 사람과 경쟁의 힘인 비겁이 가장 큰 사주예요. 변화도 사람을 통해서, 관계 속에서 일어나는 편이에요.',
+    식상: '원국에서 표현하고 벌이는 힘인 식상이 가장 큰 사주예요. 변화가 스스로 벌이는 일에서부터 시작되는 편이에요.',
+    재성: '원국에서 현실과 결과의 힘인 재성이 가장 큰 사주예요. 변화가 돈이나 눈에 보이는 결과를 따라 움직이는 편이에요.',
+    관성: '원국에서 자리와 책임의 힘인 관성이 가장 큰 사주예요. 변화가 자리나 역할이 바뀔 때 크게 따라오는 편이에요.',
+    인성: '원국에서 문서와 배움의 힘인 인성이 가장 큰 사주예요. 변화가 준비하고 배우는 과정을 거친 뒤에 오는 편이에요.',
     even: '원국에 특별히 큰 힘 없이 고르게 퍼져 있는 사주예요. 어느 한 방향보다 시기에 따라 흐름이 달라지는 편이에요.',
   };
   const FLOW_K2 = {
-    chung: '이런 구조 위에서, 변화가 조용히 오기보다 한 번에 크게 부딪히며 오는 편이에요. 원국에 충을 이루는 자리가 있어서, 그 자리가 흔들릴 때 변화가 한꺼번에 몰려요.',
-    wonjin: '이런 구조 위에서, 변화가 명확한 사건보다 애매한 갈등으로 먼저 드러나는 편이에요. 원국에 원진을 이루는 자리가 있어서, 답답함이 먼저 쌓이다가 변화로 이어져요.',
-    hap: '이런 구조 위에서, 변화가 부딪히기보다 자연스럽게 합쳐지며 오는 편이에요. 원국에 합을 이루는 자리가 있어서, 새로운 인연이나 기회를 통해 흐름이 이어져요.',
+    chung: '변화가 조용히 오기보다 한 번에 크게 부딪히며 오는 편이에요. 그 자리가 흔들릴 때 변화가 한꺼번에 몰려요.',
+    wonjin: '변화가 명확한 사건보다 애매한 갈등으로 먼저 드러나는 편이에요. 답답함이 먼저 쌓이다가 변화로 이어져요.',
+    hap: '변화가 부딪히기보다 자연스럽게 합쳐지며 오는 편이에요. 새로운 인연이나 기회를 통해 흐름이 이어져요.',
     quiet: '원국의 지지 관계가 특별히 두드러지지 않아서, 변화도 급격하기보다 서서히 흘러가는 편이에요.',
   };
+  // FLOW_K2도 "원국에 충을 이루는 자리가 있어서"처럼 관계 종류만 말하고 실제 두 자리를 보여주지
+  // 않던 걸, flowIntroParas가 이미 찾아 둔 rel(실제 관계 객체)을 받아 그대로 보여주게 했다.
+  function flowPatternPara(f, k2, rel) {
+    if (rel) return '이 사주에는 ' + rel.a + '와 ' + rel.b + '가 ' + eulReul(rel.ko) + ' 이루는 자리가 있어요. 즉, ' + WHAT_IS[rel.ko] + ' ' + FLOW_K2[k2];
+    return FLOW_K2.quiet;
+  }
   const FLOW_K3 = {
     left: '그래서 전환의 순간마다 스스로 판단하고 밀어붙이는 쪽에 가까워요. 남의 말보다 내 판단을 우선하는 편이에요.',
     right: '그래서 전환의 순간마다 자리나 규칙에 맞춰 움직이는 쪽에 가까워요. 정해진 절차를 따를 때 더 안정적으로 넘어가요.',
     both: '전환의 순간에 스스로 판단하는 힘과 자리를 따르는 힘이 함께 작동해요. 상황에 따라 둘을 오가는 편이에요.',
     neither: '전환기의 태도 자체는 원국에서 뚜렷하게 한쪽으로 기울지 않아요. 그때그때 상황에 맞춰 다르게 대응하는 편이에요.',
+  };
+  const FLOW_K1_ADVICE = {
+    비겁: '사람을 통해 변화가 오는 편이니, 이 흐름에서도 주변 관계를 먼저 살펴보면 방향이 보여요.',
+    식상: '스스로 벌인 일에서 변화가 시작되는 편이니, 이 흐름에서도 가만히 있기보다 움직여야 다음이 보여요.',
+    재성: '결과를 따라 변화가 움직이는 편이니, 이 흐름에서도 눈에 보이는 신호를 먼저 챙기면 좋아요.',
+    관성: '자리가 바뀔 때 변화가 크게 오는 편이니, 이 흐름에서도 맡는 역할의 변화를 눈여겨보세요.',
+    인성: '준비를 거친 뒤에 변화가 오는 편이니, 이 흐름에서도 서두르기보다 다지는 쪽이 맞아요.',
+    even: '어느 한쪽으로 쏠리지 않는 편이라, 지금 같은 시기의 흐름이 방향을 정하는 데 큰 역할을 해요.',
   };
   function flowIntroParas(f) {
     const gs = ['비겁', '식상', '재성', '관성', '인성']; const max = Math.max(...gs.map(g => f.stars[g].n)); const yg = yongGroup(f);
@@ -8072,7 +8141,7 @@ const SERVER = (function () {
     const rel = R[0] || null; const k2 = rel ? rel.type : 'quiet';
     const l = f.level('비겁') + (f.strength === 'strong' ? 1 : 0), r = f.level('관성') + (f.strength === 'weak' ? 1 : 0);
     const k3 = (l >= 2 && r >= 2 && Math.abs(l - r) <= 1) ? 'both' : (l <= 1 && r <= 1) ? 'neither' : l > r ? 'left' : 'right';
-    return [FLOW_K1[k1], FLOW_K2[k2], FLOW_K3[k3], ...nowFlowParas(f, 'flow', ['재성', '관성'])];
+    return [FLOW_K1[k1], FLOW_K3[k3], flowPatternPara(f, k2, rel), ...areaNowParas(f, 'flow', ['재성', '관성'], k1, FLOW_K1_ADVICE)];
   }
 
   const AREA_INTRO = {
